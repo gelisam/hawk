@@ -1,0 +1,30 @@
+Name:           hscmd
+Version:        0.2
+Description:    The Haskell Shell command line utility
+License:        GPL-3
+Author:         Mario Pastorelli
+Maintainer:     pastorelli.mario@gmail.com
+Build-Type:     Simple
+Cabal-version:  >=1.2
+
+Executable hs
+    Main-is:        HsCmd.hs
+    ghc-options:    -Wall -O2
+    build-depends:  base
+                  , bytestring
+                  , directory
+                  , easy-file
+                  , filepath
+                  , hint
+                  , MonadCatchIO-mtl
+                  , stringsearch
+                  , process
+                  , time
+--    hs-source-dirs: HsCmd
+
+Library
+    exposed-modules: HsCmd.Representable
+    ghc-options:    -Wall -O2 
+--    hs-source-dirs: HsCmd
+    build-depends: vector,regex-posix
+    extensions: FlexibleContexts,FlexibleInstances
