@@ -2,7 +2,14 @@
            , OverloadedStrings
            , ScopedTypeVariables
            , TupleSections #-}
-module Main where
+
+module HSProcess (
+
+    hscmd
+  , main
+
+) where
+
 
 import Control.Applicative ((<$>))
 import Control.Monad
@@ -24,8 +31,8 @@ import System.Environment (getArgs,getProgName)
 import System.Exit (exitFailure)
 import System.IO (FilePath,IO,print,putStr)
 
-import HsCmd.Config
-import HsCmd.Options
+import HSProcess.Config
+import HSProcess.Options
 
 
 -- missing error handling!!
@@ -41,49 +48,47 @@ readImportsFromFile fp = (P.map parseImport . P.filter notImport . P.lines)
 
 
 -- TODO missing error handling!
-hscmd :: Maybe (String,String)
-      -> Options
-      -> String
-      -> Maybe FilePath
+hscmd :: Maybe (String,String) -- ^ The toolkit file and module name
+      -> Options               -- ^ Program options
+      -> String                -- ^ The user expression to evaluate
+      -> Maybe FilePath        -- ^ The input file
       -> IO ()
 hscmd toolkit opts expr_str file = do
     maybe_f <- runInterpreter $ do
---        curr_search_path <- get searchPath
---        loadModules ["/home/rief/programming/haskell/cmdutils/src/HsCmdUtils.hs"]
-        set [languageExtensions := [NoImplicitPrelude]]
+        set [languageExtensions := [ExtendedDefaultRules
+                                   ,NoImplicitPrelude
+                                   ,NoMonomorphismRestriction]]
 
         -- load the toolkit
         maybe (return ()) (loadModules . (:[]) . P.fst) toolkit
 
-        let modules = defaultModules ++ maybe [] 
-                                              ((:[]) . (,Nothing) . P.snd)
-                                              toolkit 
-        
         -- load imports
         -- TODO: add option to avoit loading default modules
+--        setImportsQ $ defaultModules ++ maybe [] ((:[]) . (,Nothing) . P.snd) toolkit
+        let modules = defaultModules 
+                   ++ maybe [] ((:[]) . (,Nothing) . P.snd) toolkit
+
         maybe (setImportsQ modules)
               (setImportsQFromFile modules)
-              (optConfigFile opts)
+              (optModuleFile opts)
 
-        let ignoreErrors = if optIgnoreErrors opts then "P.True" else "P.False"
+
+        let ignoreErrors = P.show $ optIgnoreErrors opts
 
         -- eval program based on the existence of a delimiter
         case (optDelimiter opts,optMap opts) of
             (Nothing,_) -> do
-                f <- interpret ("((rowRepr " ++ ignoreErrors ++ ") . "
-                                ++ expr_str ++ ")")
+                f <- interpret (mkF "printRows" ignoreErrors expr_str)
                                (as :: LB.ByteString -> IO ())
                 return $ f
             (Just d,False) -> do
-                f <- interpret ("((rowRepr " ++ ignoreErrors ++ ") . " 
-                                ++ expr_str ++ ")")
+                f <- interpret (mkF "printRows" ignoreErrors expr_str)
                                (as :: [LB.ByteString] -> IO ())
                 -- TODO: avoid keep everything in buffer, rshow should output
                 -- as soon as possible (for example each line)
                 return $ f . dropLastIfEmpty . S.split d
             (Just d,True) -> do
-                f <- interpret ("((colRepr " ++ ignoreErrors ++ ") . "
-                                ++ expr_str ++ ")")
+                f <- interpret (mkF "printRow" ignoreErrors expr_str)
                                (as :: LB.ByteString -> IO ())
                 return $ mapM_ f . dropLastIfEmpty . S.split d
     case maybe_f of
@@ -100,11 +105,13 @@ hscmd toolkit opts expr_str file = do
           dropLastIfEmpty [] = []
           dropLastIfEmpty (x:[]) = if LB.null x then [] else (x:[])
           dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
+          mkF pf ie exp = unlines ["((",pf,ie,") . (",exp,"))"]
 
 getUsage :: IO String
 getUsage = do
     pn <- getProgName
-    return $ usageInfo ("Usage: " ++ pn ++ " <cmd>") options
+    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <cmd> [<file>]") 
+                       options
 
 main :: IO ()
 main = do
@@ -113,7 +120,7 @@ main = do
     
     -- checkToolkitOrRecompileIt
     either printErrorAndExit go optsArgs
-    where processArgs cfgFile args = compilerOpts args >>=
+    where processArgs cfgFile args = compileOpts args >>=
                                      postOptsProcessing cfgFile
           printErrorAndExit errors = errorMessage errors >> exitFailure
           errorMessage errs = do

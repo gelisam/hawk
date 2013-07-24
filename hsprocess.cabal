@@ -1,4 +1,4 @@
-Name:           hscmd
+Name:           hsprocess
 Version:        0.2
 Description:    The Haskell Shell command line utility
 License:        GPL-3
@@ -7,8 +7,8 @@ Maintainer:     pastorelli.mario@gmail.com
 Build-Type:     Simple
 Cabal-version:  >=1.2
 
-Executable hs
-    Main-is:        HsCmd.hs
+Executable hsp
+    Main-is:        Main.hs
     ghc-options:    -Wall -O2
     build-depends:  base
                   , bytestring
@@ -20,11 +20,24 @@ Executable hs
                   , stringsearch
                   , process
                   , time
---    hs-source-dirs: HsCmd
+    hs-source-dirs: src
 
 Library
-    exposed-modules: HsCmd.Representable
+    exposed-modules: HSProcess.Representable
     ghc-options:    -Wall -O2 
---    hs-source-dirs: HsCmd
-    build-depends: vector,regex-posix
+    hs-source-dirs: src
+    build-depends: containers
     extensions: FlexibleContexts,FlexibleInstances
+
+Test-suite reference
+  Hs-Source-Dirs:       src,tests
+  Main-Is:              RunTests.hs
+  Type:                 exitcode-stdio-1.0
+
+  Build-Depends:        base, bytestring
+  Ghc-Options:          -Wall
+  Build-Depends:        test-framework
+                      , test-framework-hunit
+                      , test-framework-quickcheck2
+                      , HUnit
+                      , QuickCheck

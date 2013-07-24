@@ -1,9 +1,12 @@
-module HsCmd.Config where
+module HSProcess.Config where
 
 import Control.Applicative ((<$>))
 import Control.Exception (bracket)
 import Control.Monad (when)
 
+import Data.ByteString.Char8 (ByteString)
+import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.Time
 import System.EasyFile
@@ -14,18 +17,22 @@ import System.Process
 
 defaultModules :: [(String,Maybe String)]
 defaultModules = flip zip (repeat Nothing) 
-                       [ "HsCmd.Representable"
+                       [ "HSProcess.Representable"
+                       , "GHC.Num"
+                       , "GHC.Real"
                        , "GHC.Types"
+                       , "Data.ByteString.Lazy.Char8"
                        , "Data.Bool"
                        , "Data.Char"
                        , "Data.Either"
                        , "Data.Eq"
                        , "Data.Function"
                        , "Data.Int"
+                       , "Data.Maybe"
                        , "Data.Ord"]
 
 getConfigDir :: IO FilePath
-getConfigDir = (</> ".hs" ) <$> getHomeDirectory
+getConfigDir = (</> ".hsp" ) <$> getHomeDirectory
 
 getDefaultConfigFile :: IO FilePath
 getDefaultConfigFile = (</> "modules" ) <$> getConfigDir
@@ -45,7 +52,8 @@ getToolkitInfosFile = (</> "toolkitInfos") <$> getCacheDir
 
 -- maybe (file name, module name)
 -- TODO: error handling
-getToolkitFileAndModuleName :: IO (Maybe (String,String))
+
+getToolkitFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
 getToolkitFileAndModuleName = do
     dir <- getConfigDir
     dirExists <- doesDirectoryExist dir
@@ -65,9 +73,15 @@ getToolkitFileAndModuleName = do
                     then recompile
                     else do
                         let [fileName,moduleName,rawLastModTime] = toolkitInfos
+                        let withoutExt = dropExtension fileName
+                        let hiFile = withoutExt ++ ".hi"
+                        hiFileDoesntExist <- not <$> doesFileExist hiFile
+                        let objFile = withoutExt ++ ".o"
+                        objFileDoesntExist <- not <$> doesFileExist objFile
                         let lastModTime = (read rawLastModTime :: UTCTime)
                         currModTime <- getModificationTime toolkitFile
-                        if currModTime > lastModTime
+                        if hiFileDoesntExist || objFileDoesntExist 
+                                             || currModTime > lastModTime
                          then recompile
                          else return $ Just (fileName,moduleName)
               else recompile
@@ -79,13 +93,20 @@ recompile = do
     clean
     toolkitFile <- getToolkitFile
     currTime <- (filter isDigit . show <$> getCurrentTime)
-    let moduleName = "HsCmd.M" ++ currTime
     configDir <- getCacheDir
     createDirectoryIfMissing True configDir
     let compiledFile = configDir </> ("toolkit" ++ currTime)
-    let toolkitFileWithModule = compiledFile ++ ".hs"
-    toolkitCode <- addModule moduleName <$> readFile toolkitFile
-    writeFile toolkitFileWithModule toolkitCode
+--    toolkitCode <- addOrGetModule moduleName <$> C8.readFile toolkitFile
+    toolkitCode <- C8.readFile toolkitFile
+    (toolkitFileWithModule,moduleName) <- 
+            case getModuleName toolkitCode of
+                Just moduleName' -> return (toolkitFile,moduleName')
+                Nothing -> 
+                    let randModuleName = C8.pack $ "HSProcess.M" ++ currTime
+                        toolkitFileWithModule = compiledFile ++ ".hs"
+                    in do let toolkitCodeWithModule = addModule randModuleName toolkitCode
+                          C8.writeFile toolkitFileWithModule toolkitCodeWithModule
+                          return (toolkitFileWithModule,randModuleName)
     let err = compiledFile ++ ".ghc.err"
     compExitCode <- bracket (openFile err WriteMode) hClose $ \h ->
             waitForProcess =<< runProcess "ghc" ["--make"
@@ -114,23 +135,29 @@ recompile = do
     lastModTime <- getModificationTime toolkitFile
     toolkitInfosFile <- getToolkitInfosFile
     writeFile toolkitInfosFile $ unlines [toolkitFileWithModule
-                                         ,moduleName
+                                         ,C8.unpack moduleName
                                          ,show lastModTime]
-    return $ Just (toolkitFileWithModule,moduleName)
+    return $ Just (toolkitFileWithModule,C8.unpack moduleName)
     where
-        addModule :: String -> String -> String
+        addModule :: ByteString -> ByteString -> ByteString
         addModule moduleName code = 
-            let strippedCode = dropWhile isSpace code
-                moduleLine = "module " ++ moduleName ++ " where"
-            in unlines (if head strippedCode == '{'
+            let strippedCode = C8.dropWhile isSpace code
+                moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
+            in C8.unlines (if C8.head strippedCode == '{'
                          then
-                           let afterPragma = dropWhile (/= '}') strippedCode
-                           in [takeWhile (/= '}') strippedCode ++
-                               take 1 afterPragma
+                           let afterPragma = C8.dropWhile (/= '}') strippedCode
+                           in [C8.append (C8.takeWhile (/= '}') strippedCode)
+                                         (C8.take 1 afterPragma)
                               , moduleLine
-                              , drop 1 afterPragma]
+                              , C8.drop 1 afterPragma]
                          else [moduleLine,strippedCode])
-
+        getModuleName :: ByteString -> Maybe ByteString
+        getModuleName bs = case BSS.indices (C8.pack "module") bs of
+                            [] -> Nothing
+                            (i:_) -> Just
+                                   . C8.takeWhile (\c -> isAlphaNum c || c == '.')
+                                   . C8.dropWhile isSpace
+                                   . C8.drop (i + 6) $ bs
         clean :: IO ()
         clean = do
             dir <- getCacheDir

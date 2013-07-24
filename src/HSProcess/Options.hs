@@ -1,4 +1,4 @@
-module HsCmd.Options where
+module HSProcess.Options where
 
 import Data.ByteString (ByteString)
 
@@ -9,12 +9,14 @@ import qualified System.FilePath as FP
 import System.Console.GetOpt
 import Data.Maybe
 
+
 data Options = Options { optDelimiter :: Maybe ByteString
                        , optRecompile :: Bool
                        , optMap :: Bool
                        , optHelp :: Bool
                        , optIgnoreErrors :: Bool
-                       , optConfigFile :: Maybe FP.FilePath}
+                       , optModuleFile :: Maybe FP.FilePath}
+    deriving Show
 
 defaultOptions :: Options
 defaultOptions = Options { optDelimiter = Nothing
@@ -22,7 +24,7 @@ defaultOptions = Options { optDelimiter = Nothing
                          , optMap = False
                          , optHelp = False
                          , optIgnoreErrors = True
-                         , optConfigFile = Nothing }
+                         , optModuleFile = Nothing }
 
 delimiter :: ByteString -> ByteString
 delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
@@ -34,14 +36,16 @@ delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
 
 options :: [OptDescr (Options -> Options)]
 options = 
- [ Option ['d'] ["delimiter"] (ReqArg delimiterAction "<String>") delimiterHelp
+ [ Option ['d'] ["delimiter"] (OptArg delimiterAction "<String>") delimiterHelp
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
  , Option ['m'] ["map"] (NoArg $ \o -> o{ optMap = True}) mapHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
  , Option ['e'] ["errors"] (NoArg ignoreErrorsAction) ignoreErrorsHelp 
- , Option ['c'] ["conf"] (ReqArg confAction "<file>") confHelp
  ]
-    where delimiterAction s o = o{ optDelimiter = Just (delimiter $ C8.pack s) } 
+    where delimiterAction s o = let d = case s of
+                                         Nothing -> C8.singleton '\n'
+                                         Just rd -> delimiter (C8.pack rd)
+                                in o{ optDelimiter = Just d } 
           delimiterHelp = "String used as delimiter"
           setRecompile o = o{ optRecompile = True}
           recompileHelp = "Recompile toolkit.hs"
@@ -52,11 +56,9 @@ options =
                           ++ "execution. When is not set,"
                           ++ " errors don't block the execution and "
                           ++ "are logged to stderr. Default: False"
-          confAction fp o = o{ optConfigFile = Just fp }
-          confHelp = "Configuration file with imports"
 
-compilerOpts :: [String] -> Either [String] (Options,[String])
-compilerOpts argv =
+compileOpts :: [String] -> Either [String] (Options,[String])
+compileOpts argv =
    case getOpt Permute options argv of
       (os,nos,[]) -> Right (L.foldl (.) id os $ defaultOptions, nos)
       (_,_,errs) -> Left errs
@@ -64,11 +66,18 @@ compilerOpts argv =
 postOptsProcessing :: String 
                    -> (Options,[String])
                    -> Either [String] (Options,[String])
-postOptsProcessing defaultConfigFile (opts,args) = Right (process opts,args)
+postOptsProcessing defaultConfigFile (opts,args) = if length args < 1
+                                                    then errorArg
+                                                    else Right (process opts,args)
     where
-        process = optConfigFileProcess . optMapProcess
-        optConfigFileProcess os = if isNothing (optConfigFile os)
-                                    then os{ optConfigFile = Just defaultConfigFile}
+        errorArg = Left $ [
+                    "Missing argument representing the function to evaluate:\n"
+                    ++ "\t opts: " ++ show opts
+                    ++ "\n\targs: " ++ show args
+                    ]
+        process = optModuleFileProcess . optMapProcess
+        optModuleFileProcess os = if isNothing (optModuleFile os)
+                                    then os{ optModuleFile = Just defaultConfigFile}
                                     else os
         optMapProcess os = if optMap os && isNothing (optDelimiter os)
                               then os{ optDelimiter = Just (C8.singleton '\n')}
