@@ -1,17 +1,20 @@
 Name:           hsprocess
 Version:        0.2
-Description:    The Haskell Shell command line utility
-License:        GPL-3
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
+Description:    The Haskell Stream Processor command line utility
+License:        GPL-3
+License-File:   LICENSE
 Build-Type:     Simple
-Cabal-version:  >=1.2
+Cabal-version:  >=1.10
 
 Executable hsp
     Main-is:        Main.hs
+    Default-Language: Haskell98
     ghc-options:    -Wall -O2
     build-depends:  base
                   , bytestring
+                  , containers
                   , directory
                   , easy-file
                   , filepath
@@ -26,18 +29,22 @@ Library
     exposed-modules: HSProcess.Representable
     ghc-options:    -Wall -O2 
     hs-source-dirs: src
-    build-depends: containers
-    extensions: FlexibleContexts,FlexibleInstances
+    build-depends: base
+                 , bytestring
+                 , containers
+    Default-Language: Haskell98
 
 Test-suite reference
   Hs-Source-Dirs:       src,tests
   Main-Is:              RunTests.hs
   Type:                 exitcode-stdio-1.0
 
-  Build-Depends:        base, bytestring
+  Build-Depends:        base, bytestring, containers
   Ghc-Options:          -Wall
-  Build-Depends:        test-framework
+  Build-Depends:        bytestring
+                      , test-framework
                       , test-framework-hunit
                       , test-framework-quickcheck2
                       , HUnit
                       , QuickCheck
+  Default-Language: Haskell98

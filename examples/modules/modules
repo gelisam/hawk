@@ -1,0 +1,10 @@
+Control.Monad
+Data.ByteString.Lazy.Char8
+
+Data.ByteString.Lazy B
+Data.ByteString.Lazy.Search BS
+Data.Map M
+Data.List L
+Data.Set S
+Data.Vector V
+Text.Regex.Posix RE
