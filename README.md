@@ -134,10 +134,14 @@ in `Prelude` work on list, like `map`, in `hsp` work on
 Note that `Prelude` is loaded with the qualified name `P`, so its
 functions are not directly visible.
 
+An example of module file can be found [in the example directory](https://github.com/melrief/HSProcess/blob/master/examples/modules/modules).
+
 ### User defined functions
 
 It is possible to define new function to be used in Haskell Stream Processor
 inside the file `$HOME/.hsp/toolkit.hs`.
+
+An example of toolkit can be found [in the example directory](https://github.com/melrief/HSProcess/blob/master/examples/toolkit/toolkit.hs)
 
 ## Differences with the Glasgow Haskell Compiler
 
