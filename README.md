@@ -141,7 +141,7 @@ An example of module file can be found [in the example directory](https://github
 It is possible to define new function to be used in Haskell Stream Processor
 inside the file `$HOME/.hsp/toolkit.hs`.
 
-An example of toolkit can be found [in the example directory](https://github.com/melrief/HSProcess/blob/master/examples/toolkit/toolkit.hs)
+An example of toolkit can be found [in the example directory](https://github.com/melrief/HSProcess/blob/master/examples/toolkit/toolkit.hs).
 
 ## Differences with the Glasgow Haskell Compiler
 
