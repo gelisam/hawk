@@ -1,3 +1,21 @@
+{- 
+  Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com)
+ 
+    This file is part of HSProcess.
+ 
+  HSProcess is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  HSProcess is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
+-}
 module HSProcess.Options where
 
 import Data.ByteString (ByteString)
@@ -69,7 +87,7 @@ compileOpts argv =
       (os,nos,[]) -> Right (L.foldl (.) id os defaultOptions, nos)
       (_,_,errs) -> Left errs
 
-postOptsProcessing :: String 
+postOptsProcessing :: Maybe String
                    -> (Options,[String])
                    -> Either [String] (Options,[String])
 postOptsProcessing defaultConfigFile (opts,args) =
@@ -91,7 +109,7 @@ postOptsProcessing defaultConfigFile (opts,args) =
                       then Left ["Cannot set both -e and -m/-d options"]
                       else Right (os,as)
         optModuleFileProcess os = if isNothing (optModuleFile os)
-                                    then os{ optModuleFile = Just defaultConfigFile}
+                                    then os{ optModuleFile = defaultConfigFile}
                                     else os
         optMapProcess os = if optMap os && isNothing (optDelimiter os)
                               then os{ optDelimiter = Just (C8.singleton '\n')}

@@ -69,7 +69,7 @@ hsp "L.filter (not . null) . split '\n'"
 ```
 
 This happens so often that ```hsp``` has a mode to split automatically the
-stream on a delimiter using ```-d p<delimiter>[```.  If
+stream on a delimiter using ```-d [<delimiter>]```.  If
 ```<delimiter>``` is omitted, then it is set to ```\n```. With ```-d```, the
 function provided must have type:
 
@@ -125,7 +125,13 @@ which means that all the functions from ```Control.Monad``` and ```Data.List```
 will be available to the user, but for ```Data.List``` functions you must
 qualify them with ```L.```.
 
-Note that ```Prelude``` is loaded with the qualified name ```P```, so standard
+There are some modules that are loaded without qualification. In particular,
+the module ```Data.ByteString.Lazy.Char8``` is automatically loaded
+because ```hsp``` works on lazy bytestrings. This means functions like that
+in ```Prelude``` work on list, like ```map```, in ```hsp``` work on
+```ByteStrings```. Same for function that work on ```String```.
+
+Note that ```Prelude``` is loaded with the qualified name ```P```, so its
 functions are not directly visible.
 
 ### User defined functions
