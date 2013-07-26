@@ -2,17 +2,26 @@ Name:           hsprocess
 Version:        0.2
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
+Synopsis:       The Haskell Stream Processor command line utility
 Description:    The Haskell Stream Processor command line utility
 License:        GPL-3
 License-File:   LICENSE
 Build-Type:     Simple
 Cabal-version:  >=1.10
+Extra-Source-Files: src/HSProcess.hs
+                  , src/HSProcess/*.hs
+                  , README.md
+                  , tests/HSProcess/Representable/Test.hs
+
+Source-Repository head
+    type: git
+    location: https://github.com/melrief/HSProcess
 
 Executable hsp
     Main-is:        Main.hs
     Default-Language: Haskell98
     ghc-options:    -Wall -O2
-    build-depends:  base
+    build-depends:  base >= 4 && < 5
                   , bytestring
                   , containers
                   , directory
