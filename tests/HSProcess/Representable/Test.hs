@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
 -}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules,OverloadedStrings #-}
 module HSProcess.Representable.Test where
 
 import qualified Data.ByteString.Lazy.Char8 as C8
@@ -32,80 +32,61 @@ import qualified Data.Set as S
 
 import HSProcess.Representable
 
-tests :: [TF.Test]
-tests = concatMap hUnitTestToTests
-        [test_rReprs
-        ]
+import Test.Hspec 
 
-test_rReprs :: Test
-test_rReprs =
-   "rRepr" `should_convert` [
-          True          `into`      "True"
-        , False         `into`      "False"
-        , 'a'           `into`      "a"
-        , (1.1::Double) `into`      "1.1"
-        , (1.1::Float)  `into`      "1.1"
-        , (1::Int)      `into`      "1"
-        , (1::Integer)  `into`      "1"
-        , typedNothing  `into`      ""
-        , Just True     `into`      "True"
-        , Just (Just 1) `into`      "1"
-        , ""            `into`      ""
-        , "word"        `into`      "word"
-        , "word word"   `into`      "word word"
-        , ()            `into`      ""
-        , (1,2)         `into_list` ["1","2"]
-        , ((1,2),(2,3)) `into_list` ["1 2","2 3"] 
+spec :: Spec
+spec = describe "rRepr" $ do
+    it "can convert boolean values" $ do
+        rRepr True `shouldBe` ["True"]
+        rRepr False `shouldBe` ["False"]
 
-        -- List
-        , ([]::[Bool])          `into_list` []
-        , [True]                `into`      "True"
-        , [True,False]          `into_list` ["True","False"]
-        , [Just 1,typedNothing] `into_list` ["1",""]
-        , [[1,2,3],[4,5,6]]     `into_list` ["1 2 3","4 5 6"]
-        , ["w w","w w"]         `into_list` ["w w","w w"]
-        , [["w w"],["w w"]]     `into_list` ["w w","w w"]
+    it "can convert char values" $ example $
+        rRepr 'c' `shouldBe` ["c"]
 
-    
-        -- Map
-        , (M.empty::Map Bool Bool)   `into_list` []
-        , M.fromList [(1,2),(3,4)]   `into_list` ["1 2", "3 4"]
-        , [M.fromList [(1,2),(3,4)]] `into`      "1 2\t3 4"
+    it "can convert double values" $ example $
+        rRepr (1.1::Double) `shouldBe` ["1.1"]
 
-        -- Set
-        , (S.empty::Set Bool)    `into_list` []
-        , S.fromList [1,1,2,3,4] `into_list` ["1","2","3","4"]
-        , [S.fromList [1,2]]     `into`      "1 2"
-    ]
-    where typedNothing = Nothing::Maybe Int
+    it "can convert float values" $ example $
+        rRepr (1.1::Float) `shouldBe` ["1.1"]
 
-          should_convert :: String -> [Test] -> Test
-          should_convert s = TestLabel s . TestList
-          into :: (Rows t) => t -> String -> Test
-          into t s = TestLabel (t `to` s) $ mk_rRepr_test''' t s
-          infix 9 `into`
+    it "can convert int values" $ example $
+        rRepr (1::Int) `shouldBe` ["1"]
 
-          into_list :: (Rows t) => t -> [String] -> Test
-          into_list t s = TestLabel (t `to` s) $ mk_rRepr_test'' t s
-          infix 9 `into_list`
+    it "can convert integer values" $ example $
+        rRepr (1::Integer) `shouldBe` ["1"]
 
-          to t s = show t ++ " -> " ++ show s
+    it "can convert maybe values" $ do 
+        example $ rRepr (Nothing::Maybe ()) `shouldBe` [""]
+        example $ rRepr (Just 1::Maybe Int) `shouldBe` ["1"]
+        example $ rRepr (Just (Just True)) `shouldBe` ["True"]
 
-testList :: String -> [(String,Test)] -> Test
-testList label = TestLabel label . TestList . map (uncurry TestLabel)
+    it "can convert unit value" $
+        rRepr () `shouldBe` [""]
 
-should :: String -> [(String,Test)] -> Test
-should = testList
+    it "can convert string values" $ do
+        example $ rRepr "" `shouldBe` [""]
+        example $ rRepr "word" `shouldBe` ["word"]
+        example $ rRepr "word word" `shouldBe` ["word word"]
 
-mk_rRepr_test :: (Rows t) => String -> t -> [String] -> Test
-mk_rRepr_test d l r = TestCase (assertEqual d (rRepr l) (map C8.pack r))
+    it "can convert tuple values" $ do
+        example $ rRepr (1,True) `shouldBe` ["1","True"]
+        example $ rRepr ((1,2),False) `shouldBe` ["1 2","False"]
 
-mk_rRepr_test' :: (Rows t) => String -> t -> String -> Test
-mk_rRepr_test' d l r = mk_rRepr_test d l [r]
+    it "can convert list values" $ do
+        rRepr ([]::[()]) `shouldBe` []
+        example $ rRepr [True] `shouldBe` ["True"]
+        example $ rRepr [True,False] `shouldBe` ["True","False"]
+        example $ rRepr [Just 1,Nothing] `shouldBe` ["1",""]
+        example $ rRepr [[1,2,3],[4,5,6]] `shouldBe` ["1 2 3","4 5 6"]
+        example $ rRepr ["w w","w w"] `shouldBe` ["w w","w w"]
+        example $ rRepr [["w w"],["w w"]] `shouldBe` ["w w","w w"]
 
-mk_rRepr_test'' :: (Rows t) => t -> [String] -> Test
-mk_rRepr_test'' l r = mk_rRepr_test d l r
-    where d = "rRepr " ++ show l ++ " is " ++ show r
+    it "can convert map values" $ do
+        rRepr (M.empty::Map Bool Bool) `shouldBe` []
+        example $ rRepr (M.fromList [(1,2),(3,4)]) `shouldBe` ["1 2","3 4"]
+        example $ rRepr ([M.fromList [(1,2),(3,4)]]) `shouldBe` ["1 2\t3 4"]
 
-mk_rRepr_test''' :: (Rows t) => t -> String -> Test
-mk_rRepr_test''' l r = mk_rRepr_test'' l [r]
+    it "can convert set values" $ do
+        rRepr (S.empty::Set Bool) `shouldBe` []
+        example $ rRepr (S.fromList [1,2,3,4]) `shouldBe` ["1","2","3","4"]
+        example $ rRepr ([S.fromList [1,2]]) `shouldBe` ["1 2"]

@@ -27,14 +27,7 @@ import Test.Framework
 --import qualified HSProcess.Test as HSPTest
 import qualified HSProcess.Representable.Test as ReprTest
 
-main :: IO ()
-main = defaultMainWithOpts
-        [ testGroup "Representable" ReprTest.tests
-        ] mempty
---main = defaultMainWithOpts
---       [ testCase "rev" testRev
---       , testProperty "listRevRevId" propListRevRevId
---       ] mempty
+import Test.Hspec (hspec)
 
--- testRev :: Assertion
--- testRev = reverse [1, 2, 3] @?= [3, 2, 1]
+main :: IO ()
+main = hspec ReprTest.spec

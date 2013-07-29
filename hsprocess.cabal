@@ -53,6 +53,7 @@ Test-suite reference
   Build-Depends:        bytestring
                       , test-framework
                       , test-framework-hunit
+                      , hspec
                       , HUnit
                       , QuickCheck
   Default-Language: Haskell98
