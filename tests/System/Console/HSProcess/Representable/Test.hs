@@ -17,7 +17,7 @@
   along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE ExtendedDefaultRules,OverloadedStrings #-}
-module HSProcess.Representable.Test where
+module System.Console.HSProcess.Representable.Test where
 
 import qualified Data.ByteString.Lazy.Char8 as C8
 
@@ -30,7 +30,7 @@ import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import HSProcess.Representable
+import System.Console.HSProcess.Representable
 
 import Test.Hspec 
 

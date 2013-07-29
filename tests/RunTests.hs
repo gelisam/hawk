@@ -25,7 +25,7 @@ import Test.Framework
 --import Test.QuickCheck
 
 --import qualified HSProcess.Test as HSPTest
-import qualified HSProcess.Representable.Test as ReprTest
+import qualified System.Console.HSProcess.Representable.Test as ReprTest
 
 import Test.Hspec (hspec)
 

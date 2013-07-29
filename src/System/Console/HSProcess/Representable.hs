@@ -21,7 +21,7 @@
            , OverloadedStrings
            , ScopedTypeVariables #-}
 
-module HSProcess.Representable (
+module System.Console.HSProcess.Representable (
 
     Row  (repr')
   , Rows (repr)
@@ -48,7 +48,15 @@ handleErrors = handle (\(e :: SomeException) -> IO.hPrint IO.stderr e)
 -- Rows class and instances
 
 -- | A type that instantiate Rows is a type that can be represented as
--- a list of string, one per row.
+-- a list of rows, where typically a row is a line.
+--
+-- For example:
+--
+-- >>> mapM_ Data.ByteString.Lazy.Char8.putStrLn $ repr [1,2,3,4]
+-- 1
+-- 2
+-- 3
+-- 4
 class (Show a) => Rows a where
     repr :: a -> [C8.ByteString]
     repr = (:[]) . C8.pack . show
@@ -127,15 +135,17 @@ instance (Row a,Row b) => ListAsRows (Map a b) where
 -- ---------------------------
 -- Row class and instances
 
--- | Row is similar to Show, instances should be convertible
--- to string. The output of repr' should be formatted such that
+-- | A Row is something that can be expressed as a line. 
+-- The output of repr' should be formatted such that
 -- it can be read and processed from the command line.
 --
 -- For example:
--- @
---    show [1,2,3,4] = "[1,2,3,4]"
---    repr' [1,2,3,4] = "1 2 3 4"
--- @
+--
+-- >>> IO.putStrLn $ show [1,2,3,4]
+-- [1,2,3,4]
+--
+-- >>> Data.ByteString.Lazy.Char8.putStrLn $ repr' [1,2,3,4]
+-- 1 2 3 4
 class (Show a) => Row a where
     repr' :: a -> ByteString
     repr' = C8.pack . show

@@ -16,9 +16,5 @@
   You should have received a copy of the GNU General Public License
   along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
 -}
-module Main where
+module System.Console.HSProcess.Test where
 
-import qualified System.Console.HSProcess as HSP
-
-main :: IO ()
-main = HSP.main

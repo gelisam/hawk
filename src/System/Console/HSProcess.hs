@@ -21,7 +21,7 @@
            , ScopedTypeVariables
            , TupleSections #-}
 
-module HSProcess (
+module System.Console.HSProcess (
 
     hsprocess
   , main
@@ -49,8 +49,8 @@ import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
 
-import HSProcess.Config
-import HSProcess.Options
+import System.Console.HSProcess.Config
+import System.Console.HSProcess.Options
 
 
 -- missing error handling!!

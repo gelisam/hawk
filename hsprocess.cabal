@@ -3,15 +3,20 @@ Version:        0.2
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
 Synopsis:       The Haskell Stream Processor command line utility
-Description:    The Haskell Stream Processor command line utility
+Description:    The Haskell Stream Processor is a command line utility to
+                process streams using Haskell code. It is intended to be used 
+                in a UNIX pipeline. It offers a configuration system to
+                personalize imported modules and a way to represent values
+                on the console.
+Category:       Console
 License:        GPL-3
 License-File:   LICENSE
 Build-Type:     Simple
 Cabal-version:  >=1.10
-Extra-Source-Files: src/HSProcess.hs
-                  , src/HSProcess/*.hs
+Extra-Source-Files: src/System/Console/HSProcess.hs
+                  , src/System/Console/HSProcess/*.hs
                   , README.md
-                  , tests/HSProcess/Representable/Test.hs
+                  , tests/System/Console/HSProcess/Representable/Test.hs
 
 Source-Repository head
     type: git
@@ -20,7 +25,7 @@ Source-Repository head
 Executable hsp
     Main-is:        Main.hs
     Default-Language: Haskell98
-    ghc-options:    -Wall -O2
+    ghc-options:    -Wall
     build-depends:  base >= 4 && < 5
                   , bytestring
                   , containers
@@ -35,8 +40,8 @@ Executable hsp
     hs-source-dirs: src
 
 Library
-    exposed-modules: HSProcess.Representable
-    ghc-options:    -Wall -O2 
+    exposed-modules: System.Console.HSProcess.Representable
+    ghc-options:    -Wall 
     hs-source-dirs: src
     build-depends: base
                  , bytestring

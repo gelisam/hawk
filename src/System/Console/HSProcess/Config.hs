@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
 -}
-module HSProcess.Config where
+module System.Console.HSProcess.Config where
 
 import Control.Applicative ((<$>))
 import Control.Exception (bracket)

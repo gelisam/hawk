@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
 -}
-module HSProcess.Options where
+module System.Console.HSProcess.Options where
 
 import Data.ByteString (ByteString)
 
