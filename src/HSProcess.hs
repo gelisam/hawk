@@ -135,7 +135,7 @@ hsprocess toolkit opts expr_str file = do
             (Just d,False) -> do
                 f <- interpret (mkF "printRows" ignoreErrors expr_str)
                                (as :: [LB.ByteString] -> IO ())
-                -- TODO: avoid keep everything in buffer, rshow should output
+                -- TODO: avoid keep everything in buffer, repr' should output
                 -- as soon as possible (for example each line)
                 return $ f . dropLastIfEmpty . S.split d
             (Just d,True) -> do

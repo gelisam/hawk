@@ -23,8 +23,8 @@
 
 module HSProcess.Representable (
 
-    Row  (rshow)
-  , Rows (rRepr)
+    Row  (repr')
+  , Rows (repr)
   , printRows
   , printRow
 
@@ -50,11 +50,11 @@ handleErrors = handle (\(e :: SomeException) -> IO.hPrint IO.stderr e)
 -- | A type that instantiate Rows is a type that can be represented as
 -- a list of string, one per row.
 class (Show a) => Rows a where
-    rRepr :: a -> [C8.ByteString]
-    rRepr = (:[]) . C8.pack . show
+    repr :: a -> [C8.ByteString]
+    repr = (:[]) . C8.pack . show
 
 printRows :: forall a . (Rows a) => Bool -> a -> IO ()
-printRows b = printRows_ . rRepr
+printRows b = printRows_ . repr
     where printRows_ [] = return ()
           printRows_ (x:xs) = do
             f x
@@ -72,25 +72,25 @@ instance Rows Int
 instance Rows Integer
 
 instance Rows () where
-    rRepr = const [C8.empty]
+    repr = const [C8.empty]
 
 instance Rows Char where
-    rRepr = (:[]) . C8.singleton
+    repr = (:[]) . C8.singleton
 
 instance Rows ByteString where
-    rRepr = (:[])
+    repr = (:[])
 
 instance (Rows a) => Rows (Maybe a) where
-    rRepr = maybe [C8.empty] rRepr
+    repr = maybe [C8.empty] repr
 
 instance (Row a, Row b) => Rows (a,b) where
-    rRepr (x,y) = [rshow x,rshow y]
+    repr (x,y) = [repr' x,repr' y]
 
 instance (Row a, Row b) => Rows (Map a b) where
-    rRepr = listAsRows . M.toList
+    repr = listAsRows . M.toList
 
 instance (ListAsRows a) => Rows (Set a) where
-    rRepr = listAsRows . S.toList
+    repr = listAsRows . S.toList
 
 
 
@@ -98,7 +98,7 @@ instance (ListAsRows a) => Rows (Set a) where
 
 class (Row a) => ListAsRows a where
     listAsRows :: [a] -> [ByteString]
-    listAsRows = L.map rshow
+    listAsRows = L.map repr'
 
 instance ListAsRows ByteString
 instance ListAsRows Bool
@@ -116,7 +116,7 @@ instance ListAsRows Char where
     listAsRows = (:[]) . C8.pack
 
 instance (ListAsRows a) => Rows [a] where
-    rRepr = listAsRows
+    repr = listAsRows
 
 instance (ListAsRow a,ListAsRows a) => ListAsRows (Set a) where
     listAsRows = listAsRows . L.map S.toList
@@ -128,17 +128,17 @@ instance (Row a,Row b) => ListAsRows (Map a b) where
 -- Row class and instances
 
 -- | Row is similar to Show, instances should be convertible
--- to string. The output of rshow should be formatted such that
+-- to string. The output of repr' should be formatted such that
 -- it can be read and processed from the command line.
 --
 -- For example:
 -- @
 --    show [1,2,3,4] = "[1,2,3,4]"
---    rshow [1,2,3,4] = "1 2 3 4"
+--    repr' [1,2,3,4] = "1 2 3 4"
 -- @
 class (Show a) => Row a where
-    rshow :: a -> ByteString
-    rshow = C8.pack . show
+    repr' :: a -> ByteString
+    repr' = C8.pack . show
 
 instance Row Bool
 instance Row Float
@@ -148,11 +148,11 @@ instance Row Integer
 instance Row ()
 
 instance Row Char where
-    rshow = C8.singleton
+    repr' = C8.singleton
 
 printRow :: forall a . (Row a) => Bool -> a -> IO ()
 printRow b = if b then handleErrors . f else f
-  where f = C8.putStrLn . rshow
+  where f = C8.putStrLn . repr'
 
 class (Show a) => ListAsRow a where
     listRepr :: [a] -> ByteString
@@ -174,26 +174,26 @@ instance ListAsRow ByteString where
     listRepr = C8.intercalate " "
 
 instance (Row a,Row b) => ListAsRow (a,b) where
-    listRepr = C8.intercalate "\t" . L.map (\(x,y) -> C8.unwords [rshow x,rshow y])
+    listRepr = C8.intercalate "\t" . L.map (\(x,y) -> C8.unwords [repr' x,repr' y])
 
 instance (ListAsRow a) => Row [a] where
-    rshow = listRepr
+    repr' = listRepr
 
 instance (ListAsRow a) => Row (Set a) where
-    rshow = listRepr . S.toList
+    repr' = listRepr . S.toList
 
 instance (Row a,Row b) => Row (Map a b) where
-    rshow = listRepr . M.toList
+    repr' = listRepr . M.toList
 
 instance Row ByteString where
-    rshow = id
+    repr' = id
 
 instance (Row a) => Row (Maybe a) where
-    rshow Nothing = C8.empty
-    rshow (Just x) = rshow x
+    repr' Nothing = C8.empty
+    repr' (Just x) = repr' x
 
 instance (Row a,Row b) => Row (a,b) where
-    rshow (a,b) = C8.intercalate " " [rshow a,rshow b]
+    repr' (a,b) = C8.intercalate " " [repr' a,repr' b]
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
-    rshow (a,b,c) = C8.intercalate " " [rshow a,rshow b,rshow c]
+    repr' (a,b,c) = C8.intercalate " " [repr' a,repr' b,repr' c]
