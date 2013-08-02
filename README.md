@@ -1,9 +1,10 @@
-hsl
+HSL
 ===
 
-Haskell command line processor
+Haskell command line text processor
 
-Tool to quickly build Haskell streaming programs to process data on the command line.
+Tool to quickly compile and run haskell streaming text processors on the
+command line.
 
 
 Installing
