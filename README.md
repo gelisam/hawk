@@ -6,6 +6,7 @@ Haskell command line text processor
 Tool to quickly compile and run haskell streaming text processors on the
 command line.
 
+Features a powerful way of working quickly with JSON.
 
 Installing
 ==========
@@ -13,7 +14,6 @@ Installing
     > git clone 'https://github.com/ssadler/hsl.git' && cd hsl
     > # Install dependencies... You probably already have them (?)
     > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
-
 
 Examples
 ========
@@ -41,7 +41,6 @@ Examples
 
     > echo '{"a": "Hello", "b": ["", "World"]}' | hsl 'json2 (tS, tS) "a" "b 1"'
     Hello	World
-
 
 Contributing
 ============
