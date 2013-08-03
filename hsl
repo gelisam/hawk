@@ -24,14 +24,25 @@ def main():
     fh.write(open(hsl).read() % (inits, f))
     fh.close()
 
-    ghc = ['ghc', '-O2', '-i' + src, mainhs]
+    # TODO: set using a command-line flag
+    compile = False
+    if compile:
+        ghc = ['ghc', '-O2', '-i' + src, mainhs]
 
-    if not subprocess.Popen(ghc, stdout=subprocess.PIPE).wait():
-        p = subprocess.Popen(binary)
-        try:
-            p.wait()
-        except (KeyboardInterrupt, IOError):
-            p.send_signal(signal.SIGTERM)
+        if subprocess.Popen(ghc, stdout=subprocess.PIPE).wait():
+          return
+
+        cmd = binary
+    else:
+        ghc = ['ghc', '-i' + src, mainhs, '-e', 'main']
+
+        cmd = ghc
+
+    p = subprocess.Popen(cmd)
+    try:
+        p.wait()
+    except (KeyboardInterrupt, IOError):
+        p.send_signal(signal.SIGTERM)
 
 
 main()
