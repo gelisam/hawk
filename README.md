@@ -35,6 +35,7 @@ Examples
     > echo '{"a": "Hello", "b": ["", "World"]}' | hsl 'json2 (tS, tS) "a" "b 1"'
     Hello	World
 
+
 Installing
 ==========
 
@@ -42,7 +43,34 @@ Installing
     > # Install dependencies... You probably already have them (?)
     > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
 
-Contributing
+
+JSON parsing
 ============
 
-Open to contributions!
+The convenience function `json` produces a series of values from a series of
+input JSONs:
+
+`json :: FromJSON a => a -> Text -> [ByteString] -> [a]`
+
+`a` above is not used at runtime; it is a hint so that the compiler knows what
+type we want back. `tI` (Int), `tS` (ByteString) and `tF` (Float) are provided for this
+purpose. The following are equivalent:
+
+    echo '[[[1,2],[3,4]]]' | hsl 'json (undefined::[(Int,Int)]) "0"'
+    1	2
+    3	4
+
+    echo '[[[1,2],[3,4]]]' | hsl 'json [(tI,tI)] "0"'
+    1	2
+    3	4
+
+The second argument defines the location of the value we want to pull out;
+space separated, so integers are array indices and everything else is an object key.
+If none is provided then the top level object is returned. See examples above.
+
+See also: [FromJSON](http://hackage.haskell.org/packages/archive/aeson/0.6.1.0/doc/html/Data-Aeson.html#t:FromJSON)
+
+`json2` and `json3` are also provided, to allow extraction of more values, ie:
+
+`json2 :: (FromJSON a, FromJSON b) => (a,b) -> Text -> Text -> [ByteString] -> [(a,b)]`
+

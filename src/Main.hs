@@ -2,6 +2,8 @@
 
 import           Prelude hiding (break)
 
+import           Control.Category ((>>>))
+import           Control.Lens
 import           Data.ByteString.Lazy.Char8 (ByteString, break)
 import qualified Data.ByteString.Lazy.Char8 as B
 import           Data.List hiding (lines, unlines, break)
@@ -17,6 +19,9 @@ import           HSL.Stdlib
 
 %s
 
-f = %s
+p = %s
 
-main = B.getContents >>= mapM_ B.putStrLn . render . f . B.lines
+run :: Renderable a => ([ByteString] -> a) -> IO ()
+run f = B.getContents >>= mapM_ B.putStrLn . render . f . B.lines
+
+main = run p

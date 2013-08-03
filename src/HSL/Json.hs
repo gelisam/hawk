@@ -85,6 +85,6 @@ jsonN :: ([Value] -> Result a) -> [T.Text] -> [B.ByteString] -> [a]
 jsonN cast qN = catMaybes . map (unsafeResult . getValues)
   where qs = map prepQuery qN
         getValues ins = do top <- case AL.parse Ae.json ins of
-                                      AL.Done _ a -> Success a
-                                      AL.Fail _ _ e -> Error e
+                                       AL.Done _ a -> Success a
+                                       AL.Fail _ _ e -> Error e
                            sequence (map (drill top) qs) >>= cast
