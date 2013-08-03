@@ -7,17 +7,19 @@ import Data.List (intersperse)
 import Data.Int (Int64)
 
 
--- Type hints
+-- Type witnesses
 
-tS :: B.ByteString
-tS = undefined
+s :: B.ByteString
+s = undefined
 
-tI :: Int
-tI = undefined
+i :: Int
+i = undefined
 
-tF :: Float
-tF = undefined
+f :: Float
+f = undefined
 
+
+-- Output Rendering
 
 class Datum a where
     bs :: a -> B.ByteString

@@ -64,31 +64,31 @@ More concretely, if you have a file with one JSON expression per line, `json` le
     {"name": "longcat", "year": 2007}
     {"name": "ceiling cat", "year": 2006}
     {"name": "invisible bike cat", "year": 2008}
-    > cat cat_memes.json | hsl 'sort . json tI "year"'
+    > cat cat_memes.json | hsl 'sort . json i "year"'
     2006
     2007
     2008
     2011
 
-The `tI` argument specifies the type of the result. `tI` (Int), `tS` (ByteString)
-and `tF` (Float) are provided for this purpose. The following are equivalent:
+The `i` argument specifies the type of the result. `i` (Int), `s` (ByteString)
+and `f` (Float) are provided for this purpose. The following are equivalent:
 
     echo '[[1,2],[3,4]]' | hsl 'json (undefined::[(Int,Int)]) ""'
     1	2
     3	4
 
-    echo '[[1,2],[3,4]]' | hsl 'json [(tI,tI)] ""'
+    echo '[[1,2],[3,4]]' | hsl 'json [(i,i)] ""'
     1	2
     3	4
 
 The empty string in the above example is an empty path, referring to the entire JSON expression. The general syntax for paths is illustrated in the following example:
 
-    > echo '{"a":{"b":["Hello","World"]}}' | hsl 'json tS "a b 0"'
+    > echo '{"a":{"b":["Hello","World"]}}' | hsl 'json s "a b 0"'
     Hello
 
 If you need to extract more than one value per line, use `json2` or `json3`.
 
-    > echo '{"born":1938, "age":75}' | hsl 'fmap (uncurry (+)) . json2 (tI,tI) "born" "age"'
+    > echo '{"born":1938, "age":75}' | hsl 'fmap (uncurry (+)) . json2 (i,i) "born" "age"'
     2013
 
 
