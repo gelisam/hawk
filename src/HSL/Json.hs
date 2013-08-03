@@ -19,6 +19,7 @@ import           Data.Aeson hiding (json)
 import qualified Data.Aeson as Ae
 import qualified Data.Aeson.Types as AT
 
+import Debug.Trace
 
 type Getter = (Value -> AT.Parser Value)
 
@@ -37,13 +38,21 @@ parseGetter :: A.Parser Getter
 parseGetter = mkIndex <$> A.decimal <|>
               mkLookup <$> readKey
   where
-    readKey = A.scan '_' keyEnd
-    keyEnd s c = if c == ' ' && s /= '\\' then Nothing else Just c
     mkLookup k = withObject "object" $ maybe err return . lookup k
       where err = error $ T.unpack k
     mkIndex i = withArray "array" (\a -> return (a ! i))
 
 
+readKey :: A.Parser T.Text
+readKey = fmap (T.pack . qq . T.unpack) $ A.scan '_' keyEnd
+  where
+    keyEnd s c = if c == ' ' && s /= '\\' then Nothing else Just c
+    qq [] = []
+    qq [x] = [x]
+    qq (x:y:cx) = if x == '\\' then y : qq cx else x : qq (y:cx)
+
+
+prepQuery :: T.Text -> [Getter]
 prepQuery q = case A.parseOnly parseQuery q of Right res -> res
                                                Left e -> error e
 
