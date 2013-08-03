@@ -5,6 +5,7 @@ import os.path
 import tempfile
 import signal
 import subprocess
+import re
 
 
 src = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')
@@ -13,6 +14,64 @@ src = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')
 hsl = src + '/Main.hs'
 
 
+# result can be
+# - 'return code' (the default)
+# - 'stdout'
+# - 'stderr'
+# - 'both' (the tuple (stdout, stderr))
+def run_process(cmd, input_string=None, reveal_stdin=False, reveal_stdout=False, reveal_stderr=False, result='return code'):
+    stdin = None if reveal_stdin else subprocess.PIPE
+    stdout = None if reveal_stdout else subprocess.PIPE
+    stderr = None if reveal_stderr else subprocess.PIPE
+    p = subprocess.Popen(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
+    try:
+        if result == 'return code':
+            return p.wait()
+        else:
+            (stdout, stderr) = p.communicate(input_string)
+            if result == 'stdout':
+                return stdout
+            elif result == 'stderr':
+                return stderr
+            elif result == 'both':
+                return (stdout, stderr)
+            else:
+                raise Exception("result is %r, should be one of 'return code', 'stdout', 'stderr', or 'both'" % result)
+    except (KeyboardInterrupt, IOError):
+        p.send_signal(signal.SIGTERM)
+        sys.exit(1)
+
+def extract_type(output):
+    # the last few lines should be:
+    #   '*Main> p :: <TYPE...'
+    #   '     ...TYPE...'
+    #   '     ...TYPE'
+    #   '*Main> Leaving GHCi.'
+    #   ''
+    lines = output.split('\n')
+
+    # drop the last two, the last few lines are now:
+    #   '*Main> p :: <TYPE...'
+    #   '     ...TYPE...'
+    #   '     ...TYPE>'
+    lines = lines[:-2]
+
+    # join the lines.
+    #   '*Main> p :: <TYPE>'
+    line = "".join(lines)
+
+    # extract the type
+    marker = '*Main> p :: '
+    i = line.rfind(marker)
+    type = line[i + len(marker):]
+
+    if type.find('GHC.Prim.Any') > -1:
+        # That's not a real type. Don't use any type,
+        # the error message will be better.
+        return None
+    else:
+        return type
+
 def main():
     binary = os.path.join(tempfile.mkdtemp(), 'Main')
     mainhs = binary + '.hs'
@@ -20,29 +79,37 @@ def main():
     f = sys.argv[1:][-1]
     inits = "\n\n".join(sys.argv[1:-1])
 
+    # write the file without the type signature
     fh = open(mainhs, 'w')
-    fh.write(open(hsl).read() % (inits, f))
+    fh.write(open(hsl).read() % (inits, '', f))
     fh.close()
+
+    type_inference = ['ghci', '-fdefer-type-errors', '-i' + src, mainhs]
+    output = run_process(type_inference, input_string=':t p', result='stdout')
+    inferred_type = extract_type(output)
+
+    if inferred_type:
+      # since GHC's default instances (http://www.haskell.org/onlinereport/decls.html#sect4.3.4)
+      # are restricted to Num types, we implement our own defaults.
+      forced_type = re.sub('\\b[a-z]\\b', 'ByteString', inferred_type)
+
+      # write the file again, with the type signature this time
+      fh = open(mainhs, 'w')
+      fh.write(open(hsl).read() % (inits, '-- p :: %s\np :: %s' % (inferred_type, forced_type), f))
+      fh.close()
 
     # TODO: set using a command-line flag
     compile = False
     if compile:
         ghc = ['ghc', '-O2', '-i' + src, mainhs]
+        if run_process(ghc):
+          sys.exit(1)
 
-        if subprocess.Popen(ghc, stdout=subprocess.PIPE).wait():
-          return
-
-        cmd = binary
+        run_process(binary, reveal_stdin=True, reveal_stdout=True, reveal_stderr=True)
     else:
         ghc = ['ghc', '-i' + src, mainhs, '-e', 'main']
 
-        cmd = ghc
-
-    p = subprocess.Popen(cmd)
-    try:
-        p.wait()
-    except (KeyboardInterrupt, IOError):
-        p.send_signal(signal.SIGTERM)
+        run_process(ghc, reveal_stdin=True, reveal_stdout=True, reveal_stderr=True)
 
 
 main()

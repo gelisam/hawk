@@ -22,6 +22,7 @@ default (Int, Double)
 
 %s
 
+%s
 p = %s
 
 run :: (ParsableFromFile a, RenderableFile b) => (a -> b) -> IO ()
