@@ -8,13 +8,6 @@ command line.
 
 Features a powerful way of working quickly with JSON.
 
-Installing
-==========
-
-    > git clone 'https://github.com/ssadler/hsl.git' && cd hsl
-    > # Install dependencies... You probably already have them (?)
-    > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
-
 Examples
 ========
 
@@ -41,6 +34,13 @@ Examples
 
     > echo '{"a": "Hello", "b": ["", "World"]}' | hsl 'json2 (tS, tS) "a" "b 1"'
     Hello	World
+
+Installing
+==========
+
+    > git clone 'https://github.com/ssadler/hsl.git' && cd hsl
+    > # Install dependencies... You probably already have them (?)
+    > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
 
 Contributing
 ============
