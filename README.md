@@ -36,6 +36,11 @@ The output is also an array of lines... but it could also be an array of tuples,
     hello	World
     nice	Planet
 
+Or a single value...
+
+    > printf 'longlinewith onespace\nma ny spa ces' | hsl "maximumBy $ comparing $ B.count ' '"
+    ma ny spa ces
+
 Full Haskell syntax is supported. Go crazy!
 
     > printf "hello\nworld\n" | hsl 'take 2 . repeat . filter (B.isPrefixOf "w")'
