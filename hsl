@@ -7,7 +7,7 @@ import signal
 import subprocess
 
 
-src = os.path.join(os.path.dirname(__file__), 'src')
+src = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')
 
 
 hsl = src + '/Main.hs'
