@@ -20,12 +20,12 @@ Poor man's [`tac`](http://www.gnu.org/software/coreutils/manual/html_node/tac-in
 
 The input is a `[ByteString]`, an array of lines.
 
-    > echo '!LSH olleH'  | hsl 'fmap B.reverse'
+    > echo '!LSH olleH'  | hsl 'map B.reverse'
     Hello HSL!
 
 The output is also an array of lines... but it could also be an array of tuples, in which case the tuples are displayed as tab-separated columns.
 
-    > printf 'helloWorld\nnicePlanet\n' | hsl "fmap (break isUpper)"
+    > printf 'helloWorld\nnicePlanet\n' | hsl "map (break isUpper)"
     hello	World
     nice	Planet
 
@@ -88,7 +88,7 @@ The empty string in the above example is an empty path, referring to the entire 
 
 If you need to extract more than one value per line, use `json2` or `json3`.
 
-    > echo '{"born":1938, "age":75}' | hsl 'fmap (uncurry (+)) . json2 (i,i) "born" "age"'
+    > echo '{"born":1938, "age":75}' | hsl 'map (uncurry (+)) . json2 (i,i) "born" "age"'
     2013
 
 
