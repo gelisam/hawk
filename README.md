@@ -31,8 +31,8 @@ The output is also an array of lines... but it could also be an array of tuples,
 
 Or a single value...
 
-    > printf 'literary\ncheeseburger' | hsl 'maximumBy (comparing B.length) . concatMap b.words'
-    ma ny spa ces
+    > printf 'literary\ncheeseburger' | hsl 'maximumBy (comparing B.length) . concatMap B.words'
+    cheeseburger
 
 Full Haskell syntax is supported. Go crazy!
 
