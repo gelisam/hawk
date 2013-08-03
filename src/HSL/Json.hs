@@ -19,7 +19,6 @@ import           Data.Aeson hiding (json)
 import qualified Data.Aeson as Ae
 import qualified Data.Aeson.Types as AT
 
-import Debug.Trace
 
 type Getter = (Value -> AT.Parser Value)
 
