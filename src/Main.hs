@@ -17,12 +17,14 @@ import           HSL.Json
 import           HSL.Types
 import           HSL.Stdlib
 
+default (Int, Double)
+
 
 %s
 
 p = %s
 
-run :: Renderable a => ([ByteString] -> a) -> IO ()
-run f = B.getContents >>= mapM_ B.putStrLn . render . f . B.lines
+run :: (ParsableFromFile a, RenderableFile b) => (a -> b) -> IO ()
+run f = B.getContents >>= B.putStr . renderFile . f . parseFile
 
 main = run p
