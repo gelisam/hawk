@@ -31,7 +31,7 @@ The output is also an array of lines... but it could also be an array of tuples,
 
 Or a single value...
 
-    > printf 'longlinewith onespace\nma ny spa ces' | hsl "maximumBy $ comparing $ B.count ' '"
+    > printf 'literary\ncheeseburger' | hsl 'maximumBy (comparing B.length) . concatMap b.words'
     ma ny spa ces
 
 Full Haskell syntax is supported. Go crazy!
@@ -70,13 +70,16 @@ More concretely, if you have a file with one JSON expression per line, `json` le
     2008
     2011
 
-The `tI` argument specifies the type of the result. Without it, you would have to write the more cumbersome `(json _ "year" :: Int)`.
+The `tI` argument specifies the type of the result. `tI` (Int), `tS` (ByteString)
+and `tF` (Float) are provided for this purpose. The following are equivalent:
 
-Supported type specifiers include `tI` for Int, `tS` for `ByteString`, and arrays thereof.
+    echo '[[1,2],[3,4]]' | hsl 'json (undefined::[(Int,Int)]) ""'
+    1	2
+    3	4
 
-    > echo '[1,2]' | hsl 'json [tI] ""'
-    1
-    2
+    echo '[[1,2],[3,4]]' | hsl 'json [(tI,tI)] ""'
+    1	2
+    3	4
 
 The empty string in the above example is an empty path, referring to the entire JSON expression. The general syntax for paths is illustrated in the following example:
 
@@ -95,35 +98,4 @@ Installing
     > git clone 'https://github.com/ssadler/hsl.git' && cd hsl
     > # Install dependencies... You probably already have them (?)
     > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
-
-
-JSON parsing
-============
-
-The convenience function `json` produces a series of values from a series of
-input JSONs:
-
-`json :: FromJSON a => a -> Text -> [ByteString] -> [a]`
-
-`a` above is not used at runtime; it is a hint so that the compiler knows what
-type we want back. `tI` (Int), `tS` (ByteString) and `tF` (Float) are provided for this
-purpose. The following are equivalent:
-
-    echo '[[[1,2],[3,4]]]' | hsl 'json (undefined::[(Int,Int)]) "0"'
-    1	2
-    3	4
-
-    echo '[[[1,2],[3,4]]]' | hsl 'json [(tI,tI)] "0"'
-    1	2
-    3	4
-
-The second argument defines the location of the value we want to pull out;
-space separated, so integers are array indices and everything else is an object key.
-If none is provided then the top level object is returned. See examples above.
-
-See also: [FromJSON](http://hackage.haskell.org/packages/archive/aeson/0.6.1.0/doc/html/Data-Aeson.html#t:FromJSON)
-
-`json2` and `json3` are also provided, to allow extraction of more values, ie:
-
-`json2 :: (FromJSON a, FromJSON b) => (a,b) -> Text -> Text -> [ByteString] -> [(a,b)]`
 
