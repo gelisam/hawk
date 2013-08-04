@@ -1,38 +1,33 @@
 HSL
 ===
 
-Haskell command line text processor
+An experimental branch of [HSL](https://github.com/ssadler/hsl), a Haskell text processor for the command-line.
 
-Tool to quickly compile and run haskell streaming text processors on the
-command line.
+There are many other similar tools: [eddie](https://code.google.com/p/eddie/), [HSProcess](https://github.com/melrief/HSProcess/), and of course the original [HSL](https://github.com/ssadler/hsl).
 
-Features a powerful way of working quickly with JSON.
+This experimental branch differs from those other tools by relying on type inference to guess how you need the input to be parsed. With `eddie` and `HSProcess`, command-line flags are used to tell the tool whether you want your Haskell expression to be applied to each line or to the entire stream. In contrast, my version uses the type of your Haskell expression to decide how to apply it:
 
-Examples
-========
-
-Poor man's [`tac`](http://www.gnu.org/software/coreutils/manual/html_node/tac-invocation.html):
-
+    -- reverse :: [a] -> [a],
+    -- so we split the input into lines
     > seq 3 | hsl reverse
     3
     2
     1
 
-The input is a `[ByteString]`, an array of lines.
+    -- swap :: (a, b) -> (b, a),
+    -- so we split each line into two fields
+    > printf "A\t1\nB\t2" | hsl swap
+    1	A
+    2	B
 
-    > echo '!LSH olleH'  | hsl 'map B.reverse'
-    Hello HSL!
+More Examples
+========
 
-The output is also an array of lines... but it could also be an array of tuples, in which case the tuples are displayed as tab-separated columns.
+Since each line is a `ByteString` and not a `[Char]`, we can easily infer whether you intend to reverse lines or characters:
 
-    > printf 'helloWorld\nnicePlanet\n' | hsl "map (break isUpper)"
-    hello	World
-    nice	Planet
-
-Or a single value...
-
-    > printf 'literary\ncheeseburger' | hsl 'maximumBy (comparing B.length) . concatMap B.words'
-    cheeseburger
+    > printf 'Hello\nWorld'  | hsl B.reverse
+    olleH
+    dlroW
 
 Full Haskell syntax is supported. Go crazy!
 
