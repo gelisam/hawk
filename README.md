@@ -36,7 +36,7 @@ Or a single value...
 
 Full Haskell syntax is supported. Go crazy!
 
-    > printf "hello\nworld\n" | hsl 'take 2 . repeat . filter (B.isPrefixOf "w")'
+    > printf "hello\nworld\n" | hsl 'take 2 . repeat . head . filter (B.isPrefixOf "w")'
     world
     world
 
@@ -73,11 +73,11 @@ More concretely, if you have a file with one JSON expression per line, `json` le
 The `i` argument specifies the type of the result. `i` (Int), `s` (ByteString)
 and `f` (Float) are provided for this purpose. The following are equivalent:
 
-    echo '[[1,2],[3,4]]' | hsl 'json (undefined::[(Int,Int)]) ""'
+    > printf '[1,2]\n[3,4]' | hsl 'json (undefined::(Int,Int)) ""'
     1	2
     3	4
 
-    echo '[[1,2],[3,4]]' | hsl 'json [(i,i)] ""'
+    > printf '[1,2]\n[3,4]' | hsl 'json (i,i) ""'
     1	2
     3	4
 
