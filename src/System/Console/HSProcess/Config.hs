@@ -35,7 +35,7 @@ import System.Process
 
 defaultModules :: [(String,Maybe String)]
 defaultModules = flip zip (repeat Nothing) 
-                       [ "HSProcess.Representable"
+                       [ "System.Console.HSProcess.Representable"
                        , "GHC.Num"
                        , "GHC.Real"
                        , "GHC.Types"
