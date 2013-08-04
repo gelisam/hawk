@@ -93,6 +93,14 @@ def main():
       # are restricted to Num types, we implement our own defaults.
       forced_type = re.sub('\\b[a-z]\\b', 'ByteString', inferred_type)
 
+      parts = forced_type.split('->')
+      if inferred_type[0] != '[' and len(parts) == 2:
+        # quick hack to uniformly apply line-based transformers
+        # without complicating the existing typeclasses
+
+        forced_type = '[%s] -> [%s]' % (parts[0], parts[1])
+        f = 'map (%s)' % f
+
       # write the file again, with the type signature this time
       fh = open(mainhs, 'w')
       fh.write(open(hsl).read() % (inits, '-- p :: %s\np :: %s' % (inferred_type, forced_type), f))
