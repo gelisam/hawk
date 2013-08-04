@@ -1,5 +1,5 @@
 Name:           hsprocess
-Version:        0.2
+Version:        0.3
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
 Synopsis:       The Haskell Stream Processor command line utility
