@@ -93,6 +93,13 @@ def main():
       # are restricted to Num types, we implement our own defaults.
       forced_type = re.sub('\\b[a-z]\\b', 'ByteString', inferred_type)
 
+      if inferred_type.find('->') == -1:
+        # quick hack to print values without filtering the input
+        # without complicating the existing typeclasses
+
+        forced_type = '[ByteString] -> %s' % forced_type
+        f = 'const (%s)' % f
+
       parts = forced_type.split('->')
       if inferred_type[0] != '[' and len(parts) == 2:
         # quick hack to uniformly apply line-based transformers

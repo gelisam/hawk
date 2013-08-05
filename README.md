@@ -20,6 +20,15 @@ This experimental branch differs from those other tools by relying on type infer
     1	A
     2	B
 
+    -- [5,4..1] :: [Int],
+    -- not a function, so we ignore the input
+    > hsl [5,4..1]
+    5
+    4
+    3
+    2
+    1
+
 More Examples
 ========
 
