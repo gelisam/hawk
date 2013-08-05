@@ -70,7 +70,8 @@ initInterpreter :: Maybe (String, String)
 initInterpreter toolkit moduleFile = do
         set [languageExtensions := [ExtendedDefaultRules
                                    ,NoImplicitPrelude
-                                   ,NoMonomorphismRestriction]]
+                                   ,NoMonomorphismRestriction
+                                   ,OverloadedStrings]]
 
         -- load the toolkit
         maybe (return ()) (loadModules . (:[]) . P.fst) toolkit
