@@ -63,6 +63,8 @@ def extract_type(output):
     # extract the type
     marker = '*Main> p :: '
     i = line.rfind(marker)
+    if i == -1:
+      return None
     type = line[i + len(marker):]
 
     if type.find('GHC.Prim.Any') > -1:
