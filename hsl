@@ -93,7 +93,7 @@ def main():
     if inferred_type:
       # since GHC's default instances (http://www.haskell.org/onlinereport/decls.html#sect4.3.4)
       # are restricted to Num types, we implement our own defaults.
-      forced_type = re.sub('\\b[a-z]\\b', 'ByteString', inferred_type)
+      forced_type = re.sub('\\b[a-z][1-9]?\\b', 'ByteString', inferred_type)
 
       if inferred_type.find('->') == -1:
         # quick hack to print values without filtering the input
