@@ -1,22 +1,4 @@
-{- 
-  Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com)
- 
-    This file is part of HSProcess.
- 
-  HSProcess is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
- 
-  HSProcess is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
--}
-module System.Console.HSProcess.Config where
+module System.Console.Hawk.Config where
 
 import Control.Applicative ((<$>))
 import Control.Exception (bracket)
@@ -35,7 +17,7 @@ import System.Process
 
 defaultModules :: [(String,Maybe String)]
 defaultModules = flip zip (repeat Nothing) 
-                       [ "System.Console.HSProcess.Representable"
+                       [ "System.Console.Hawk.Representable"
                        , "GHC.Num"
                        , "GHC.Real"
                        , "GHC.Types"
@@ -50,7 +32,7 @@ defaultModules = flip zip (repeat Nothing)
                        , "Data.Ord"]
 
 getConfigDir :: IO FilePath
-getConfigDir = (</> ".hsp" ) <$> getHomeDirectory
+getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
 
 getDefaultConfigFile :: IO (Maybe FilePath)
 getDefaultConfigFile = do
@@ -123,7 +105,7 @@ recompile = do
             case getModuleName toolkitCode of
                 Just moduleName' -> return (toolkitFile,moduleName')
                 Nothing -> 
-                    let randModuleName = C8.pack $ "HSProcess.M" ++ currTime
+                    let randModuleName = C8.pack $ "Hawk.M" ++ currTime
                         toolkitFileWithModule = compiledFile ++ ".hs"
                     in do let toolkitCodeWithModule = addModule randModuleName toolkitCode
                           C8.writeFile toolkitFileWithModule toolkitCodeWithModule

@@ -1,28 +1,27 @@
-Name:           hsprocess
+Name:           hawk
 Version:        0.3
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
-Synopsis:       The Haskell Stream Processor command line utility
-Description:    The Haskell Stream Processor is a command line utility to
-                process streams using Haskell code. It is intended to be used 
-                in a UNIX pipeline. It offers a configuration system to
-                personalize imported modules and a way to represent values
-                on the console.
+Synopsis:       Haskell text processor for the command-line
+Description:    Hawk is a command line utility to process streams of text
+                using Haskell code. It is intended to be used in a UNIX
+                pipeline. It offers a configuration system to personalize
+                imported modules and a way to represent values on the console.
 Category:       Console
-License:        GPL-3
+License:        PublicDomain
 License-File:   LICENSE
 Build-Type:     Simple
 Cabal-version:  >=1.10
-Extra-Source-Files: src/System/Console/HSProcess.hs
-                  , src/System/Console/HSProcess/*.hs
+Extra-Source-Files: src/System/Console/Hawk.hs
+                  , src/System/Console/Hawk/*.hs
                   , README.md
-                  , tests/System/Console/HSProcess/Representable/Test.hs
+                  , tests/System/Console/Hawk/Representable/Test.hs
 
 Source-Repository head
     type: git
-    location: https://github.com/melrief/HSProcess
+    location: https://github.com/ssadler/hawk
 
-Executable hsp
+Executable hawk
     Main-is:        Main.hs
     Default-Language: Haskell98
     ghc-options:    -Wall
@@ -40,7 +39,7 @@ Executable hsp
     hs-source-dirs: src
 
 Library
-    exposed-modules: System.Console.HSProcess.Representable
+    exposed-modules: System.Console.Hawk.Representable
     ghc-options:    -Wall 
     hs-source-dirs: src
     build-depends: base

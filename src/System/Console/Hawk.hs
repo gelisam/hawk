@@ -1,29 +1,11 @@
-{- 
-  Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com)
- 
-    This file is part of HSProcess.
- 
-  HSProcess is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
- 
-  HSProcess is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with HSProcess.  If not, see <http://www.gnu.org/licenses/>.
--}
 {-# LANGUAGE NoImplicitPrelude
            , OverloadedStrings
            , ScopedTypeVariables
            , TupleSections #-}
 
-module System.Console.HSProcess (
+module System.Console.Hawk (
 
-    hsprocess
+    hawk
   , main
 
 ) where
@@ -49,8 +31,8 @@ import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
 
-import System.Console.HSProcess.Config
-import System.Console.HSProcess.Options
+import System.Console.Hawk.Config
+import System.Console.Hawk.Options
 
 
 -- missing error handling!!
@@ -102,11 +84,11 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> print e
 
-hspeval :: Maybe (String,String) -- ^ The toolkit file and module name
-        -> Options               -- ^ Program options
-        -> String                -- ^ The user expression to evaluate
-        -> IO ()
-hspeval toolkit opts expr_str = do
+hawkeval :: Maybe (String,String) -- ^ The toolkit file and module name
+         -> Options               -- ^ Program options
+         -> String                -- ^ The user expression to evaluate
+         -> IO ()
+hawkeval toolkit opts expr_str = do
     maybe_f <- runInterpreter $ do
         initInterpreter toolkit (optModuleFile opts)
         let ignoreErrors = P.show $ optIgnoreErrors opts
@@ -117,12 +99,12 @@ hspeval toolkit opts expr_str = do
         Right f -> f
 
 -- TODO missing error handling!
-hsprocess :: Maybe (String,String) -- ^ The toolkit file and module name
-      -> Options               -- ^ Program options
-      -> String                -- ^ The user expression to evaluate
-      -> Maybe FilePath        -- ^ The input file
-      -> IO ()
-hsprocess toolkit opts expr_str file = do
+hawk :: Maybe (String,String) -- ^ The toolkit file and module name
+     -> Options               -- ^ Program options
+     -> String                -- ^ The user expression to evaluate
+     -> Maybe FilePath        -- ^ The input file
+     -> IO ()
+hawk toolkit opts expr_str file = do
     maybe_f <- runInterpreter $ do
 
         initInterpreter toolkit (optModuleFile opts)
@@ -182,10 +164,10 @@ main = do
                           else runHsp toolkit opts notOpts
           runHsp t os nos = do
                         if optEval os
-                          then hspeval t os (L.head nos)
+                          then hawkeval t os (L.head nos)
                           else do
                             let file = if L.length nos > 1
                                          then Just $ nos !! 1
                                          else Nothing
-                            hsprocess t os (L.head nos) file
+                            hawk t os (L.head nos) file
                         hFlush stdout 
