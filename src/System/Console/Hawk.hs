@@ -161,8 +161,8 @@ main = do
                                       else getToolkitFileAndModuleName
                         if L.null notOpts || optHelp opts
                           then getUsage >>= putStr
-                          else runHsp toolkit opts notOpts
-          runHsp t os nos = do
+                          else runHawk toolkit opts notOpts
+          runHawk t os nos = do
                         if optEval os
                           then hawkeval t os (L.head nos)
                           else do
