@@ -148,7 +148,7 @@ printRow b = if b then handleErrors . f else f
 
 class (Show a) => ListAsRow a where
     listRepr :: [a] -> ByteString
-    listRepr = C8.intercalate " " . L.map (C8.pack . show)
+    listRepr = C8.intercalate "\t" . L.map (C8.pack . show)
 
 instance ListAsRow Bool
 instance ListAsRow Float
@@ -163,7 +163,7 @@ instance ListAsRow Char where
     listRepr = C8.pack
 
 instance ListAsRow ByteString where
-    listRepr = C8.intercalate " "
+    listRepr = C8.intercalate "\t"
 
 instance (Row a,Row b) => ListAsRow (a,b) where
     listRepr = C8.intercalate "\t" . L.map (\(x,y) -> C8.unwords [repr' x,repr' y])
@@ -185,7 +185,7 @@ instance (Row a) => Row (Maybe a) where
     repr' (Just x) = repr' x
 
 instance (Row a,Row b) => Row (a,b) where
-    repr' (a,b) = C8.intercalate " " [repr' a,repr' b]
+    repr' (a,b) = repr' [repr' a,repr' b] 
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
-    repr' (a,b,c) = C8.intercalate " " [repr' a,repr' b,repr' c]
+    repr' (a,b,c) = repr' [repr' a,repr' b,repr' c]
