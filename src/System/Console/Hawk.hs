@@ -154,7 +154,7 @@ main = do
           printErrorAndExit errors = errorMessage errors >> exitFailure
           errorMessage errs = do
                 usage <- getUsage
-                P.putStrLn $ L.unlines (errs ++ ['\n':usage])
+                IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
           go (opts,notOpts) = do
                 toolkit <- if optRecompile opts
                               then recompileConfig
