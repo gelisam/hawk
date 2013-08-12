@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config where
 
 import Control.Applicative ((<$>))
@@ -119,17 +120,17 @@ getConfigFileWithModule configFile moduleName configFileWithModule = do
 addModule :: ByteString -- ^ module name
           -> ByteString -- ^ haskell code
           -> ByteString -- ^ result
-addModule moduleName code = 
+addModule moduleName code =
     let strippedCode = C8.dropWhile isSpace code
+        maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
+                        then let (pragma,afterPragma) = BSS.breakOn "#-}" strippedCode
+                             in (Just pragma,C8.drop 3 afterPragma)
+                        else (Nothing,strippedCode)
         moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
-    in C8.unlines (if C8.head strippedCode == '{'
-                 then
-                   let afterPragma = C8.dropWhile (/= '}') strippedCode
-                   in [C8.append (C8.takeWhile (/= '}') strippedCode)
-                                 (C8.take 1 afterPragma)
-                      , moduleLine
-                      , C8.drop 1 afterPragma]
-                 else [moduleLine,strippedCode])
+    in case maybePragma of
+        (Nothing,c) -> C8.unlines [moduleLine,c]
+        (Just pragma,c) -> C8.unlines [pragma,moduleLine,c]
+
 
 -- get the module name from a file if it exists
 getModuleName :: ByteString -> Maybe ByteString
