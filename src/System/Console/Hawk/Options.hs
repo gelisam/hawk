@@ -52,7 +52,7 @@ options =
                                 in o{ optDelimiter = Just d } 
           delimiterHelp = "String used as delimiter"
           setRecompile o = o{ optRecompile = True}
-          recompileHelp = "Recompile toolkit.hs"
+          recompileHelp = "Recompile prelude.hs"
           mapHelp = "Map a command over each string separated by the delimiter"
           evalHelp = "Ignore stdin and the input file and evaluate the "
                   ++ "user expression"
@@ -73,15 +73,15 @@ postOptsProcessing :: Maybe String
                    -> (Options,[String])
                    -> Either [String] (Options,[String])
 postOptsProcessing defaultConfigFile (opts,args) =
-    if length args < 1
-      then errorArg
+    if optHelp opts == False && length args < 1
+      then Left ["Error: Missing cmd to evaluate"]
       else solveAmbiguities (opts,args) >>= Right . first process
     where
-        errorArg = Left [
-                    "Missing argument representing the function to evaluate:\n"
-                    ++ "\t opts: " ++ show opts
-                    ++ "\n\targs: " ++ show args
-                    ]
+--        errorArg = Left [
+--                    "Missing argument representing the function to evaluate:\n"
+--                    ++ "\t opts: " ++ show opts
+--                    ++ "\n\targs: " ++ show args
+--                    ]
         process :: Options -> Options
         process = optModuleFileProcess . optMapProcess
         solveAmbiguities :: (Options,[String])

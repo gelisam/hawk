@@ -12,6 +12,7 @@ module System.Console.Hawk.Representable (
 
 ) where
 
+import Prelude
 import Control.Exception (SomeException,handle)
 import Data.ByteString.Lazy.Char8
 import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)

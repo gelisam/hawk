@@ -26,7 +26,8 @@ import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
-import System.Environment (getArgs,getProgName)
+import System.Environment (getArgs,getProgName,getExecutablePath)
+import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
@@ -37,19 +38,37 @@ import System.Console.Hawk.Options
 
 -- missing error handling!!
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
-readImportsFromFile fp = (P.map parseImport . P.filter notImport . P.lines) 
-                         `fmap` P.readFile fp
-    where parseImport :: String -> (String,Maybe String)
-          parseImport s = case words s of
-                            w:[] -> (w,Nothing)
-                            w:q:[] -> (w,Just q)
-                            _ -> P.undefined -- error!
-          notImport s = not (L.null s) && not ("--" `L.isPrefixOf` s)
+readImportsFromFile fp = P.read <$> IO.readFile fp
+
+extendSearchPath :: String -> InterpreterT IO ()
+extendSearchPath newPath = do
+    oldPaths <- get searchPath
+    let newPaths = newPath:oldPaths
+    set [searchPath := newPaths]
+
+-- special hack for cabal-dev:
+-- since the hawk library is only installed in this local folder,
+-- we need to point InterpreterT to its location.
+cabalDevWorkaround :: InterpreterT IO ()
+cabalDevWorkaround = do
+    exe <- lift getExecutablePath
+    when (binSuffix `L.isSuffixOf` exe) $ do
+      let n = L.length exe P.- L.length binSuffix
+          prefix = P.take n exe
+          src = prefix ++ srcSuffix
+      extendSearchPath src
+      -- HACK: interpret the source file.
+      -- won't work when installing from hackage.
+      loadModules ["System.Console.Hawk.Representable"]
+  where
+    binSuffix = "cabal-dev/bin/hawk"
+    srcSuffix = "src"
 
 initInterpreter :: Maybe (String, String)
                 -> Maybe FilePath
                 -> InterpreterT IO ()
 initInterpreter toolkit moduleFile = do
+        cabalDevWorkaround
         set [languageExtensions := [ExtendedDefaultRules
                                    ,NoImplicitPrelude
                                    ,NoMonomorphismRestriction
@@ -144,30 +163,36 @@ getUsage = do
 
 main :: IO ()
 main = do
-    cfgFile <- getDefaultConfigFile
-    optsArgs <- processArgs cfgFile <$> getArgs
+    maybeCfgFile <- getModulesFileIfExists
+    optsArgs <- processArgs maybeCfgFile <$> getArgs
     
     -- checkToolkitOrRecompileIt
     either printErrorAndExit go optsArgs
-    where processArgs cfgFile args = compileOpts args >>=
-                                     postOptsProcessing cfgFile
+    where getModulesFileIfExists :: IO (Maybe FilePath)
+          getModulesFileIfExists = do
+                cfgFile <- getModulesFile
+                cfgFileExists <- doesFileExist cfgFile
+                return $ if cfgFileExists then Just cfgFile else Nothing
+          processArgs cfgFile args = do
+                compiledOpts <- compileOpts args
+                postOptsProcessing cfgFile compiledOpts
           printErrorAndExit errors = errorMessage errors >> exitFailure
           errorMessage errs = do
-                        usage <- getUsage
-                        P.putStrLn $ L.unlines (errs ++ ['\n':usage])
+                usage <- getUsage
+                IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
           go (opts,notOpts) = do
-                        toolkit <- if optRecompile opts
-                                      then recompile
-                                      else getToolkitFileAndModuleName
-                        if L.null notOpts || optHelp opts
-                          then getUsage >>= putStr
-                          else runHawk toolkit opts notOpts
+                toolkit <- if optRecompile opts
+                              then recompileConfig
+                              else getConfigFileAndModuleName
+                if L.null notOpts || optHelp opts
+                  then getUsage >>= putStr
+                  else runHawk toolkit opts notOpts
           runHawk t os nos = do
-                        if optEval os
-                          then hawkeval t os (L.head nos)
-                          else do
-                            let file = if L.length nos > 1
-                                         then Just $ nos !! 1
-                                         else Nothing
-                            hawk t os (L.head nos) file
-                        hFlush stdout 
+                if optEval os
+                  then hawkeval t os (L.head nos)
+                  else do
+                    let file = if L.length nos > 1
+                                 then Just $ nos !! 1
+                                 else Nothing
+                    hawk t os (L.head nos) file
+                hFlush stdout 

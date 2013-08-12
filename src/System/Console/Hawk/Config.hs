@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config where
 
 import Control.Applicative ((<$>))
@@ -8,7 +9,10 @@ import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
+import Data.List
+import Data.Maybe (catMaybes)
 import Data.Time
+import Language.Haskell.Exts
 import System.EasyFile
 import System.Exit
 import System.IO
@@ -34,20 +38,17 @@ defaultModules = flip zip (repeat Nothing)
 getConfigDir :: IO FilePath
 getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
 
-getDefaultConfigFile :: IO (Maybe FilePath)
-getDefaultConfigFile = do
-    modFile <- (</> "modules" ) <$> getConfigDir
-    modFileExists <- doesFileExist modFile
-    return (if modFileExists then Just modFile else Nothing)
-
-getToolkitFile :: IO FilePath
-getToolkitFile = (</> "toolkit.hs") <$> getConfigDir
+getConfigFile :: IO FilePath
+getConfigFile = (</> "prelude.hs") <$> getConfigDir
 
 getCacheDir :: IO FilePath
 getCacheDir = (</> "cache") <$> getConfigDir
 
-getToolkitInfosFile :: IO FilePath
-getToolkitInfosFile = (</> "toolkitInfos") <$> getCacheDir
+getConfigInfosFile :: IO FilePath
+getConfigInfosFile = (</> "configInfos") <$> getCacheDir
+
+getModulesFile :: IO FilePath
+getModulesFile = (</> "modules") <$> getCacheDir
 
 
 -- --
@@ -56,70 +57,107 @@ getToolkitInfosFile = (</> "toolkitInfos") <$> getCacheDir
 -- maybe (file name, module name)
 -- TODO: error handling
 
-getToolkitFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
-getToolkitFileAndModuleName = do
+getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
+getConfigFileAndModuleName = do
     dir <- getConfigDir
     dirExists <- doesDirectoryExist dir
     if (not dirExists)
      then createDirectoryIfMissing True dir >> return Nothing
      else do
-        toolkitFile <- getToolkitFile
-        toolkitFileExists <- doesFileExist toolkitFile
-        if toolkitFileExists
+        configFile <- getConfigFile
+        configFileExists <- doesFileExist configFile
+        if configFileExists
          then do
-            toolkitInfosFile <- getToolkitInfosFile
-            toolkitInfosExists <- doesFileExist toolkitInfosFile
-            if toolkitInfosExists
+            configInfosFile <- getConfigInfosFile
+            configInfosExists <- doesFileExist configInfosFile
+            if configInfosExists
               then do
-                  toolkitInfos <- lines <$> readFile toolkitInfosFile
-                  if length toolkitInfos /= 3 -- error
-                    then recompile
+                  configInfos <- lines <$> readFile configInfosFile
+                  if length configInfos /= 3 -- error
+                    then recompileConfig
                     else do
-                        let [fileName,moduleName,rawLastModTime] = toolkitInfos
+                        let [fileName,moduleName,rawLastModTime] = configInfos
                         let withoutExt = dropExtension fileName
                         let hiFile = withoutExt ++ ".hi"
                         hiFileDoesntExist <- not <$> doesFileExist hiFile
                         let objFile = withoutExt ++ ".o"
                         objFileDoesntExist <- not <$> doesFileExist objFile
                         let lastModTime = (read rawLastModTime :: UTCTime)
-                        currModTime <- getModificationTime toolkitFile
+                        currModTime <- getModificationTime configFile
                         if hiFileDoesntExist || objFileDoesntExist 
                                              || currModTime > lastModTime
-                         then recompile
+                         then recompileConfig
                          else return $ Just (fileName,moduleName)
-              else recompile
+              else recompileConfig
          else return Nothing
 
--- TODO: error handling
-recompile :: IO (Maybe (String,String))
-recompile = do
-    clean
-    toolkitFile <- getToolkitFile
-    currTime <- (filter isDigit . show <$> getCurrentTime)
-    configDir <- getCacheDir
-    createDirectoryIfMissing True configDir
-    let compiledFile = configDir </> ("toolkit" ++ currTime)
---    toolkitCode <- addOrGetModule moduleName <$> C8.readFile toolkitFile
-    toolkitCode <- C8.readFile toolkitFile
-    (toolkitFileWithModule,moduleName) <- 
-            case getModuleName toolkitCode of
-                Just moduleName' -> return (toolkitFile,moduleName')
-                Nothing -> 
-                    let randModuleName = C8.pack $ "Hawk.M" ++ currTime
-                        toolkitFileWithModule = compiledFile ++ ".hs"
-                    in do let toolkitCodeWithModule = addModule randModuleName toolkitCode
-                          C8.writeFile toolkitFileWithModule toolkitCodeWithModule
-                          return (toolkitFileWithModule,randModuleName)
-    let err = compiledFile ++ ".ghc.err"
+getOrCreateCacheDir :: IO FilePath
+getOrCreateCacheDir = do
+    cacheDir <- getCacheDir
+    createDirectoryIfMissing True cacheDir
+    return cacheDir
+
+-- retrieve the real configuration file, that is the configuration
+-- file with a module name. If the configuration file doesn't have a module
+-- name than create one and set it in a cache file
+getConfigFileWithModule :: FilePath -- ^ the user config file
+                        -> ByteString -- ^ module name in case the config file
+                                      --   doesn't have it
+                        -> FilePath -- ^ output file, used to put the config file
+                                    --   with the random module
+                        -> IO (FilePath,ByteString)
+getConfigFileWithModule configFile moduleName configFileWithModule = do
+    configCode <- C8.readFile configFile
+    case getModuleName configCode of
+        Just moduleName' -> return (configFile,moduleName')
+        Nothing -> let configCodeWithModule = addModule moduleName
+                                                        configCode
+                   in do
+                      C8.writeFile configFileWithModule configCodeWithModule
+                      return (configFileWithModule,moduleName)
+
+-- add a module to a string representing a Haskell source file
+addModule :: ByteString -- ^ module name
+          -> ByteString -- ^ haskell code
+          -> ByteString -- ^ result
+addModule moduleName code =
+    let strippedCode = C8.dropWhile isSpace code
+        maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
+                        then let (pragma,afterPragma) = BSS.breakOn "#-}" strippedCode
+                             in (Just pragma,C8.drop 3 afterPragma)
+                        else (Nothing,strippedCode)
+        moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
+    in case maybePragma of
+        (Nothing,c) -> C8.unlines [moduleLine,c]
+        (Just pragma,c) -> C8.unlines [pragma,moduleLine,c]
+
+
+-- get the module name from a file if it exists
+getModuleName :: ByteString -> Maybe ByteString
+getModuleName bs = case BSS.indices (C8.pack "module") bs of
+                    [] -> Nothing
+                    (i:_) -> Just
+                           . C8.takeWhile (\c -> isAlphaNum c || c == '.')
+                           . C8.dropWhile isSpace
+                           . C8.drop (i + 6) $ bs
+
+-- compile a haskell file
+-- TODO: this should return the error instead of print it and exit
+compile :: FilePath -- ^ the source file
+        -> FilePath -- ^ the output file
+        -> FilePath -- ^ the directory used for compiler files
+        -> FilePath -- ^ error file
+        -> IO ()
+compile sourceFile outputFile dir err = do
     compExitCode <- bracket (openFile err WriteMode) hClose $ \h ->
             waitForProcess =<< runProcess "ghc" ["--make"
-                                               , toolkitFileWithModule
+                                               , sourceFile
                                                , "-i"
                                                , "-ilib"
                                                , "-fforce-recomp"
                                                , "-v0"
-                                               , "-o",compiledFile]
-                                          (Just configDir)
+                                               , "-o",outputFile]
+                                          (Just dir)
                                           Nothing
                                           Nothing
                                           Nothing
@@ -128,39 +166,71 @@ recompile = do
     when (compExitCode /= ExitSuccess) $ do
         ghcErr <- readFile err
         let msg = unlines $ ["Error detected while loading "
-                          ++ "configuration file: " ++ toolkitFile]
+                          ++ "configuration file: " ++ sourceFile]
                           ++ lines (if null ghcErr
                                       then show compExitCode
                                       else ghcErr)
                           ++ ["","Please check the file for errors."]
-        putStrLn msg
+        putStrLn msg -- TODO: use stderr
         exitFailure
-    lastModTime <- getModificationTime toolkitFile
-    toolkitInfosFile <- getToolkitInfosFile
-    writeFile toolkitInfosFile $ unlines [toolkitFileWithModule
+
+-- create the module file by extracting modules from the given file
+createModulesFile :: FilePath -- ^ the source file from which extract modules
+                  -> IO ()
+createModulesFile sourceFile = do
+    modulesFile <- getModulesFile
+    modules <- parseFileAndGetModules []
+    --print modules
+    C8.writeFile modulesFile (C8.pack $ show modules)
+    where parseFileAndGetModules exts = do
+            result <- parseFileWithExts exts sourceFile
+            case result of
+                ParseOk (Module _ _ _ _ _ importDeclarations _) -> do
+                    return $ concatMap toHintModules importDeclarations
+                ParseFailed srcLog err -> do
+                    if " is not enabled" `isSuffixOf` err
+                        -- if parsing failes because of some extension missing
+                        -- then add that extension and retry
+                        then parseFileAndGetModules ((read . head $ words err):exts)
+                        else do
+                            putStrLn $ concat ["Error parsing file "
+                                             , sourceFile,"\n"
+                                             , show srcLog,": ",err]
+                            exitFailure
+          toHintModules :: ImportDecl -> [(String,Maybe String)]
+          toHintModules importDecl =
+            case importDecl of
+              ImportDecl _ (ModuleName mn) False _ _ Nothing _ -> [(mn,Nothing)]
+              ImportDecl _ (ModuleName mn) False _ _ (Just (ModuleName s)) _ -> 
+                                    [(mn,Nothing),(mn,Just s)]
+              ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
+              ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
+                                    [(mn,Just s)]
+              otherwise -> undefined
+
+
+-- TODO: error handling
+recompileConfig :: IO (Maybe (String,String))
+recompileConfig = do
+    clean
+    configFile <- getConfigFile
+    currTime <- (filter isDigit . show <$> getCurrentTime)
+    cacheDir <- getOrCreateCacheDir
+    let compiledFile = cacheDir </> ("config" ++ currTime)
+    (configFileWithModule,moduleName) <- getConfigFileWithModule 
+                                               configFile
+                                               (C8.pack $ "Hawk.M" ++ currTime)
+                                               (compiledFile ++ ".hs")
+    let err = compiledFile ++ ".ghc.err"
+    compile configFileWithModule compiledFile cacheDir err
+    lastModTime <- getModificationTime configFile
+    configInfosFile <- getConfigInfosFile
+    writeFile configInfosFile $ unlines [configFileWithModule
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
-    return $ Just (toolkitFileWithModule,C8.unpack moduleName)
+    createModulesFile configFile
+    return $ Just (configFileWithModule,C8.unpack moduleName)
     where
-        addModule :: ByteString -> ByteString -> ByteString
-        addModule moduleName code = 
-            let strippedCode = C8.dropWhile isSpace code
-                moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
-            in C8.unlines (if C8.head strippedCode == '{'
-                         then
-                           let afterPragma = C8.dropWhile (/= '}') strippedCode
-                           in [C8.append (C8.takeWhile (/= '}') strippedCode)
-                                         (C8.take 1 afterPragma)
-                              , moduleLine
-                              , C8.drop 1 afterPragma]
-                         else [moduleLine,strippedCode])
-        getModuleName :: ByteString -> Maybe ByteString
-        getModuleName bs = case BSS.indices (C8.pack "module") bs of
-                            [] -> Nothing
-                            (i:_) -> Just
-                                   . C8.takeWhile (\c -> isAlphaNum c || c == '.')
-                                   . C8.dropWhile isSpace
-                                   . C8.drop (i + 6) $ bs
         clean :: IO ()
         clean = do
             dir <- getCacheDir
