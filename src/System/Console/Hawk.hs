@@ -26,7 +26,7 @@ import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
-import System.Environment (getArgs,getProgName)
+import System.Environment (getArgs,getProgName,getExecutablePath)
 import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
@@ -40,10 +40,35 @@ import System.Console.Hawk.Options
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
 readImportsFromFile fp = P.read <$> IO.readFile fp
 
+extendSearchPath :: String -> InterpreterT IO ()
+extendSearchPath newPath = do
+    oldPaths <- get searchPath
+    let newPaths = newPath:oldPaths
+    set [searchPath := newPaths]
+
+-- special hack for cabal-dev:
+-- since the hawk library is only installed in this local folder,
+-- we need to point InterpreterT to its location.
+cabalDevWorkaround :: InterpreterT IO ()
+cabalDevWorkaround = do
+    exe <- lift getExecutablePath
+    when (binSuffix `L.isSuffixOf` exe) $ do
+      let n = L.length exe P.- L.length binSuffix
+          prefix = P.take n exe
+          src = prefix ++ srcSuffix
+      extendSearchPath src
+      -- HACK: interpret the source file.
+      -- won't work when installing from hackage.
+      loadModules ["System.Console.Hawk.Representable"]
+  where
+    binSuffix = "cabal-dev/bin/hawk"
+    srcSuffix = "src"
+
 initInterpreter :: Maybe (String, String)
                 -> Maybe FilePath
                 -> InterpreterT IO ()
 initInterpreter toolkit moduleFile = do
+        cabalDevWorkaround
         set [languageExtensions := [ExtendedDefaultRules
                                    ,NoImplicitPrelude
                                    ,NoMonomorphismRestriction
