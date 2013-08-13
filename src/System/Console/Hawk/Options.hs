@@ -26,7 +26,7 @@ defaultOptions = Options { optDelimiter = Nothing
                          , optMap = False
                          , optEval = False
                          , optHelp = False
-                         , optIgnoreErrors = True
+                         , optIgnoreErrors = False
                          , optModuleFile = Nothing }
 
 delimiter :: ByteString -> ByteString
@@ -44,7 +44,7 @@ options =
  , Option ['m'] ["map"] (NoArg $ \o -> o{ optMap = True}) mapHelp
  , Option ['e'] ["eval"] (NoArg $ \o -> o{ optEval = True}) evalHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
- , Option ['E'] ["errors"] (NoArg ignoreErrorsAction) ignoreErrorsHelp 
+ , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
     where delimiterAction s o = let d = case s of
                                          Nothing -> C8.singleton '\n'
@@ -57,11 +57,8 @@ options =
           evalHelp = "Ignore stdin and the input file and evaluate the "
                   ++ "user expression"
           helpHelp = "Print help and exit"
-          ignoreErrorsAction o = o{ optIgnoreErrors = False}
-          ignoreErrorsHelp = "When set, errors in user code block "
-                          ++ "execution. When is not set,"
-                          ++ " errors don't block the execution and "
-                          ++ "are logged to stderr. Default: False"
+          keepGoingAction o = o{ optIgnoreErrors = True}
+          keepGoingHelp = "Keep going when one line fails."
 
 compileOpts :: [String] -> Either [String] (Options,[String])
 compileOpts argv =
