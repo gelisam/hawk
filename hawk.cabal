@@ -25,7 +25,7 @@ Executable hawk
     Main-is:        Main.hs
     Default-Language: Haskell98
     ghc-options:    -Wall
-    build-depends:  base >= 4 && < 5
+    build-depends:  base >= 4.6 && < 5
                   , bytestring
                   , containers
                   , directory
