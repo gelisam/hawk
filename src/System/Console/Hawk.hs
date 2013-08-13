@@ -158,7 +158,7 @@ hawk toolkit opts expr_str file = do
 getUsage :: IO String
 getUsage = do
     pn <- getProgName
-    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <cmd> [<file>]") 
+    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <expr> [<file>]") 
                        options
 
 main :: IO ()

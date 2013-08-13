@@ -39,7 +39,7 @@ delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
 
 options :: [OptDescr (Options -> Options)]
 options = 
- [ Option ['d'] ["delimiter"] (OptArg delimiterAction "<String>") delimiterHelp
+ [ Option ['d'] ["delimiter"] (OptArg delimiterAction "<delim>") delimiterHelp
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
  , Option ['m'] ["map"] (NoArg $ \o -> o{ optMap = True}) mapHelp
  , Option ['e'] ["eval"] (NoArg $ \o -> o{ optEval = True}) evalHelp
@@ -50,15 +50,14 @@ options =
                                          Nothing -> C8.singleton '\n'
                                          Just rd -> delimiter (C8.pack rd)
                                 in o{ optDelimiter = Just d } 
-          delimiterHelp = "String used as delimiter"
+          delimiterHelp = "line-delimiter, defaults to '\\n'"
           setRecompile o = o{ optRecompile = True}
-          recompileHelp = "Recompile ~/.hawk/prelude.hs even if it didn't change."
-          mapHelp = "Map a command over each string separated by the delimiter"
-          evalHelp = "Ignore stdin and the input file and evaluate the "
-                  ++ "user expression"
-          helpHelp = "Print help and exit"
+          recompileHelp = "recompile ~/.hawk/prelude.hs\neven if it did not change"
+          mapHelp = "map <expr> over each line"
+          evalHelp = "evaluate the value of <expr>"
+          helpHelp = "print this help message and exit"
           keepGoingAction o = o{ optIgnoreErrors = True}
-          keepGoingHelp = "Keep going when one line fails."
+          keepGoingHelp = "keep going when one line fails"
 
 compileOpts :: [String] -> Either [String] (Options,[String])
 compileOpts argv =
@@ -71,7 +70,7 @@ postOptsProcessing :: Maybe String
                    -> Either [String] (Options,[String])
 postOptsProcessing defaultConfigFile (opts,args) =
     if optHelp opts == False && length args < 1
-      then Left ["Error: Missing cmd to evaluate"]
+      then Left ["Error: Missing expression"]
       else solveAmbiguities (opts,args) >>= Right . first process
     where
 --        errorArg = Left [
