@@ -52,7 +52,7 @@ options =
                                 in o{ optDelimiter = Just d } 
           delimiterHelp = "String used as delimiter"
           setRecompile o = o{ optRecompile = True}
-          recompileHelp = "Recompile prelude.hs"
+          recompileHelp = "Recompile ~/.hawk/prelude.hs even if it didn't change."
           mapHelp = "Map a command over each string separated by the delimiter"
           evalHelp = "Ignore stdin and the input file and evaluate the "
                   ++ "user expression"
