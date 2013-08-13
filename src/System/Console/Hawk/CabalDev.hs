@@ -13,42 +13,45 @@ import Language.Haskell.Interpreter (InterpreterT, InterpreterError, runInterpre
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
 import System.Directory (getDirectoryContents)
 import System.Environment (getExecutablePath)
+import System.FilePath (pathSeparator, splitFileName)
 import Text.Printf (printf)
 
 
+-- convert slashes to backslashes if needed
+path :: String -> String
+path = map replaceSeparator where
+  replaceSeparator '/' = pathSeparator
+  replaceSeparator x = x
+
 -- if hawk has been compiled by cabal-dev,
--- its binary has been placed in a cabal-dev folder
-isCabalDev :: IO Bool
-isCabalDev = do
-    exe <- getExecutablePath
-    return $ "cabal-dev/bin/hawk" `isSuffixOf` exe
+-- its binary has been placed in a cabal-dev folder.
+-- 
+-- return something like (Just "/.../cabal-dev")
+cabalDevDir :: IO (Maybe String)
+cabalDevDir = do
+    (dir, _) <- splitFileName <$> getExecutablePath
+    if path "cabal-dev/bin/" `isSuffixOf` dir
+      then return $ Just $ take (length dir - length "/bin/") dir
+      else return $ Nothing
 
 -- something like "packages-7.6.3.conf"
 isPackageFile :: String -> Bool
 isPackageFile xs = "packages-" `isPrefixOf` xs && ".conf" `isSuffixOf` xs
 
--- > cabalDevDir "/.../cabal-dev/bin/hawk"
--- "/.../cabal-dev"
-cabalDevDir :: String -> String
-cabalDevDir exe = take (length exe - length suffix) exe where
-  suffix :: String
-  suffix = "/bin/hawk"
-
 -- something like "/.../cabal-dev/package-7.6.3.conf"
-cabalDevPackageFile :: IO String
-cabalDevPackageFile = do
-    dir <- cabalDevDir <$> getExecutablePath
+cabalDevPackageFile :: String -> IO String
+cabalDevPackageFile dir = do
     files <- getDirectoryContents dir
     let [file] = filter isPackageFile files
-    return $ printf "%s/%s" dir file
+    return $ printf (path "%s/%s") dir file
 
 -- a version of runInterpreter which can load libraries
 -- installed along hawk's cabal-dev folder, if applicable.
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
 runHawkInterpreter mx = do
-    cabalDev <- isCabalDev
-    if cabalDev
-      then do packageFile <- cabalDevPackageFile
-              let arg = printf "-package-db %s" packageFile
-              unsafeRunInterpreterWithArgs [arg] mx
-      else runInterpreter mx
+    cabalDev <- cabalDevDir
+    case cabalDev of
+      Nothing -> runInterpreter mx
+      Just dir -> do packageFile <- cabalDevPackageFile dir
+                     let arg = printf "-package-db %s" packageFile
+                     unsafeRunInterpreterWithArgs [arg] mx
