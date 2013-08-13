@@ -24,18 +24,15 @@ import Data.String
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
-import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
-import Prelude (Num (..))
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
-import System.Directory (getDirectoryContents)
-import System.Environment (getArgs,getProgName,getExecutablePath)
+import System.Environment (getArgs,getProgName)
 import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
-import Text.Printf (printf)
 
+import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
 import System.Console.Hawk.Options
 
@@ -43,44 +40,6 @@ import System.Console.Hawk.Options
 -- missing error handling!!
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
 readImportsFromFile fp = P.read <$> IO.readFile fp
-
--- if hawk has been compiled by cabal-dev,
--- its binary has been placed in a cabal-dev folder,
--- along with its dependencies, including the "hawk" library.
-isCabalDev :: IO Bool
-isCabalDev = do
-    exe <- getExecutablePath
-    return $ "cabal-dev/bin/hawk" `L.isSuffixOf` exe
-
--- something like "packages-7.6.3.conf"
-isPackageFile :: String -> Bool
-isPackageFile xs = "packages-" `L.isPrefixOf` xs && ".conf" `L.isSuffixOf` xs
-
--- > cabalDevDir "/.../cabal-dev/bin/hawk"
--- "/.../cabal-dev"
-cabalDevDir :: String -> String
-cabalDevDir exe = P.take (P.length exe - P.length suffix) exe where
-  suffix :: String
-  suffix = "/bin/hawk"
-
--- something like "/.../cabal-dev/package-7.6.3.conf"
-cabalDevPackageFile :: IO String
-cabalDevPackageFile = do
-    dir <- cabalDevDir <$> getExecutablePath
-    files <- getDirectoryContents dir
-    let [file] = P.filter isPackageFile files
-    return $ printf "%s/%s" dir file
-
--- a version of runInterpreter which can load libraries
--- installed along hawk's cabal-dev folder, if applicable.
-runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
-runHawkInterpreter mx = do
-    cabalDev <- isCabalDev
-    if cabalDev
-      then do packageFile <- cabalDevPackageFile
-              let arg = printf "-package-db %s" packageFile
-              unsafeRunInterpreterWithArgs [arg] mx
-      else runInterpreter mx
 
 initInterpreter :: Maybe (String, String)
                 -> Maybe FilePath
