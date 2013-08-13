@@ -3,7 +3,7 @@ module System.Console.Hawk.Config where
 
 import Control.Applicative ((<$>))
 import Control.Exception (bracket)
-import Control.Monad (when)
+import Control.Monad (when, unless)
 
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as C8
@@ -66,30 +66,29 @@ getConfigFileAndModuleName = do
      else do
         configFile <- getConfigFile
         configFileExists <- doesFileExist configFile
-        if configFileExists
-         then do
-            configInfosFile <- getConfigInfosFile
-            configInfosExists <- doesFileExist configInfosFile
-            if configInfosExists
-              then do
-                  configInfos <- lines <$> readFile configInfosFile
-                  if length configInfos /= 3 -- error
-                    then recompileConfig
-                    else do
-                        let [fileName,moduleName,rawLastModTime] = configInfos
-                        let withoutExt = dropExtension fileName
-                        let hiFile = withoutExt ++ ".hi"
-                        hiFileDoesntExist <- not <$> doesFileExist hiFile
-                        let objFile = withoutExt ++ ".o"
-                        objFileDoesntExist <- not <$> doesFileExist objFile
-                        let lastModTime = (read rawLastModTime :: UTCTime)
-                        currModTime <- getModificationTime configFile
-                        if hiFileDoesntExist || objFileDoesntExist 
-                                             || currModTime > lastModTime
-                         then recompileConfig
-                         else return $ Just (fileName,moduleName)
-              else recompileConfig
-         else return Nothing
+        unless configFileExists $ do
+          writeFile configFile "import qualified Prelude as P\n"
+        configInfosFile <- getConfigInfosFile
+        configInfosExists <- doesFileExist configInfosFile
+        if configInfosExists
+          then do
+              configInfos <- lines <$> readFile configInfosFile
+              if length configInfos /= 3 -- error
+                then recompileConfig
+                else do
+                    let [fileName,moduleName,rawLastModTime] = configInfos
+                    let withoutExt = dropExtension fileName
+                    let hiFile = withoutExt ++ ".hi"
+                    hiFileDoesntExist <- not <$> doesFileExist hiFile
+                    let objFile = withoutExt ++ ".o"
+                    objFileDoesntExist <- not <$> doesFileExist objFile
+                    let lastModTime = (read rawLastModTime :: UTCTime)
+                    currModTime <- getModificationTime configFile
+                    if hiFileDoesntExist || objFileDoesntExist 
+                                         || currModTime > lastModTime
+                     then recompileConfig
+                     else return $ Just (fileName,moduleName)
+          else recompileConfig
 
 getOrCreateCacheDir :: IO FilePath
 getOrCreateCacheDir = do
