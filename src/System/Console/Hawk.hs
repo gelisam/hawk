@@ -31,6 +31,7 @@ import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
+import Text.Printf (printf)
 
 import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
@@ -87,7 +88,7 @@ hawkeval toolkit opts expr_str = do
     maybe_f <- runHawkInterpreter $ do
         initInterpreter toolkit (optModuleFile opts)
         let ignoreErrors = P.show $ optIgnoreErrors opts
-        interpret ("printRows " ++ ignoreErrors ++ "(" ++ expr_str++ ")")
+        interpret (printf "printRows %s (%s)" ignoreErrors expr_str)
                   (as :: IO ())
     case maybe_f of
         Left ie -> printErrors ie
@@ -129,7 +130,9 @@ hawk toolkit opts expr_str file = do
           dropLastIfEmpty [] = []
           dropLastIfEmpty (x:[]) = if LB.null x then [] else [x]
           dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
-          mkF pf ie exp = unlines ["((",pf,ie,") . (",exp,"))"]
+          
+          mkF :: String -> String -> String -> String
+          mkF = printf "((%s %s) . (%s))"
 
 getUsage :: IO String
 getUsage = do
