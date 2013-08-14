@@ -105,34 +105,46 @@ hawk toolkit opts expr_str file = do
 
         initInterpreter toolkit (optModuleFile opts)
         
-        let ignoreErrors = P.show $ optIgnoreErrors opts
+        let ignoreErrors = optIgnoreErrors opts
 
         -- eval program based on the existence of a delimiter
         case (optDelimiter opts,optMap opts) of
-            (Nothing,_) -> interpret (mkF "printRows" ignoreErrors expr_str)
-                                     (as :: LB.ByteString -> IO ())
-            (Just d,False) -> do
-                f <- interpret (mkF "printRows" ignoreErrors expr_str)
-                               (as :: [LB.ByteString] -> IO ())
+            (Nothing,_) ->
+                interpret (runExpr [printRows ignoreErrors, expr_str])
+                          (as :: IO ())
+            (Just d,False) ->
+                interpret (runExpr [printRows ignoreErrors, expr_str, parseRows d])
+                          (as :: IO ())
                 -- TODO: avoid keep everything in buffer, repr' should output
                 -- as soon as possible (for example each line)
-                return $ f . dropLastIfEmpty . S.split d
-            (Just d,True) -> do
-                f <- interpret (mkF "printRow" ignoreErrors expr_str)
-                               (as :: LB.ByteString -> IO ())
-                return $ mapM_ f . dropLastIfEmpty . S.split d
+            (Just d,True) ->
+                interpret (runExprs [runMap [printRow ignoreErrors, expr_str]
+                                    ,parseRows d])
+                          (as :: IO ())
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
-        Right f -> maybe LB.getContents LB.readFile file >>= f
+        Right f -> f
     where 
-          dropLastIfEmpty :: [LB.ByteString]
-                          -> [LB.ByteString]
-          dropLastIfEmpty [] = []
-          dropLastIfEmpty (x:[]) = if LB.null x then [] else [x]
-          dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
+          compose :: [String] -> String
+          compose = L.intercalate "." . P.map (printf "(%s)")
           
-          mkF :: String -> String -> String -> String
-          mkF = printf "((%s %s) . (%s))"
+          runExprs :: [String] -> String
+          runExprs = printf "(runExprs (%s))" . compose
+          
+          runExpr :: [String] -> String
+          runExpr = printf "(runExpr (%s))" . compose
+          
+          runMap :: [String] -> String
+          runMap = printf "(map (%s))" . compose
+          
+          printRow :: Bool -> String
+          printRow b = printf "(printRow %s)" (P.show b)
+          
+          printRows :: Bool -> String
+          printRows b = printf "(printRows %s)" (P.show b)
+          
+          parseRows :: a -> String
+          parseRows d = "parseRows"
 
 getUsage :: IO String
 getUsage = do
