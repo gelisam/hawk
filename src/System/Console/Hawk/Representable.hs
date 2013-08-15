@@ -9,6 +9,9 @@ module System.Console.Hawk.Representable (
   , Rows (repr)
   , printRows
   , printRow
+  , parseRows
+  , runExpr
+  , runExprs
 
 ) where
 
@@ -26,6 +29,24 @@ import qualified System.IO as IO
 
 handleErrors :: IO () -> IO ()
 handleErrors = handle (\(e :: SomeException) -> IO.hPrint IO.stderr e)
+
+dropLastIfEmpty :: [C8.ByteString] -> [C8.ByteString]
+dropLastIfEmpty [] = []
+dropLastIfEmpty (x:[]) = if C8.null x then [] else [x]
+dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
+
+parseRows :: C8.ByteString -> [C8.ByteString]
+parseRows = dropLastIfEmpty . C8.split '\n'
+
+runExpr :: (C8.ByteString -> IO ()) -> IO ()
+runExpr f = do
+    stdin <- C8.getContents
+    f stdin
+
+runExprs :: (C8.ByteString -> [IO ()]) -> IO ()
+runExprs f = do
+    stdin <- C8.getContents
+    sequence_ (f stdin)
 
 -- ------------------------
 -- Rows class and instances
