@@ -10,7 +10,6 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.List
-import Data.Maybe (catMaybes)
 import Data.Time
 import Language.Haskell.Exts
 import System.EasyFile
@@ -57,8 +56,8 @@ getModulesFile = (</> "modules") <$> getCacheDir
 -- maybe (file name, module name)
 -- TODO: error handling
 
-getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
-getConfigFileAndModuleName = do
+recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
+recompileConfigIfNeeded = do
     dir <- getConfigDir
     dirExists <- doesDirectoryExist dir
     unless dirExists $
@@ -86,7 +85,7 @@ getConfigFileAndModuleName = do
                 if hiFileDoesntExist || objFileDoesntExist 
                                      || currModTime > lastModTime
                  then recompileConfig
-                 else return $ Just (fileName,moduleName)
+                 else return (fileName,moduleName)
       else recompileConfig
 
 getOrCreateCacheDir :: IO FilePath
@@ -160,7 +159,6 @@ compile sourceFile outputFile dir err = do
                                           Nothing
                                           Nothing
                                           (Just h)
-    
     when (compExitCode /= ExitSuccess) $ do
         ghcErr <- readFile err
         let msg = unlines $ ["Error detected while loading "
@@ -204,11 +202,11 @@ createModulesFile sourceFile = do
               ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
               ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
                                     [(mn,Just s)]
-              otherwise -> undefined
+              _ -> undefined
 
 
 -- TODO: error handling
-recompileConfig :: IO (Maybe (String,String))
+recompileConfig :: IO (String,String)
 recompileConfig = do
     clean
     configFile <- getConfigFile
@@ -227,7 +225,7 @@ recompileConfig = do
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
     createModulesFile configFile
-    return $ Just (configFileWithModule,C8.unpack moduleName)
+    return (configFileWithModule,C8.unpack moduleName)
     where
         clean :: IO ()
         clean = do

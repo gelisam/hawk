@@ -41,23 +41,19 @@ import System.Console.Hawk.Options
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
 readImportsFromFile fp = P.read <$> IO.readFile fp
 
-initInterpreter :: Maybe (String, String)
+initInterpreter :: (String, String) -- ^ config file and module nme
                 -> Maybe FilePath
                 -> InterpreterT IO ()
-initInterpreter toolkit moduleFile = do
+initInterpreter config moduleFile = do
         set [languageExtensions := [ExtendedDefaultRules
                                    ,NoImplicitPrelude
                                    ,NoMonomorphismRestriction
                                    ,OverloadedStrings]]
 
-        -- load the toolkit
-        maybe (return ()) (loadModules . (:[]) . P.fst) toolkit
+        -- load the config file
+        loadModules [P.fst config]
 
-        -- load imports
-        -- TODO: add option to avoit loading default modules
---        setImportsQ $ defaultModules ++ maybe [] ((:[]) . (,Nothing) . P.snd) toolkit
-        let modules = defaultModules 
-                   ++ maybe [] ((:[]) . (,Nothing) . P.snd) toolkit
+        let modules = (P.snd config,Nothing):defaultModules 
 
         maybe (setImportsQ modules)
               (setImportsQFromFile modules)
@@ -79,13 +75,27 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> print e
 
-hawkeval :: Maybe (String,String) -- ^ The toolkit file and module name
-         -> Options               -- ^ Program options
-         -> String                -- ^ The user expression to evaluate
+runHawk :: (String,String)
+        -> Options
+        -> [String]
+        -> IO ()
+runHawk config os nos = do
+      if optEval os
+        then hawkeval config os (L.head nos)
+        else do
+          let file = if L.length nos > 1
+                       then Just $ nos !! 1
+                       else Nothing
+          hawk config os (L.head nos) file
+      hFlush stdout 
+
+hawkeval :: (String,String) -- ^ The config file and module name
+         -> Options          -- ^ Program options
+         -> String           -- ^ The user expression to evaluate
          -> IO ()
-hawkeval toolkit opts expr_str = do
+hawkeval config opts expr_str = do
     maybe_f <- runHawkInterpreter $ do
-        initInterpreter toolkit (optModuleFile opts)
+        initInterpreter config (optModuleFile opts)
         let ignoreErrors = P.show $ optIgnoreErrors opts
         interpret ("printRows " ++ ignoreErrors ++ "(" ++ expr_str++ ")")
                   (as :: IO ())
@@ -94,15 +104,15 @@ hawkeval toolkit opts expr_str = do
         Right f -> f
 
 -- TODO missing error handling!
-hawk :: Maybe (String,String) -- ^ The toolkit file and module name
+hawk :: (String,String) -- ^ The config file and module name
      -> Options               -- ^ Program options
      -> String                -- ^ The user expression to evaluate
      -> Maybe FilePath        -- ^ The input file
      -> IO ()
-hawk toolkit opts expr_str file = do
+hawk config opts expr_str file = do
     maybe_f <- runHawkInterpreter $ do
 
-        initInterpreter toolkit (optModuleFile opts)
+        initInterpreter config (optModuleFile opts)
         
         let ignoreErrors = P.show $ optIgnoreErrors opts
 
@@ -142,7 +152,6 @@ main = do
     maybeCfgFile <- getModulesFileIfExists
     optsArgs <- processArgs maybeCfgFile <$> getArgs
     
-    -- checkToolkitOrRecompileIt
     either printErrorAndExit go optsArgs
     where getModulesFileIfExists :: IO (Maybe FilePath)
           getModulesFileIfExists = do
@@ -157,18 +166,9 @@ main = do
                 usage <- getUsage
                 IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
           go (opts,notOpts) = do
-                toolkit <- if optRecompile opts
+                config <- if optRecompile opts
                               then recompileConfig
-                              else getConfigFileAndModuleName
+                              else recompileConfigIfNeeded
                 if L.null notOpts || optHelp opts
                   then getUsage >>= putStr
-                  else runHawk toolkit opts notOpts
-          runHawk t os nos = do
-                if optEval os
-                  then hawkeval t os (L.head nos)
-                  else do
-                    let file = if L.length nos > 1
-                                 then Just $ nos !! 1
-                                 else Nothing
-                    hawk t os (L.head nos) file
-                hFlush stdout 
+                  else runHawk config opts notOpts
