@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module System.Console.Hawk.Config where
+module System.Console.Hawk.Config (
+      defaultModules
+    , getConfigFileAndModuleName
+    , getModulesFile
+    , recompileConfig
+) where
 
 import Control.Applicative ((<$>))
 import Control.Exception (bracket)
@@ -16,6 +21,7 @@ import Language.Haskell.Exts
 import System.EasyFile
 import System.Exit
 import System.IO
+import System.Lock.FLock
 import System.Process
 
 
@@ -41,6 +47,13 @@ getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
 getConfigFile :: IO FilePath
 getConfigFile = (</> "prelude.hs") <$> getConfigDir
 
+getLockFile :: IO FilePath
+getLockFile = do
+    lockFile <- (</> "lock") <$> getConfigDir
+    exists <- doesFileExist lockFile
+    unless exists $ C8.writeFile lockFile ""
+    return lockFile
+
 getCacheDir :: IO FilePath
 getCacheDir = (</> "cache") <$> getConfigDir
 
@@ -59,36 +72,38 @@ getModulesFile = (</> "modules") <$> getCacheDir
 
 getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
 getConfigFileAndModuleName = do
-    dir <- getConfigDir
-    dirExists <- doesDirectoryExist dir
-    if (not dirExists)
-     then createDirectoryIfMissing True dir >> return Nothing
-     else do
-        configFile <- getConfigFile
-        configFileExists <- doesFileExist configFile
-        unless configFileExists $ do
-          writeFile configFile "import qualified Prelude as P\n"
-        configInfosFile <- getConfigInfosFile
-        configInfosExists <- doesFileExist configInfosFile
-        if configInfosExists
-          then do
-              configInfos <- lines <$> readFile configInfosFile
-              if length configInfos /= 3 -- error
-                then recompileConfig
-                else do
-                    let [fileName,moduleName,rawLastModTime] = configInfos
-                    let withoutExt = dropExtension fileName
-                    let hiFile = withoutExt ++ ".hi"
-                    hiFileDoesntExist <- not <$> doesFileExist hiFile
-                    let objFile = withoutExt ++ ".o"
-                    objFileDoesntExist <- not <$> doesFileExist objFile
-                    let lastModTime = (read rawLastModTime :: UTCTime)
-                    currModTime <- getModificationTime configFile
-                    if hiFileDoesntExist || objFileDoesntExist 
-                                         || currModTime > lastModTime
-                     then recompileConfig
-                     else return $ Just (fileName,moduleName)
-          else recompileConfig
+    lockFile <- getLockFile 
+    withLock lockFile Exclusive Block $ do
+        dir <- getConfigDir
+        dirExists <- doesDirectoryExist dir
+        if (not dirExists)
+         then createDirectoryIfMissing True dir >> return Nothing
+         else do
+            configFile <- getConfigFile
+            configFileExists <- doesFileExist configFile
+            unless configFileExists $ do
+              writeFile configFile "import qualified Prelude as P\n"
+            configInfosFile <- getConfigInfosFile
+            configInfosExists <- doesFileExist configInfosFile
+            if configInfosExists
+              then do
+                  configInfos <- lines <$> readFile configInfosFile
+                  if length configInfos /= 3 -- error
+                    then recompileConfig
+                    else do
+                        let [fileName,moduleName,rawLastModTime] = configInfos
+                        let withoutExt = dropExtension fileName
+                        let hiFile = withoutExt ++ ".hi"
+                        hiFileDoesntExist <- not <$> doesFileExist hiFile
+                        let objFile = withoutExt ++ ".o"
+                        objFileDoesntExist <- not <$> doesFileExist objFile
+                        let lastModTime = (read rawLastModTime :: UTCTime)
+                        currModTime <- getModificationTime configFile
+                        if hiFileDoesntExist || objFileDoesntExist 
+                                             || currModTime > lastModTime
+                         then recompileConfig
+                         else return $ Just (fileName,moduleName)
+              else recompileConfig
 
 getOrCreateCacheDir :: IO FilePath
 getOrCreateCacheDir = do

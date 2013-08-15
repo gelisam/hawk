@@ -26,16 +26,25 @@ import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
+import System.Directory (getTemporaryDirectory)
 import System.Environment (getArgs,getProgName)
-import System.EasyFile (doesFileExist)
+import System.EasyFile ((</>),doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
+import System.Lock.FLock
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
 
 import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
 import System.Console.Hawk.Options
 
+
+getInterpreterLockFile :: IO FilePath
+getInterpreterLockFile = do
+    lockFile <- (</> "hawk.lock") <$> getTemporaryDirectory
+    exists <- doesFileExist lockFile
+    unless exists $ IO.writeFile lockFile ""
+    return lockFile
 
 -- missing error handling!!
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
@@ -79,12 +88,18 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> print e
 
+runLockedHawkInterpreter :: forall a . InterpreterT IO a
+                            -> IO (Either InterpreterError a)
+runLockedHawkInterpreter i = do
+    lockFile <- getInterpreterLockFile
+    withLock lockFile Exclusive Block $ runHawkInterpreter i
+
 hawkeval :: Maybe (String,String) -- ^ The toolkit file and module name
          -> Options               -- ^ Program options
          -> String                -- ^ The user expression to evaluate
          -> IO ()
 hawkeval toolkit opts expr_str = do
-    maybe_f <- runHawkInterpreter $ do
+    maybe_f <- runLockedHawkInterpreter $ do
         initInterpreter toolkit (optModuleFile opts)
         let ignoreErrors = P.show $ optIgnoreErrors opts
         interpret ("printRows " ++ ignoreErrors ++ "(" ++ expr_str++ ")")
@@ -100,7 +115,7 @@ hawk :: Maybe (String,String) -- ^ The toolkit file and module name
      -> Maybe FilePath        -- ^ The input file
      -> IO ()
 hawk toolkit opts expr_str file = do
-    maybe_f <- runHawkInterpreter $ do
+    maybe_f <- runLockedHawkInterpreter $ do
 
         initInterpreter toolkit (optModuleFile opts)
         
