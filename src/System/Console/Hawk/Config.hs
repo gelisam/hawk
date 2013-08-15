@@ -61,34 +61,33 @@ getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,Mo
 getConfigFileAndModuleName = do
     dir <- getConfigDir
     dirExists <- doesDirectoryExist dir
-    if (not dirExists)
-     then createDirectoryIfMissing True dir >> return Nothing
-     else do
-        configFile <- getConfigFile
-        configFileExists <- doesFileExist configFile
-        unless configFileExists $ do
-          writeFile configFile "import qualified Prelude as P\n"
-        configInfosFile <- getConfigInfosFile
-        configInfosExists <- doesFileExist configInfosFile
-        if configInfosExists
-          then do
-              configInfos <- lines <$> readFile configInfosFile
-              if length configInfos /= 3 -- error
-                then recompileConfig
-                else do
-                    let [fileName,moduleName,rawLastModTime] = configInfos
-                    let withoutExt = dropExtension fileName
-                    let hiFile = withoutExt ++ ".hi"
-                    hiFileDoesntExist <- not <$> doesFileExist hiFile
-                    let objFile = withoutExt ++ ".o"
-                    objFileDoesntExist <- not <$> doesFileExist objFile
-                    let lastModTime = (read rawLastModTime :: UTCTime)
-                    currModTime <- getModificationTime configFile
-                    if hiFileDoesntExist || objFileDoesntExist 
-                                         || currModTime > lastModTime
-                     then recompileConfig
-                     else return $ Just (fileName,moduleName)
-          else recompileConfig
+    unless dirExists $
+        createDirectoryIfMissing True dir
+    configFile <- getConfigFile
+    configFileExists <- doesFileExist configFile
+    unless configFileExists $
+        writeFile configFile "import qualified Prelude as P\n"
+    configInfosFile <- getConfigInfosFile
+    configInfosExists <- doesFileExist configInfosFile
+    if configInfosExists
+      then do
+          configInfos <- lines <$> readFile configInfosFile
+          if length configInfos /= 3 -- error
+            then recompileConfig
+            else do
+                let [fileName,moduleName,rawLastModTime] = configInfos
+                let withoutExt = dropExtension fileName
+                let hiFile = withoutExt ++ ".hi"
+                hiFileDoesntExist <- not <$> doesFileExist hiFile
+                let objFile = withoutExt ++ ".o"
+                objFileDoesntExist <- not <$> doesFileExist objFile
+                let lastModTime = (read rawLastModTime :: UTCTime)
+                currModTime <- getModificationTime configFile
+                if hiFileDoesntExist || objFileDoesntExist 
+                                     || currModTime > lastModTime
+                 then recompileConfig
+                 else return $ Just (fileName,moduleName)
+      else recompileConfig
 
 getOrCreateCacheDir :: IO FilePath
 getOrCreateCacheDir = do
