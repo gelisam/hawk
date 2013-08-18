@@ -7,6 +7,7 @@ module System.Console.Hawk.Representable (
 
     Row  (repr')
   , Rows (repr)
+  , listMap
   , printRows
   , printRow
   , parseRows
@@ -34,6 +35,9 @@ dropLastIfEmpty :: [C8.ByteString] -> [C8.ByteString]
 dropLastIfEmpty [] = []
 dropLastIfEmpty (x:[]) = if C8.null x then [] else [x]
 dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
+
+listMap :: (a -> b) -> [a] -> [b]
+listMap = L.map
 
 parseRows :: C8.ByteString -> [C8.ByteString]
 parseRows = dropLastIfEmpty . C8.split '\n'

@@ -52,13 +52,20 @@ Test-suite reference
   Hs-Source-Dirs:       src,tests
   Main-Is:              RunTests.hs
   Type:                 exitcode-stdio-1.0
-
-  Build-Depends:        base, bytestring, containers
   Ghc-Options:          -Wall
-  Build-Depends:        bytestring
+  Build-Depends:        base
+                      , bytestring
+                      , containers
+                      , directory
                       , test-framework
                       , test-framework-hunit
+                      , temporary
                       , hspec
                       , HUnit
-                      , QuickCheck
+                      , easy-file
+                      , haskell-src-exts
+                      , filepath
+                      , process
+                      , stringsearch
+                      , time
   Default-Language: Haskell98

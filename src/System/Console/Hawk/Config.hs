@@ -19,20 +19,8 @@ import System.Process
 
 
 defaultModules :: [(String,Maybe String)]
-defaultModules = flip zip (repeat Nothing) 
-                       [ "System.Console.Hawk.Representable"
-                       , "GHC.Num"
-                       , "GHC.Real"
-                       , "GHC.Types"
-                       , "Data.ByteString.Lazy.Char8"
-                       , "Data.Bool"
-                       , "Data.Char"
-                       , "Data.Either"
-                       , "Data.Eq"
-                       , "Data.Function"
-                       , "Data.Int"
-                       , "Data.Maybe"
-                       , "Data.Ord"]
+defaultModules = [("System.Console.Hawk.Representable",
+                   Just "System.Console.Hawk.Representable")]
 
 getConfigDir :: IO FilePath
 getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
@@ -65,7 +53,7 @@ recompileConfigIfNeeded = do
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
-        writeFile configFile "import qualified Prelude as P\n"
+        writeFile configFile "import Prelude"
     configInfosFile <- getConfigInfosFile
     configInfosExists <- doesFileExist configInfosFile
     if configInfosExists
@@ -175,10 +163,15 @@ createModulesFile :: FilePath -- ^ the source file from which extract modules
                   -> IO ()
 createModulesFile sourceFile = do
     modulesFile <- getModulesFile
-    modules <- parseFileAndGetModules []
+    modules <- parseFileAndGetModules sourceFile []
     --print modules
     C8.writeFile modulesFile (C8.pack $ show modules)
-    where parseFileAndGetModules exts = do
+
+parseFileAndGetModules :: FilePath
+                       -> [Extension]
+                       -> IO [(String,Maybe String)]
+parseFileAndGetModules sourceFile exts = go exts
+    where go exts = do
             result <- parseFileWithExts exts sourceFile
             case result of
                 ParseOk (Module _ _ _ _ _ importDeclarations _) -> do
@@ -187,7 +180,7 @@ createModulesFile sourceFile = do
                     if " is not enabled" `isSuffixOf` err
                         -- if parsing failes because of some extension missing
                         -- then add that extension and retry
-                        then parseFileAndGetModules ((read . head $ words err):exts)
+                        then go ((read . head $ words err):exts)
                         else do
                             putStrLn $ concat ["Error parsing file "
                                              , sourceFile,"\n"

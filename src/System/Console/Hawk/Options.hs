@@ -65,7 +65,7 @@ compileOpts argv =
       (os,nos,[]) -> Right (L.foldl (.) id os defaultOptions, nos)
       (_,_,errs) -> Left errs
 
-postOptsProcessing :: Maybe String
+postOptsProcessing :: String
                    -> (Options,[String])
                    -> Either [String] (Options,[String])
 postOptsProcessing defaultConfigFile (opts,args) =
@@ -87,7 +87,7 @@ postOptsProcessing defaultConfigFile (opts,args) =
                       then Left ["Cannot set both -e and -m/-d options"]
                       else Right (os,as)
         optModuleFileProcess os = if isNothing (optModuleFile os)
-                                    then os{ optModuleFile = defaultConfigFile}
+                                    then os{ optModuleFile = Just defaultConfigFile}
                                     else os
         optMapProcess os = if optMap os && isNothing (optDelimiter os)
                               then os{ optDelimiter = Just (C8.singleton '\n')}

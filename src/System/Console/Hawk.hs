@@ -98,7 +98,8 @@ hawkeval config opts expr_str = do
     maybe_f <- runHawkInterpreter $ do
         initInterpreter config (optModuleFile opts)
         let ignoreErrors = P.show $ optIgnoreErrors opts
-        interpret (printf "printRows %s (%s)" ignoreErrors expr_str)
+        interpret (printf "System.Console.Hawk.Representable.printRows %s (%s)"
+                   ignoreErrors expr_str)
                   (as :: IO ())
     case maybe_f of
         Left ie -> printErrors ie
@@ -139,22 +140,27 @@ hawk config opts expr_str file = do
           compose = L.intercalate "." . P.map (printf "(%s)")
           
           runExprs :: [String] -> String
-          runExprs = printf "(runExprs (%s))" . compose
+          runExprs = printf "(System.Console.Hawk.Representable.runExprs (%s))"
+                     . compose
           
           runExpr :: [String] -> String
-          runExpr = printf "(runExpr (%s))" . compose
+          runExpr = printf "(System.Console.Hawk.Representable.runExpr (%s))"
+                    . compose
           
           runMap :: [String] -> String
-          runMap = printf "(map (%s))" . compose
+          runMap = printf "(System.Console.Hawk.Representable.listMap (%s))"
+                   . compose
           
           printRow :: Bool -> String
-          printRow b = printf "(printRow %s)" (P.show b)
+          printRow b = printf "(System.Console.Hawk.Representable.printRow %s)"
+                       (P.show b)
           
           printRows :: Bool -> String
-          printRows b = printf "(printRows %s)" (P.show b)
+          printRows b = printf "(System.Console.Hawk.Representable.printRows %s)"
+                        (P.show b)
           
           parseRows :: a -> String
-          parseRows d = "parseRows"
+          parseRows d = "System.Console.Hawk.Representable.parseRows"
 
 getUsage :: IO String
 getUsage = do
@@ -164,16 +170,10 @@ getUsage = do
 
 main :: IO ()
 main = do
-    maybeCfgFile <- getModulesFileIfExists
-    optsArgs <- processArgs maybeCfgFile <$> getArgs
-    
+    moduleFile <- getModulesFile
+    optsArgs <- processArgs moduleFile <$> getArgs
     either printErrorAndExit go optsArgs
-    where getModulesFileIfExists :: IO (Maybe FilePath)
-          getModulesFileIfExists = do
-                cfgFile <- getModulesFile
-                cfgFileExists <- doesFileExist cfgFile
-                return $ if cfgFileExists then Just cfgFile else Nothing
-          processArgs cfgFile args = do
+    where processArgs cfgFile args = do
                 compiledOpts <- compileOpts args
                 postOptsProcessing cfgFile compiledOpts
           printErrorAndExit errors = errorMessage errors >> exitFailure
