@@ -39,10 +39,6 @@ import System.Console.Hawk.Config
 import System.Console.Hawk.Options
 
 
--- missing error handling!!
-readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
-readImportsFromFile fp = P.read <$> IO.readFile fp
-
 initInterpreter :: (String, String) -- ^ config file and module nme
                 -> Maybe FilePath
                 -> InterpreterT IO ()
@@ -55,18 +51,19 @@ initInterpreter config moduleFile = do
         -- load the config file
         loadModules [P.fst config]
 
-        let modules = (P.snd config,Nothing):defaultModules 
+        -- load the config module plus representable
+        let requiredModules = (P.snd config,Nothing):defaultModules
+        userModules <- lift $ maybe (return []) loadFromFile moduleFile
 
-        maybe (setImportsQ modules)
-              (setImportsQFromFile modules)
-              moduleFile 
-    where
-          setImportsQFromFile :: [(String,Maybe String)]
-                              -> FilePath
-                              -> InterpreterT IO ()
-          setImportsQFromFile requiredImports confFile = do
-                imports <- lift (readImportsFromFile confFile)
-                setImportsQ $ imports ++ requiredImports
+        let modules = requiredModules ++ userModules
+
+        let modulesWithPrelude = if "Prelude" `L.notElem` fmap P.fst modules
+                                    then ("Prelude",Nothing):modules
+                                    else modules
+
+        setImportsQ modulesWithPrelude
+    where loadFromFile :: FilePath -> IO [(String,Maybe String)]
+          loadFromFile fp = P.read <$> IO.readFile fp
 
 printErrors :: InterpreterError -> IO ()
 printErrors e = case e of
