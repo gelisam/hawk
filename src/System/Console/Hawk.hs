@@ -16,6 +16,7 @@ import Control.Monad
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Bool
+import Data.Eq
 import Data.Either
 import Data.Function
 import Data.Ord
@@ -78,30 +79,11 @@ runHawk :: (String,String)
         -> Options
         -> [String]
         -> IO ()
-runHawk config os nos = do
-      if optEval os
-        then hawkeval config os (L.head nos)
-        else do
-          let file = if L.length nos > 1
-                       then Just $ nos !! 1
-                       else Nothing
-          hawk config os (L.head nos) file
-      hFlush stdout 
+runHawk config os nos = let file = if L.length nos > 1
+                                    then Just (nos !! 1)
+                                    else Nothing
+                        in hawk config os (L.head nos) file
 
-hawkeval :: (String,String) -- ^ The config file and module name
-         -> Options          -- ^ Program options
-         -> String           -- ^ The user expression to evaluate
-         -> IO ()
-hawkeval config opts expr_str = do
-    maybe_f <- runHawkInterpreter $ do
-        initInterpreter config (optModuleFile opts)
-        let ignoreErrors = P.show $ optIgnoreErrors opts
-        interpret (printf "System.Console.Hawk.Representable.printRows %s (%s)"
-                   ignoreErrors expr_str)
-                  (as :: IO ())
-    case maybe_f of
-        Left ie -> printErrors ie
-        Right f -> f
 
 -- TODO missing error handling!
 hawk :: (String,String) -- ^ The config file and module name
@@ -117,37 +99,54 @@ hawk config opts expr_str file = do
         let ignoreErrors = optIgnoreErrors opts
 
         -- eval program based on the existence of a delimiter
-        case (optDelimiter opts,optMap opts) of
-            (Nothing,_) ->
-                interpret (runExpr file [printRows ignoreErrors, expr_str])
+        case optMode opts of
+            EvalMode -> 
+                interpret (printf "System.Console.Hawk.Representable.printRows %s (%s)"
+                           (P.show ignoreErrors) expr_str)
+                  (as :: IO ())
+            StreamMode ->
+                interpret (runExpr [printRows ignoreErrors, expr_str])
                           (as :: IO ())
-            (Just d,False) ->
-                interpret (runExpr file [printRows ignoreErrors, expr_str, parseRows d])
+            LinesMode -> do
+                interpret (runExpr [ printRows ignoreErrors
+                                        , expr_str
+                                        , parseRows linesDelim])
                           (as :: IO ())
-                -- TODO: avoid keep everything in buffer, repr' should output
-                -- as soon as possible (for example each line)
-            (Just d,True) ->
-                interpret (runExprs file [runMap [printRow ignoreErrors, expr_str]
-                                    ,parseRows d])
+            MapMode -> do
+                interpret (runExprs [runMap [ printRow ignoreErrors
+                                                 , expr_str]
+                                    ,parseRows linesDelim])
                           (as :: IO ())
+            WordsMode -> do
+                let expr = (runExprs [runWords [ printRow ignoreErrors
+                                                   , expr_str]
+                                    ,parseWords linesDelim wordsDelim])
+                interpret expr (as :: IO ())
+                
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
         Right f -> f
     where 
+          linesDelim = optLinesDelim opts
+          wordsDelim = optWordsDelim opts
           compose :: [String] -> String
           compose = L.intercalate "." . P.map (printf "(%s)")
           
-          runExprs :: Maybe FilePath -> [String] -> String
-          runExprs file = printf "(System.Console.Hawk.Representable.runExprs (%s) (%s))"
+          runExprs :: [String] -> String
+          runExprs = printf "(System.Console.Hawk.Representable.runExprs (%s) (%s))"
                      (P.show file) . compose
           
-          runExpr :: Maybe FilePath -> [String] -> String
-          runExpr file = printf "(System.Console.Hawk.Representable.runExpr (%s) (%s))"
+          runExpr :: [String] -> String
+          runExpr = printf "(System.Console.Hawk.Representable.runExpr (%s) (%s))"
                     (P.show file) . compose
           
           runMap :: [String] -> String
           runMap = printf "(System.Console.Hawk.Representable.listMap (%s))"
                    . compose
+
+          runWords :: [String] -> String
+          runWords = printf "(System.Console.Hawk.Representable.listMapWords (%s))"
+                     . compose
           
           printRow :: Bool -> String
           printRow b = printf "(System.Console.Hawk.Representable.printRow %s)"
@@ -161,6 +160,12 @@ hawk config opts expr_str file = do
           parseRows = printf "System.Console.Hawk.Representable.parseRows (%s)"
                          . P.show
 
+          parseWords :: B.ByteString -> B.ByteString -> String
+          parseWords linesDelim wordsDelim = compose
+            [ printf "System.Console.Hawk.Representable.parseWords (%s)" (P.show wordsDelim)
+            , parseRows linesDelim
+            ]
+
 getUsage :: IO String
 getUsage = do
     pn <- getProgName
@@ -172,9 +177,11 @@ main = do
     moduleFile <- getModulesFile
     optsArgs <- processArgs moduleFile <$> getArgs
     either printErrorAndExit go optsArgs
-    where processArgs cfgFile args = do
-                compiledOpts <- compileOpts args
-                postOptsProcessing cfgFile compiledOpts
+    where processArgs moduleFile args =
+                case compileOpts args of
+                    Left err -> Left err
+                    Right (opts,notOpts) -> 
+                        Right (opts{ optModuleFile = Just moduleFile},notOpts)
           printErrorAndExit errors = errorMessage errors >> exitFailure
           errorMessage errs = do
                 usage <- getUsage

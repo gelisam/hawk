@@ -8,9 +8,11 @@ module System.Console.Hawk.Representable (
     Row  (repr')
   , Rows (repr)
   , listMap
+  , listMapWords
   , printRows
   , printRow
   , parseRows
+  , parseWords
   , runExpr
   , runExprs
 
@@ -41,8 +43,14 @@ dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
 listMap :: (a -> b) -> [a] -> [b]
 listMap = L.map
 
+listMapWords :: ([a] -> b) -> [[a]] -> [b]
+listMapWords = L.map
+
 parseRows :: StrictBS.ByteString -> C8.ByteString -> [C8.ByteString]
 parseRows delim str = dropLastIfEmpty $ BS.split delim str
+
+parseWords :: StrictBS.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
+parseWords delim strs = L.map (L.filter (not . C8.null) . BS.split delim) strs
 
 runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
 runExpr fp f = do
