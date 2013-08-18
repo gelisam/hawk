@@ -53,7 +53,11 @@ recompileConfigIfNeeded = do
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
-        writeFile configFile "import Prelude"
+        writeFile configFile $
+            unlines
+            [ "import Prelude"
+            , "import qualified Data.ByteString.Lazy.Char8 as B"
+            , "import qualified Data.List as L"]
     configInfosFile <- getConfigInfosFile
     configInfosExists <- doesFileExist configInfosFile
     if configInfosExists
