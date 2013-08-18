@@ -44,15 +44,15 @@ listMap = L.map
 parseRows :: StrictBS.ByteString -> C8.ByteString -> [C8.ByteString]
 parseRows delim str = dropLastIfEmpty $ BS.split delim str
 
-runExpr :: (C8.ByteString -> IO ()) -> IO ()
-runExpr f = do
-    stdin <- C8.getContents
-    f stdin
+runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
+runExpr fp f = do
+    input <- maybe C8.getContents C8.readFile fp
+    f input
 
-runExprs :: (C8.ByteString -> [IO ()]) -> IO ()
-runExprs f = do
-    stdin <- C8.getContents
-    sequence_ (f stdin)
+runExprs :: Maybe FilePath -> (C8.ByteString -> [IO ()]) -> IO ()
+runExprs fp f = do
+    input <- maybe C8.getContents C8.readFile fp
+    sequence_ (f input)
 
 -- ------------------------
 -- Rows class and instances

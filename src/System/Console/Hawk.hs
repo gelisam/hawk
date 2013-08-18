@@ -122,15 +122,15 @@ hawk config opts expr_str file = do
         -- eval program based on the existence of a delimiter
         case (optDelimiter opts,optMap opts) of
             (Nothing,_) ->
-                interpret (runExpr [printRows ignoreErrors, expr_str])
+                interpret (runExpr file [printRows ignoreErrors, expr_str])
                           (as :: IO ())
             (Just d,False) ->
-                interpret (runExpr [printRows ignoreErrors, expr_str, parseRows d])
+                interpret (runExpr file [printRows ignoreErrors, expr_str, parseRows d])
                           (as :: IO ())
                 -- TODO: avoid keep everything in buffer, repr' should output
                 -- as soon as possible (for example each line)
             (Just d,True) ->
-                interpret (runExprs [runMap [printRow ignoreErrors, expr_str]
+                interpret (runExprs file [runMap [printRow ignoreErrors, expr_str]
                                     ,parseRows d])
                           (as :: IO ())
     case maybe_f of
@@ -140,13 +140,13 @@ hawk config opts expr_str file = do
           compose :: [String] -> String
           compose = L.intercalate "." . P.map (printf "(%s)")
           
-          runExprs :: [String] -> String
-          runExprs = printf "(System.Console.Hawk.Representable.runExprs (%s))"
-                     . compose
+          runExprs :: Maybe FilePath -> [String] -> String
+          runExprs file = printf "(System.Console.Hawk.Representable.runExprs (%s) (%s))"
+                     (P.show file) . compose
           
-          runExpr :: [String] -> String
-          runExpr = printf "(System.Console.Hawk.Representable.runExpr (%s))"
-                    . compose
+          runExpr :: Maybe FilePath -> [String] -> String
+          runExpr file = printf "(System.Console.Hawk.Representable.runExpr (%s) (%s))"
+                    (P.show file) . compose
           
           runMap :: [String] -> String
           runMap = printf "(System.Console.Hawk.Representable.listMap (%s))"
