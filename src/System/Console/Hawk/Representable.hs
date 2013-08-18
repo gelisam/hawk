@@ -18,11 +18,13 @@ module System.Console.Hawk.Representable (
 
 import Prelude
 import Control.Exception (SomeException,handle)
-import Data.ByteString.Lazy.Char8
+import qualified Data.ByteString as StrictBS
+import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)
 import qualified Data.List as L
 import Data.Set (Set)
 import qualified Data.Set as S
+import qualified Data.ByteString.Lazy.Search as BS
 import Data.Map (Map)
 import qualified Data.Map as M
 import GHC.IO.Exception (IOErrorType(ResourceVanished),IOException(ioe_type))
@@ -39,8 +41,8 @@ dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
 listMap :: (a -> b) -> [a] -> [b]
 listMap = L.map
 
-parseRows :: C8.ByteString -> [C8.ByteString]
-parseRows = dropLastIfEmpty . C8.split '\n'
+parseRows :: StrictBS.ByteString -> C8.ByteString -> [C8.ByteString]
+parseRows delim str = dropLastIfEmpty $ BS.split delim str
 
 runExpr :: (C8.ByteString -> IO ()) -> IO ()
 runExpr f = do

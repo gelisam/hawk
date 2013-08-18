@@ -21,6 +21,7 @@ import Data.Function
 import Data.Ord
 import Data.Maybe
 import Data.String
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
@@ -159,8 +160,9 @@ hawk config opts expr_str file = do
           printRows b = printf "(System.Console.Hawk.Representable.printRows %s)"
                         (P.show b)
           
-          parseRows :: a -> String
-          parseRows d = "System.Console.Hawk.Representable.parseRows"
+          parseRows :: B.ByteString -> String
+          parseRows = printf "System.Console.Hawk.Representable.parseRows (%s)"
+                         . P.show
 
 getUsage :: IO String
 getUsage = do

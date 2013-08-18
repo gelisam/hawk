@@ -46,6 +46,7 @@ Library
     build-depends: base
                  , bytestring
                  , containers
+                 , stringsearch
     Default-Language: Haskell98
 
 Test-suite reference
