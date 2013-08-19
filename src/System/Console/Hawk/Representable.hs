@@ -56,15 +56,20 @@ parseWords delim strs = L.map f strs
                 then L.filter  (not . C8.null) . BS.split delim
                 else BS.split delim
 
-runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
-runExpr fp f = do
+runOnInput :: Maybe FilePath -- ^ the input file or stdout when Nothing
+            -> (C8.ByteString -> IO ()) -- ^ the action to run on the input
+            -> IO ()
+runOnInput fp f = do
     input <- maybe C8.getContents C8.readFile fp
     f input
+    IO.hFlush IO.stdout
+    -- TODO: we need also hFlush stderr?
+
+runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
+runExpr = runOnInput
 
 runExprs :: Maybe FilePath -> (C8.ByteString -> [IO ()]) -> IO ()
-runExprs fp f = do
-    input <- maybe C8.getContents C8.readFile fp
-    sequence_ (f input)
+runExprs fp f = runOnInput fp (sequence_ . f)
 
 -- ------------------------
 -- Rows class and instances
