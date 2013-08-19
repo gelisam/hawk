@@ -20,7 +20,7 @@ module System.Console.Hawk.Representable (
 
 import Prelude
 import Control.Exception (SomeException,handle)
-import qualified Data.ByteString as StrictBS
+import qualified Data.ByteString.Char8 as SC8
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)
 import qualified Data.List as L
@@ -46,11 +46,15 @@ listMap = L.map
 listMapWords :: ([a] -> b) -> [[a]] -> [b]
 listMapWords = L.map
 
-parseRows :: StrictBS.ByteString -> C8.ByteString -> [C8.ByteString]
+parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
 parseRows delim str = dropLastIfEmpty $ BS.split delim str
 
-parseWords :: StrictBS.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
-parseWords delim strs = L.map (L.filter (not . C8.null) . BS.split delim) strs
+-- special case for space
+parseWords :: SC8.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
+parseWords delim strs = L.map f strs
+    where f = if delim == SC8.singleton ' '
+                then L.filter  (not . C8.null) . BS.split delim
+                else BS.split delim
 
 runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
 runExpr fp f = do
