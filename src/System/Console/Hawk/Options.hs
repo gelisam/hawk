@@ -42,8 +42,8 @@ delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
 options :: [OptDescr (Options -> Options)]
 options = 
  -- delimiters
- [ Option ['d'] ["lines-delimiter"] (ReqArg delimiterAction "<delim>") delimiterHelp
- , Option ['D'] ["words-delimiter"] (ReqArg wordsDelimAction "<delim>") wordsDelimHelp
+ [ Option ['D'] ["lines-delimiter"] (ReqArg delimiterAction "<delim>") delimiterHelp
+ , Option ['d'] ["words-delimiter"] (ReqArg wordsDelimAction "<delim>") wordsDelimHelp
 
  -- modes
  , Option ['s'] ["stream"] (NoArg $ \o -> o{ optMode = StreamMode }) streamHelp
