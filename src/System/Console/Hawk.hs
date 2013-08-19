@@ -16,23 +16,19 @@ import Control.Monad
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Bool
-import Data.Eq
 import Data.Either
 import Data.Function
 import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
-import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
 import System.Environment (getArgs,getProgName)
-import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
-import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
+import System.IO (FilePath,IO)
 import Text.Printf (printf)
 
 import System.Console.Hawk.CabalDev
@@ -73,7 +69,7 @@ printErrors e = case e of
                     forM_ es' $ \e' ->
                       case e' of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
-                  _ -> print e
+                  _ -> IO.print e
 
 runHawk :: (String,String)
         -> Options
@@ -161,9 +157,9 @@ hawk config opts expr_str file = do
                          . P.show
 
           parseWords :: B.ByteString -> B.ByteString -> String
-          parseWords linesDelim wordsDelim = compose
-            [ printf "System.Console.Hawk.Representable.parseWords (%s)" (P.show wordsDelim)
-            , parseRows linesDelim
+          parseWords ld wd = compose
+            [ printf "System.Console.Hawk.Representable.parseWords (%s)" (P.show wd)
+            , parseRows ld
             ]
 
 getUsage :: IO String
@@ -191,5 +187,5 @@ main = do
                               then recompileConfig
                               else recompileConfigIfNeeded
                 if L.null notOpts || optHelp opts
-                  then getUsage >>= putStr
+                  then getUsage >>= IO.putStr
                   else runHawk config opts notOpts
