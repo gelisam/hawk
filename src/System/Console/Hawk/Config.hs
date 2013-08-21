@@ -112,8 +112,8 @@ addModule :: ByteString -- ^ module name
 addModule moduleName code =
     let strippedCode = C8.dropWhile isSpace code
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
-                        then let (pragma,afterPragma) = BSS.breakOn "#-}" strippedCode
-                             in (Just pragma,C8.drop 3 afterPragma)
+                        then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
+                             in (Just pragma, afterPragma)
                         else (Nothing,strippedCode)
         moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
     in case maybePragma of
