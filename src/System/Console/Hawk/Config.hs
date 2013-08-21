@@ -11,7 +11,13 @@ import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.List
 import Data.Time
-import Language.Haskell.Exts
+import Language.Haskell.Exts ( parseFileWithExts )
+import Language.Haskell.Exts.Extension ( Extension (..) )
+import Language.Haskell.Exts.Parser
+    ( getTopPragmas
+    , ParseResult (..)
+    )
+import Language.Haskell.Exts.Syntax
 import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 import System.Exit
