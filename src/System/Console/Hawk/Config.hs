@@ -12,6 +12,7 @@ import Data.Char
 import Data.List
 import Data.Time
 import Language.Haskell.Exts
+import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 import System.Exit
 import System.IO
@@ -42,6 +43,8 @@ getConfigInfosFile = getCacheDir <//> "configInfos"
 getModulesFile :: IO FilePath
 getModulesFile = getCacheDir <//> "modules"
 
+getExtensionsFile :: IO FilePath
+getExtensionsFile = getCacheDir <//> "extensions"
 
 -- --
 -- From now the code is heavy, it needs a refactoring (renaming)
@@ -60,7 +63,8 @@ recompileConfigIfNeeded = do
     unless configFileExists $
         writeFile configFile $
             unlines
-            [ "import Prelude"
+            [ "{-# LANGUAGE ExtendedDefaultRules #-}"
+            , "import Prelude"
             , "import qualified Data.ByteString.Lazy.Char8 as B"
             , "import qualified Data.List as L"]
     configInfosFile <- getConfigInfosFile
@@ -176,6 +180,30 @@ createModulesFile sourceFile = do
     --print modules
     C8.writeFile modulesFile (C8.pack $ show modules)
 
+createExtensionsFile :: FilePath -- ^ the source file from which extract exts
+                     -> IO ()
+createExtensionsFile sourceFile = do
+    result <- getTopPragmas <$> readFile sourceFile 
+    case result of
+        ParseFailed srcLoc str -> do
+            print $ "error parsing file " ++ sourceFile
+                                          ++ " at line " ++ show srcLoc ++ ": "
+                                          ++ str
+            exitFailure
+        ParseOk modulePragmas -> do
+            let extensions = concatMap getLanguageExtensions modulePragmas
+            extensionsFile <- getExtensionsFile
+            writeFile extensionsFile $ show extensions
+    where for = flip map
+          getLanguageExtensions :: ModulePragma
+                                -> [Interpreter.Extension]
+          getLanguageExtensions pragma = case pragma of
+                            LanguagePragma _ names -> for names $ \name ->
+                                case name of
+                                    Ident n -> (read n :: Interpreter.Extension)
+                                    Symbol n -> (read n :: Interpreter.Extension)
+                            _ -> []
+
 parseFileAndGetModules :: FilePath
                        -> [Extension]
                        -> IO [(String,Maybe String)]
@@ -227,6 +255,7 @@ recompileConfig = do
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
     createModulesFile configFile
+    createExtensionsFile configFile
     return (configFileWithModule,C8.unpack moduleName)
     where
         clean :: IO ()

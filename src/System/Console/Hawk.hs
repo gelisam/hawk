@@ -36,14 +36,14 @@ import System.Console.Hawk.Config
 import System.Console.Hawk.Options
 
 
-initInterpreter :: (String, String) -- ^ config file and module nme
+initInterpreter :: (String, String) -- ^ config file and module name
                 -> Maybe FilePath
+                -> FilePath
                 -> InterpreterT IO ()
-initInterpreter config moduleFile = do
-        set [languageExtensions := [ExtendedDefaultRules
-                                   ,NoImplicitPrelude
-                                   ,NoMonomorphismRestriction
-                                   ,OverloadedStrings]]
+initInterpreter config moduleFile extensionsFile = do
+        extensions <- lift $ P.read <$> IO.readFile extensionsFile
+        
+        set [languageExtensions := (extensions::[Extension])]
 
         -- load the config file
         loadModules [P.fst config]
@@ -78,19 +78,22 @@ runHawk :: (String,String)
 runHawk config os nos = let file = if L.length nos > 1
                                     then Just (nos !! 1)
                                     else Nothing
-                        in hawk config os (L.head nos) file
+                        in do
+                            extFile <- getExtensionsFile
+                            hawk config os extFile (L.head nos) file
 
 
 -- TODO missing error handling!
-hawk :: (String,String) -- ^ The config file and module name
+hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
+     -> FilePath              -- ^ The file containing the extensions
      -> String                -- ^ The user expression to evaluate
      -> Maybe FilePath        -- ^ The input file
      -> IO ()
-hawk config opts expr_str file = do
+hawk config opts extFile expr_str file = do
     maybe_f <- runHawkInterpreter $ do
 
-        initInterpreter config (optModuleFile opts)
+        initInterpreter config (optModuleFile opts) extFile
         
         let ignoreErrors = optIgnoreErrors opts
 
