@@ -204,7 +204,6 @@ parseFileAndGetModules sourceFile = go
               ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
               ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
                                     [(mn,Just s)]
-              _ -> undefined
 
 
 -- TODO: error handling
