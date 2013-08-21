@@ -22,20 +22,25 @@ defaultModules :: [(String,Maybe String)]
 defaultModules = [("System.Console.Hawk.Representable",
                    Just "System.Console.Hawk.Representable")]
 
+(<//>) :: IO FilePath -- the left filepath in the IO monad
+       -> FilePath -- the right filepath
+       -> IO FilePath -- the filepath resulting
+lpath <//> rpath = (</> rpath) <$> lpath
+
 getConfigDir :: IO FilePath
-getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
+getConfigDir = getHomeDirectory <//> ".hawk"
 
 getConfigFile :: IO FilePath
-getConfigFile = (</> "prelude.hs") <$> getConfigDir
+getConfigFile = getConfigDir <//> "prelude.hs"
 
 getCacheDir :: IO FilePath
-getCacheDir = (</> "cache") <$> getConfigDir
+getCacheDir = getConfigDir <//> "cache"
 
 getConfigInfosFile :: IO FilePath
-getConfigInfosFile = (</> "configInfos") <$> getCacheDir
+getConfigInfosFile = getCacheDir <//> "configInfos"
 
 getModulesFile :: IO FilePath
-getModulesFile = (</> "modules") <$> getCacheDir
+getModulesFile = getCacheDir <//> "modules"
 
 
 -- --
