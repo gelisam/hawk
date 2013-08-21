@@ -2,7 +2,6 @@
 module System.Console.Hawk.Config where
 
 import Control.Applicative ((<$>))
-import Control.Exception (bracket)
 import Control.Monad (when, unless)
 
 import Data.ByteString.Char8 (ByteString)
@@ -156,10 +155,9 @@ getModuleName bs = case BSS.indices (C8.pack "module") bs of
 compile :: FilePath -- ^ the source file
         -> FilePath -- ^ the output file
         -> FilePath -- ^ the directory used for compiler files
-        -> FilePath -- ^ error file
         -> IO ()
-compile sourceFile outputFile dir err = do
-    compExitCode <- bracket (openFile err WriteMode) hClose $ \h ->
+compile sourceFile outputFile dir = do
+    compExitCode <-
             waitForProcess =<< runProcess "ghc" ["--make"
                                                , sourceFile
                                                , "-i"
@@ -171,16 +169,8 @@ compile sourceFile outputFile dir err = do
                                           Nothing
                                           Nothing
                                           Nothing
-                                          (Just h)
+                                          (Just stderr)
     when (compExitCode /= ExitSuccess) $ do
-        ghcErr <- readFile err
-        let msg = unlines $ ["Error detected while loading "
-                          ++ "configuration file: " ++ sourceFile]
-                          ++ lines (if null ghcErr
-                                      then show compExitCode
-                                      else ghcErr)
-                          ++ ["","Please check the file for errors."]
-        putStrLn msg -- TODO: use stderr
         exitFailure
 
 -- create the module file by extracting modules from the given file
@@ -258,8 +248,7 @@ recompileConfig = do
                                                configFile
                                                (C8.pack $ "Hawk.M" ++ currTime)
                                                (compiledFile ++ ".hs")
-    let err = compiledFile ++ ".ghc.err"
-    compile configFileWithModule compiledFile cacheDir err
+    compile configFileWithModule compiledFile cacheDir
     lastModTime <- getModificationTime configFile
     configInfosFile <- getConfigInfosFile
     writeFile configInfosFile $ unlines [configFileWithModule
