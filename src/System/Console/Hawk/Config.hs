@@ -207,7 +207,7 @@ createExtensionsFile sourceFile = do
 parseFileAndGetModules :: FilePath
                        -> [Extension]
                        -> IO [(String,Maybe String)]
-parseFileAndGetModules sourceFile exts = go exts
+parseFileAndGetModules sourceFile = go
     where go exts = do
             result <- parseFileWithExts exts sourceFile
             case result of
@@ -232,7 +232,6 @@ parseFileAndGetModules sourceFile exts = go exts
               ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
               ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
                                     [(mn,Just s)]
-              _ -> undefined
 
 
 -- TODO: error handling

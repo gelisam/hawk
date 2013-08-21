@@ -2,13 +2,12 @@ module System.Console.Hawk.Options where
 
 import Data.ByteString (ByteString)
 
-import Control.Arrow (first)
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.List as L
 import qualified System.FilePath as FP
 
 import System.Console.GetOpt
-import Data.Maybe
+
 
 data Modes = EvalMode | StreamMode | LinesMode | MapMode | WordsMode
     deriving (Eq,Read,Show)
