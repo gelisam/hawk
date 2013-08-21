@@ -17,6 +17,7 @@ import System.EasyFile
 import System.Exit
 import System.IO
 import System.Process
+import Text.Printf
 
 
 defaultModules :: [(String,Maybe String)]
@@ -108,26 +109,31 @@ getConfigFileWithModule configFile moduleName configFileWithModule = do
     configCode <- C8.readFile configFile
     case getModuleName configCode of
         Just moduleName' -> return (configFile,moduleName')
-        Nothing -> let configCodeWithModule = addModule moduleName
+        Nothing -> let configCodeWithModule = addModule configFile
+                                                        moduleName
                                                         configCode
                    in do
                       C8.writeFile configFileWithModule configCodeWithModule
                       return (configFileWithModule,moduleName)
 
 -- add a module to a string representing a Haskell source file
-addModule :: ByteString -- ^ module name
+addModule :: FilePath   -- ^ the user config file
+          -> ByteString -- ^ module name
           -> ByteString -- ^ haskell code
           -> ByteString -- ^ result
-addModule moduleName code =
+addModule configFile moduleName code =
     let strippedCode = C8.dropWhile isSpace code
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
                         then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
                              in (Just pragma, afterPragma)
                         else (Nothing,strippedCode)
+        line :: Int -> ByteString
+        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
         moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
     in case maybePragma of
         (Nothing,c) -> C8.unlines [moduleLine,c]
-        (Just pragma,c) -> C8.unlines [pragma,moduleLine,c]
+        (Just pragma,c) -> let n = 1 + C8.length (C8.filter (=='\n') pragma)
+                            in C8.unlines [line 1,pragma,moduleLine,line n,c]
 
 
 -- get the module name from a file if it exists
