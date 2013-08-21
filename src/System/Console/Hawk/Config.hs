@@ -179,7 +179,7 @@ createModulesFile sourceFile = do
 parseFileAndGetModules :: FilePath
                        -> [Extension]
                        -> IO [(String,Maybe String)]
-parseFileAndGetModules sourceFile exts = go exts
+parseFileAndGetModules sourceFile = go
     where go exts = do
             result <- parseFileWithExts exts sourceFile
             case result of
