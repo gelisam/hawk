@@ -241,8 +241,15 @@ recompileConfig :: IO (String,String)
 recompileConfig = do
     clean
     configFile <- getConfigFile
-    currTime <- (filter isDigit . show <$> getCurrentTime)
     cacheDir <- getOrCreateCacheDir
+    
+    extensions <- parseExtensions configFile
+    cacheExtensions extensions
+    
+    modules <- parseModules configFile extensions
+    cacheModules modules
+    
+    currTime <- (filter isDigit . show <$> getCurrentTime)
     let compiledFile = cacheDir </> ("config" ++ currTime)
     (configFileWithModule,moduleName) <- getConfigFileWithModule 
                                                configFile
@@ -255,16 +262,10 @@ recompileConfig = do
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
     
-    extensions <- parseExtensions configFile
-    cacheExtensions extensions
-    
-    modules <- parseModules configFile extensions
-    cacheModules modules
-    
     return (configFileWithModule,C8.unpack moduleName)
-    where
-        clean :: IO ()
-        clean = do
-            dir <- getCacheDir
-            dirExists <- doesDirectoryExist dir
-            when (dirExists) (removeDirectoryRecursive dir)
+  where
+    clean :: IO ()
+    clean = do
+        dir <- getCacheDir
+        dirExists <- doesDirectoryExist dir
+        when (dirExists) (removeDirectoryRecursive dir)
