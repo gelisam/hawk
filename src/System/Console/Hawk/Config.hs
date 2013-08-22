@@ -9,6 +9,7 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.List
+import Data.Maybe
 import Data.Time
 import Language.Haskell.Exts ( parseFileWithExts )
 import Language.Haskell.Exts.Extension ( Extension (..) )
@@ -173,67 +174,66 @@ compile sourceFile outputFile dir = do
     when (compExitCode /= ExitSuccess) $ do
         exitFailure
 
-createExtensionsFile :: FilePath -- ^ the source file from which extract exts
-                     -> IO ()
-createExtensionsFile sourceFile = do
+
+getResult :: FilePath -> ParseResult a -> IO a
+getResult _ (ParseOk x) = return x
+getResult sourceFile (ParseFailed srcLoc err) = do
+    putStrLn $ printf "error parsing file %s:%d: %s" sourceFile (show srcLoc) err
+    exitFailure
+
+
+type ExtensionName = String
+
+parseExtensions :: FilePath -> IO [ExtensionName]
+parseExtensions sourceFile = do
     result <- getTopPragmas <$> readFile sourceFile 
-    case result of
-        ParseFailed srcLoc str -> do
-            print $ "error parsing file " ++ sourceFile
-                                          ++ " at line " ++ show srcLoc ++ ": "
-                                          ++ str
-            exitFailure
-        ParseOk modulePragmas -> do
-            let extensions = concatMap getLanguageExtensions modulePragmas
-            extensionsFile <- getExtensionsFile
-            writeFile extensionsFile $ show extensions
-    where for = flip map
-          getLanguageExtensions :: ModulePragma
-                                -> [Interpreter.Extension]
-          getLanguageExtensions pragma = case pragma of
-                            LanguagePragma _ names -> for names $ \name ->
-                                case name of
-                                    Ident n -> (read n :: Interpreter.Extension)
-                                    Symbol n -> (read n :: Interpreter.Extension)
-                            _ -> []
+    listExtensions <$> getResult sourceFile result
+  where
+    listExtensions :: [ModulePragma] -> [ExtensionName]
+    listExtensions = map getName . concat . mapMaybe extensionNames
+    
+    extensionNames :: ModulePragma -> Maybe [Name]
+    extensionNames (LanguagePragma _ names) = Just names
+    extensionNames _                        = Nothing
+    
+    getName :: Name -> ExtensionName
+    getName (Ident  s) = s
+    getName (Symbol s) = s
 
--- create the module file by extracting modules from the given file
-createModulesFile :: FilePath -- ^ the source file from which extract modules
-                  -> IO ()
-createModulesFile sourceFile = do
+cacheExtensions :: [ExtensionName] -> IO ()
+cacheExtensions extensions = do
+    extensionsFile <- getExtensionsFile
+    writeFile extensionsFile $ show extensions'
+  where
+    extensions' :: [Interpreter.Extension]
+    extensions' = map read extensions
+
+
+type QualifiedModules = (String, Maybe String)
+
+parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModules]
+parseModules sourceFile extensions = do
+    result <- parseFileWithExts extensions' sourceFile
+    Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
+    return $ concatMap toHintModules importDeclarations
+  where
+    extensions' :: [Extension]
+    extensions' = map read extensions
+    
+    toHintModules :: ImportDecl -> [QualifiedModules]
+    toHintModules importDecl =
+      case importDecl of
+        ImportDecl _ (ModuleName mn) False _ _ Nothing _ -> [(mn,Nothing)]
+        ImportDecl _ (ModuleName mn) False _ _ (Just (ModuleName s)) _ ->
+                              [(mn,Nothing),(mn,Just s)]
+        ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
+        ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
+                              [(mn,Just s)]
+
+cacheModules :: [QualifiedModules] -> IO ()
+cacheModules modules = do
     modulesFile <- getModulesFile
-    modules <- parseFileAndGetModules sourceFile []
-    --print modules
-    C8.writeFile modulesFile (C8.pack $ show modules)
-
-parseFileAndGetModules :: FilePath
-                       -> [Extension]
-                       -> IO [(String,Maybe String)]
-parseFileAndGetModules sourceFile = go
-    where go exts = do
-            result <- parseFileWithExts exts sourceFile
-            case result of
-                ParseOk (Module _ _ _ _ _ importDeclarations _) -> do
-                    return $ concatMap toHintModules importDeclarations
-                ParseFailed srcLog err -> do
-                    if " is not enabled" `isSuffixOf` err
-                        -- if parsing failes because of some extension missing
-                        -- then add that extension and retry
-                        then go ((read . head $ words err):exts)
-                        else do
-                            putStrLn $ concat ["Error parsing file "
-                                             , sourceFile,"\n"
-                                             , show srcLog,": ",err]
-                            exitFailure
-          toHintModules :: ImportDecl -> [(String,Maybe String)]
-          toHintModules importDecl =
-            case importDecl of
-              ImportDecl _ (ModuleName mn) False _ _ Nothing _ -> [(mn,Nothing)]
-              ImportDecl _ (ModuleName mn) False _ _ (Just (ModuleName s)) _ -> 
-                                    [(mn,Nothing),(mn,Just s)]
-              ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
-              ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
-                                    [(mn,Just s)]
+    writeFile modulesFile $ show modules
 
 
 -- TODO: error handling
@@ -254,8 +254,13 @@ recompileConfig = do
     writeFile configInfosFile $ unlines [configFileWithModule
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
-    createExtensionsFile configFile
-    createModulesFile configFile
+    
+    extensions <- parseExtensions configFile
+    cacheExtensions extensions
+    
+    modules <- parseModules configFile extensions
+    cacheModules modules
+    
     return (configFileWithModule,C8.unpack moduleName)
     where
         clean :: IO ()
