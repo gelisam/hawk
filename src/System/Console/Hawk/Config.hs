@@ -173,15 +173,6 @@ compile sourceFile outputFile dir = do
     when (compExitCode /= ExitSuccess) $ do
         exitFailure
 
--- create the module file by extracting modules from the given file
-createModulesFile :: FilePath -- ^ the source file from which extract modules
-                  -> IO ()
-createModulesFile sourceFile = do
-    modulesFile <- getModulesFile
-    modules <- parseFileAndGetModules sourceFile []
-    --print modules
-    C8.writeFile modulesFile (C8.pack $ show modules)
-
 createExtensionsFile :: FilePath -- ^ the source file from which extract exts
                      -> IO ()
 createExtensionsFile sourceFile = do
@@ -205,6 +196,15 @@ createExtensionsFile sourceFile = do
                                     Ident n -> (read n :: Interpreter.Extension)
                                     Symbol n -> (read n :: Interpreter.Extension)
                             _ -> []
+
+-- create the module file by extracting modules from the given file
+createModulesFile :: FilePath -- ^ the source file from which extract modules
+                  -> IO ()
+createModulesFile sourceFile = do
+    modulesFile <- getModulesFile
+    modules <- parseFileAndGetModules sourceFile []
+    --print modules
+    C8.writeFile modulesFile (C8.pack $ show modules)
 
 parseFileAndGetModules :: FilePath
                        -> [Extension]
@@ -254,8 +254,8 @@ recompileConfig = do
     writeFile configInfosFile $ unlines [configFileWithModule
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
-    createModulesFile configFile
     createExtensionsFile configFile
+    createModulesFile configFile
     return (configFileWithModule,C8.unpack moduleName)
     where
         clean :: IO ()
