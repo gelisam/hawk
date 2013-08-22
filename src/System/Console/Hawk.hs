@@ -65,7 +65,7 @@ initInterpreter config moduleFile extensionsFile = do
 printErrors :: InterpreterError -> IO ()
 printErrors e = case e of
                   WontCompile es' -> do
-                    IO.hPutStrLn IO.stderr "\nWon't compile:"
+                    IO.hPutStrLn IO.stderr "\nWon't typecheck:"
                     forM_ es' $ \e' ->
                       case e' of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
