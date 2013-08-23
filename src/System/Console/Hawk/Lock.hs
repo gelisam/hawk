@@ -9,8 +9,8 @@ import Network.Socket
 
 
 -- use a socket number as a lock indicator.
-withLock :: FilePath -> IO a -> IO a
-withLock _ body = withSocketsDo $ do
+withLock :: IO a -> IO a
+withLock body = withSocketsDo $ do
     bracket lock unlock $ const body
   where
     lock = do

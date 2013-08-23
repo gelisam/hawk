@@ -26,9 +26,8 @@ import qualified Data.ByteString.Lazy.Search as S
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
-import System.Directory (getTemporaryDirectory)
 import System.Environment (getArgs,getProgName)
-import System.EasyFile ((</>),doesFileExist)
+import System.EasyFile (doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
@@ -38,13 +37,6 @@ import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Options
 
-
-getInterpreterLockFile :: IO FilePath
-getInterpreterLockFile = do
-    lockFile <- (</> "hawk.lock") <$> getTemporaryDirectory
-    exists <- doesFileExist lockFile
-    unless exists $ IO.writeFile lockFile ""
-    return lockFile
 
 -- missing error handling!!
 readImportsFromFile :: FilePath -> IO [(String,Maybe String)]
@@ -91,8 +83,7 @@ printErrors e = case e of
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
 runLockedHawkInterpreter i = do
-    lockFile <- getInterpreterLockFile
-    withLock lockFile $ runHawkInterpreter i
+    withLock $ runHawkInterpreter i
 
 hawkeval :: Maybe (String,String) -- ^ The toolkit file and module name
          -> Options               -- ^ Program options

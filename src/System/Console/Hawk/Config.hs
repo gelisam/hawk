@@ -48,13 +48,6 @@ getConfigDir = (</> ".hawk" ) <$> getHomeDirectory
 getConfigFile :: IO FilePath
 getConfigFile = (</> "prelude.hs") <$> getConfigDir
 
-getLockFile :: IO FilePath
-getLockFile = do
-    lockFile <- (</> "lock") <$> getConfigDir
-    exists <- doesFileExist lockFile
-    unless exists $ C8.writeFile lockFile ""
-    return lockFile
-
 getCacheDir :: IO FilePath
 getCacheDir = (</> "cache") <$> getConfigDir
 
@@ -73,8 +66,7 @@ getModulesFile = (</> "modules") <$> getCacheDir
 
 getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
 getConfigFileAndModuleName = do
-    lockFile <- getLockFile 
-    withLock lockFile $ do
+    withLock $ do
         dir <- getConfigDir
         dirExists <- doesDirectoryExist dir
         if (not dirExists)
