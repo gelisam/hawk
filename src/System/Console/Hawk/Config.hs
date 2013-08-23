@@ -21,8 +21,9 @@ import Language.Haskell.Exts
 import System.EasyFile
 import System.Exit
 import System.IO
-import System.Lock.FLock
 import System.Process
+
+import System.Console.Hawk.Lock
 
 
 defaultModules :: [(String,Maybe String)]
@@ -73,7 +74,7 @@ getModulesFile = (</> "modules") <$> getCacheDir
 getConfigFileAndModuleName :: IO (Maybe (String,String)) -- ^ Maybe (FileName,ModuleName)
 getConfigFileAndModuleName = do
     lockFile <- getLockFile 
-    withLock lockFile Exclusive Block $ do
+    withLock lockFile $ do
         dir <- getConfigDir
         dirExists <- doesDirectoryExist dir
         if (not dirExists)

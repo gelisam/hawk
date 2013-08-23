@@ -31,10 +31,10 @@ Executable hawk
                   , directory
                   , easy-file
                   , filepath
-                  , flock
                   , haskell-src-exts
                   , hint
                   , MonadCatchIO-mtl
+                  , network
                   , stringsearch
                   , process
                   , time

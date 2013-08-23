@@ -31,11 +31,11 @@ import System.Environment (getArgs,getProgName)
 import System.EasyFile ((</>),doesFileExist)
 import System.Exit (exitFailure)
 import qualified System.IO as IO
-import System.Lock.FLock
 import System.IO (FilePath,IO,hFlush,print,putStr,stdout)
 
 import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
+import System.Console.Hawk.Lock
 import System.Console.Hawk.Options
 
 
@@ -92,7 +92,7 @@ runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
 runLockedHawkInterpreter i = do
     lockFile <- getInterpreterLockFile
-    withLock lockFile Exclusive Block $ runHawkInterpreter i
+    withLock lockFile $ runHawkInterpreter i
 
 hawkeval :: Maybe (String,String) -- ^ The toolkit file and module name
          -> Options               -- ^ Program options
