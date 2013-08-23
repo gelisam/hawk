@@ -4,6 +4,8 @@ module System.Console.Hawk.Lock ( withLock ) where
 import Control.Concurrent ( threadDelay )
 import Control.Exception
 import Control.Monad ( guard )
+import Data.List (isPrefixOf)
+import GHC.IO.Exception
 import Network.BSD ( getProtocolNumber ) -- still cross-platform, don't let the name fool you
 import Network.Socket
 
@@ -26,8 +28,9 @@ withLock body = withSocketsDo $ do
     unlock = close
     
     
-    isADDRINUSE :: SomeException -> Maybe ()
-    isADDRINUSE = guard . (=="bind: failed (Address already in use (WSAEADDRINUSE))") . show
+    isADDRINUSE :: IOError -> Maybe ()
+    isADDRINUSE = guard . (== "bind") . ioe_location
+    --isADDRINUSE = guard . ("bind:" `isPrefixOf`) . show
     
     open = listenOn portNumber
     
