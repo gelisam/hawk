@@ -19,7 +19,7 @@ Extra-Source-Files: src/System/Console/Hawk.hs
 
 Source-Repository head
     type: git
-    location: https://github.com/ssadler/hawk
+    location: https://github.com/gelisam/hawk
 
 Executable hawk
     Main-is:        Main.hs
