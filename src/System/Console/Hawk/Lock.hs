@@ -1,8 +1,11 @@
-module System.Console.Hawk.Lock ( withLock ) where
+module System.Console.Hawk.Lock
+    ( withLock
+    , withTestLock
+    ) where
 
---import Control.Concurrent ( threadDelay )
+import Control.Concurrent ( threadDelay )
 import Control.Exception
-import Control.Monad ( guard )
+import Control.Monad ( when, guard )
 import GHC.IO.Exception
 import GHC.IO.Handle ( Handle, hGetContents, hClose )
 import Network.BSD ( getProtocolNumber ) -- still cross-platform, don't let the name fool you
@@ -12,33 +15,38 @@ import Text.Printf
 
 
 -- use a socket number as a lock indicator.
+withSocketLock :: Bool -> IO a -> IO a
+withSocketLock testing = withSocketsDo . bracket (lock testing) unlock . const
+
+-- make sure GHC inlines withSocketLock in the following two functions
+-- and optimizes the testing and non-testing versions separately.
+{-# INLINE withSocketLock #-}
+
 withLock :: IO a -> IO a
-withLock body = withSocketsDo $ do
-    bracket lock unlock $ const body
+withLock = withSocketLock False
+
+withTestLock :: IO a -> IO a
+withTestLock = withSocketLock True
 
 
-lock :: IO Socket
-lock = catchJust isADDRINUSE openSocket $ \() -> do
+lock :: Bool -> IO Socket
+lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     -- open failed, the lock must be in use.
     
-    -- uncomment this and race two instances in order to verify that locking works.
-    --putStrLn "** LOCKED **"
+    when testing $ putStrLn "** LOCKED **"
     
-    -- uncomment and run less than 5 seconds before another process unlocks,
-    -- to verify that we correctly handle the case where the socket is closed
+    -- used to test an interleaving in which the socket is closed here,
     -- between openSocket and waitForException.
-    --threadDelay 5000000
+    when testing $ threadDelay 5000000
     
     -- wait for the other instance to signal that it is done with the lock.
     catchJust isDisconnected waitForException $ \() -> do
       -- we were disconnected, the server must have released the lock!
       
-      -- uncomment this and race with a long-running instance to verify
-      -- that we unlock as early as possible.
-      --putStrLn "** UNLOCKED **"
+      when testing $ putStrLn "** UNLOCKED **"
       
       -- try again.
-      lock
+      lock testing
 
 unlock :: Socket -> IO ()
 unlock = closeSocket
