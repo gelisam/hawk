@@ -29,7 +29,9 @@ withTestLock :: IO a -> IO a
 withTestLock = withSocketLock True
 
 
-lock :: Bool -> IO Socket
+type Lock = Socket
+
+lock :: Bool -> IO Lock
 lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     -- open failed, the lock must be in use.
     
@@ -48,7 +50,7 @@ lock testing = catchJust isADDRINUSE openSocket $ \() -> do
       -- try again.
       lock testing
 
-unlock :: Socket -> IO ()
+unlock :: Lock -> IO ()
 unlock = closeSocket
 
 
