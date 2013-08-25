@@ -8,10 +8,10 @@ import System.Console.Hawk.TestUtils
 
 
 spec :: Spec
-spec = parseFileAndGetModulesSpec
+spec = parseModulesSpec
 
-parseFileAndGetModulesSpec :: Spec
-parseFileAndGetModulesSpec = describe "parseModules" $ do
+parseModulesSpec :: Spec
+parseModulesSpec = describe "parseModules" $ do
     it "returns empty when no modules are declared" $ do
         res <- withTempFile'' $ \file -> parseModules file []
         res `shouldBe` []
