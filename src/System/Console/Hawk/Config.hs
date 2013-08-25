@@ -1,5 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
-module System.Console.Hawk.Config where
+module System.Console.Hawk.Config (
+      defaultModules
+    , recompileConfigIfNeeded
+    , getExtensionsFile
+    , getModulesFile
+    , recompileConfig
+) where
 
 import Control.Applicative ((<$>))
 import Control.Monad (when, unless)
@@ -24,6 +30,8 @@ import System.Exit
 import System.IO
 import System.Process
 import Text.Printf
+
+import System.Console.Hawk.Lock
 
 
 defaultModules :: [(String,Maybe String)]
@@ -60,7 +68,7 @@ getExtensionsFile = getCacheDir <//> "extensions"
 -- TODO: error handling
 
 recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
-recompileConfigIfNeeded = do
+recompileConfigIfNeeded = withLock $ do
     dir <- getConfigDir
     dirExists <- doesDirectoryExist dir
     unless dirExists $

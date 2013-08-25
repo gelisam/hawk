@@ -33,6 +33,7 @@ import Text.Printf (printf)
 
 import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
+import System.Console.Hawk.Lock
 import System.Console.Hawk.Options
 
 
@@ -82,6 +83,10 @@ runHawk config os nos = let file = if L.length nos > 1
                             extFile <- getExtensionsFile
                             hawk config os extFile (L.head nos) file
 
+runLockedHawkInterpreter :: forall a . InterpreterT IO a
+                            -> IO (Either InterpreterError a)
+runLockedHawkInterpreter i = do
+    withLock $ runHawkInterpreter i
 
 -- TODO missing error handling!
 hawk :: (String,String)      -- ^ The config file and module name
@@ -91,7 +96,7 @@ hawk :: (String,String)      -- ^ The config file and module name
      -> Maybe FilePath        -- ^ The input file
      -> IO ()
 hawk config opts extFile expr_str file = do
-    maybe_f <- runHawkInterpreter $ do
+    maybe_f <- runLockedHawkInterpreter $ do
 
         initInterpreter config (optModuleFile opts) extFile
         
