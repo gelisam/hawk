@@ -4,6 +4,7 @@ module System.Console.Hawk.Config (
     , recompileConfigIfNeeded
     , getExtensionsFile
     , getModulesFile
+    , parseModules
     , recompileConfig
 ) where
 
