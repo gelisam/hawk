@@ -15,7 +15,6 @@ import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
-import Data.List
 import Data.Maybe
 import Data.Time
 import Language.Haskell.Exts ( parseFileWithExts )

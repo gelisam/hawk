@@ -1,7 +1,5 @@
 module System.Console.Hawk.Config.Test where
 
-import System.Directory (
-    getTemporaryDirectory)
 import System.Console.Hawk.Config (
     parseModules)
 import Test.Hspec 
