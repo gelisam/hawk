@@ -15,51 +15,19 @@ import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
-import Data.Maybe
 import Data.Time
-import Language.Haskell.Exts ( parseFileWithExts )
-import Language.Haskell.Exts.Extension ( Extension (..) )
-import Language.Haskell.Exts.Parser
-    ( getTopPragmas
-    , ParseResult (..)
-    )
-import Language.Haskell.Exts.Syntax
-import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
-import System.Exit
-import System.IO
-import System.Process
 import Text.Printf
 
+import System.Console.Hawk.Config.Cache
+import System.Console.Hawk.Config.Compile
+import System.Console.Hawk.Config.Parse
 import System.Console.Hawk.Lock
 
 
 defaultModules :: [(String,Maybe String)]
 defaultModules = [("System.Console.Hawk.Representable",
                    Just "System.Console.Hawk.Representable")]
-
-(<//>) :: IO FilePath -- the left filepath in the IO monad
-       -> FilePath -- the right filepath
-       -> IO FilePath -- the filepath resulting
-lpath <//> rpath = (</> rpath) <$> lpath
-
-getConfigDir :: IO FilePath
-getConfigDir = getHomeDirectory <//> ".hawk"
-
-getConfigFile :: IO FilePath
-getConfigFile = getConfigDir <//> "prelude.hs"
-
-getCacheDir :: IO FilePath
-getCacheDir = getConfigDir <//> "cache"
-
-getConfigInfosFile :: IO FilePath
-getConfigInfosFile = getCacheDir <//> "configInfos"
-
-getModulesFile :: IO FilePath
-getModulesFile = getCacheDir <//> "modules"
-
-getExtensionsFile :: IO FilePath
-getExtensionsFile = getCacheDir <//> "extensions"
 
 -- --
 -- From now the code is heavy, it needs a refactoring (renaming)
@@ -158,90 +126,6 @@ getModuleName bs = case BSS.indices (C8.pack "module") bs of
                            . C8.takeWhile (\c -> isAlphaNum c || c == '.')
                            . C8.dropWhile isSpace
                            . C8.drop (i + 6) $ bs
-
--- compile a haskell file
--- TODO: this should return the error instead of print it and exit
-compile :: FilePath -- ^ the source file
-        -> FilePath -- ^ the output file
-        -> FilePath -- ^ the directory used for compiler files
-        -> IO ()
-compile sourceFile outputFile dir = do
-    compExitCode <-
-            waitForProcess =<< runProcess "ghc" ["--make"
-                                               , sourceFile
-                                               , "-i"
-                                               , "-ilib"
-                                               , "-fforce-recomp"
-                                               , "-v0"
-                                               , "-o",outputFile]
-                                          (Just dir)
-                                          Nothing
-                                          Nothing
-                                          Nothing
-                                          (Just stderr)
-    when (compExitCode /= ExitSuccess) $ do
-        exitFailure
-
-
-getResult :: FilePath -> ParseResult a -> IO a
-getResult _ (ParseOk x) = return x
-getResult sourceFile (ParseFailed srcLoc err) = do
-    putStrLn $ printf "error parsing file %s:%d: %s" sourceFile (show srcLoc) err
-    exitFailure
-
-
-type ExtensionName = String
-
-parseExtensions :: FilePath -> IO [ExtensionName]
-parseExtensions sourceFile = do
-    result <- getTopPragmas <$> readFile sourceFile 
-    listExtensions <$> getResult sourceFile result
-  where
-    listExtensions :: [ModulePragma] -> [ExtensionName]
-    listExtensions = map getName . concat . mapMaybe extensionNames
-    
-    extensionNames :: ModulePragma -> Maybe [Name]
-    extensionNames (LanguagePragma _ names) = Just names
-    extensionNames _                        = Nothing
-    
-    getName :: Name -> ExtensionName
-    getName (Ident  s) = s
-    getName (Symbol s) = s
-
-cacheExtensions :: [ExtensionName] -> IO ()
-cacheExtensions extensions = do
-    extensionsFile <- getExtensionsFile
-    writeFile extensionsFile $ show extensions'
-  where
-    extensions' :: [Interpreter.Extension]
-    extensions' = map read extensions
-
-
-type QualifiedModules = (String, Maybe String)
-
-parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModules]
-parseModules sourceFile extensions = do
-    result <- parseFileWithExts extensions' sourceFile
-    Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
-    return $ concatMap toHintModules importDeclarations
-  where
-    extensions' :: [Extension]
-    extensions' = map read extensions
-    
-    toHintModules :: ImportDecl -> [QualifiedModules]
-    toHintModules importDecl =
-      case importDecl of
-        ImportDecl _ (ModuleName mn) False _ _ Nothing _ -> [(mn,Nothing)]
-        ImportDecl _ (ModuleName mn) False _ _ (Just (ModuleName s)) _ ->
-                              [(mn,Nothing),(mn,Just s)]
-        ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
-        ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
-                              [(mn,Just s)]
-
-cacheModules :: [QualifiedModules] -> IO ()
-cacheModules modules = do
-    modulesFile <- getModulesFile
-    writeFile modulesFile $ show modules
 
 
 -- TODO: error handling
