@@ -8,9 +8,12 @@ import Test.Framework
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Config.Test as ConfigTest
 
+import Test.DocTest (doctest)
 import Test.Hspec (hspec)
 
 main :: IO ()
-main = hspec $ do
-    ReprTest.spec
-    ConfigTest.spec
+main = do
+    hspec $ do
+        ReprTest.spec
+        ConfigTest.spec
+    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]

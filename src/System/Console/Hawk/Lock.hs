@@ -6,6 +6,7 @@ module System.Console.Hawk.Lock
 import Control.Concurrent ( threadDelay )
 import Control.Exception
 import Control.Monad ( when, guard )
+import Data.List ( elemIndex )
 import GHC.IO.Exception
 import GHC.IO.Handle ( Handle, hGetContents, hClose )
 import Network.BSD ( getProtocolNumber ) -- still cross-platform, don't let the name fool you
@@ -39,13 +40,13 @@ lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     
     -- used to test an interleaving in which the socket is closed here,
     -- between openSocket and waitForException.
-    when testing $ threadDelay 5000000
+    when testing $ threadDelay 20000
     
     -- wait for the other instance to signal that it is done with the lock.
-    catchJust isDisconnected waitForException $ \() -> do
+    catchJust isDisconnected waitForException $ \reason -> do
       -- we were disconnected, the server must have released the lock!
       
-      when testing $ putStrLn "** UNLOCKED **"
+      when testing $ printf "** UNLOCKED (%s) **\n" reason
       
       -- try again.
       lock testing
@@ -65,8 +66,11 @@ waitForException = bracket openHandle closeHandle $ \h -> do
 isADDRINUSE :: IOError -> Maybe ()
 isADDRINUSE = guard . (== "bind") . ioe_location
 
-isDisconnected :: IOError -> Maybe ()
-isDisconnected = guard . (`elem` ["connect", "hGetContents"]) . ioe_location
+isDisconnected :: IOError -> Maybe String
+isDisconnected = fmap (xs !!) . indexOf . ioe_location
+  where
+    xs = ["connect", "hGetContents"]
+    indexOf x = elemIndex x xs
 
 
 openHandle :: IO Handle

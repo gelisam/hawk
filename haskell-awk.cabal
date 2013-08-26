@@ -59,6 +59,7 @@ Test-suite reference
                       , bytestring
                       , containers
                       , directory
+                      , doctest >= 0.8
                       , test-framework
                       , test-framework-hunit
                       , temporary
