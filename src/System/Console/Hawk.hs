@@ -88,6 +88,18 @@ runLockedHawkInterpreter :: forall a . InterpreterT IO a
 runLockedHawkInterpreter i = do
     withLock $ runHawkInterpreter i
 
+data StreamFormat = StreamFormat | LinesFormat | WordsFormat
+    deriving (P.Eq,P.Show,P.Read)
+
+streamFormat :: B.ByteString
+             -> B.ByteString
+             -> StreamFormat
+streamFormat ld wd = if B.null ld
+                        then StreamFormat
+                        else if B.null wd
+                                then LinesFormat
+                                else WordsFormat
+
 -- TODO missing error handling!
 hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
@@ -100,75 +112,50 @@ hawk config opts extFile expr_str file = do
 
         initInterpreter config (optModuleFile opts) extFile
         
-        let ignoreErrors = optIgnoreErrors opts
-
         -- eval program based on the existence of a delimiter
-        case optMode opts of
-            EvalMode -> 
-                interpret (printf "System.Console.Hawk.Representable.printRows %s (%s)"
-                           (P.show ignoreErrors) expr_str)
-                  (as :: IO ())
-            StreamMode ->
-                interpret (runExpr [printRows ignoreErrors, expr_str])
-                          (as :: IO ())
-            LinesMode -> do
-                interpret (runExpr [ printRows ignoreErrors
-                                        , expr_str
-                                        , parseRows linesDelim])
-                          (as :: IO ())
-            MapMode -> do
-                interpret (runExprs [runMap [ printRow ignoreErrors
-                                                 , expr_str]
-                                    ,parseRows linesDelim])
-                          (as :: IO ())
-            WordsMode -> do
-                let expr = (runExprs [runWords [ printRow ignoreErrors
-                                                   , expr_str]
-                                    ,parseWords linesDelim wordsDelim])
-                interpret expr (as :: IO ())
-                
+        case (optMode opts,streamFormat linesDelim wordsDelim) of
+            (EvalMode,_) -> interpret evalExpr   (as :: IO ())
+            (ApplyMode,StreamFormat) -> interpret streamExpr (as :: IO ())
+            (ApplyMode,LinesFormat)  -> interpret linesExpr  (as :: IO ())
+            (ApplyMode,WordsFormat)  -> interpret wordsExpr  (as :: IO ())
+            (MapMode,StreamFormat) -> interpret mapStreamExpr (as :: IO ())
+            (MapMode,LinesFormat)  -> interpret mapLinesExpr  (as :: IO ())
+            (MapMode,WordsFormat) -> interpret mapWordsExpr (as :: IO ())
+
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
         Right f -> f
     where 
+          evalExpr = printf
+                     "System.Console.Hawk.Representable.printRows %s (%s)"
+                     (P.show ignoreErrors) expr_str
+          mapStreamExpr = runExpr [printRows, listMap expr_str]
+          mapLinesExpr = runExpr [printRows,listMap expr_str,parseRows]
+          mapWordsExpr = runExpr [printRows,listMap expr_str,parseWords]
+          listMap = printf (qualify "listMap (%s)")
+          streamExpr = runExpr [printRows, expr_str]
+          linesExpr = runExpr [printRows, expr_str, parseRows]
+          wordsExpr = runExpr [printRows, expr_str, parseWords]
+          ignoreErrors = P.show $ optIgnoreErrors opts
           linesDelim = optLinesDelim opts
           wordsDelim = optWordsDelim opts
           compose :: [String] -> String
           compose = L.intercalate "." . P.map (printf "(%s)")
-          
-          runExprs :: [String] -> String
-          runExprs = printf "(System.Console.Hawk.Representable.runExprs (%s) (%s))"
-                     (P.show file) . compose
-          
           runExpr :: [String] -> String
-          runExpr = printf "(System.Console.Hawk.Representable.runExpr (%s) (%s))"
-                    (P.show file) . compose
+          runExpr = printf (qualify "runExpr (%s) (%s)") (P.show file) . compose
+          printRows :: String
+          printRows = printf (qualify "printRows (%s)") ignoreErrors
           
-          runMap :: [String] -> String
-          runMap = printf "(System.Console.Hawk.Representable.listMap (%s))"
-                   . compose
+          parseRows :: String
+          parseRows = printf (qualify "parseRows (%s)") (P.show linesDelim)
 
-          runWords :: [String] -> String
-          runWords = printf "(System.Console.Hawk.Representable.listMapWords (%s))"
-                     . compose
-          
-          printRow :: Bool -> String
-          printRow b = printf "(System.Console.Hawk.Representable.printRow %s)"
-                       (P.show b)
-          
-          printRows :: Bool -> String
-          printRows b = printf "(System.Console.Hawk.Representable.printRows %s)"
-                        (P.show b)
-          
-          parseRows :: B.ByteString -> String
-          parseRows = printf "System.Console.Hawk.Representable.parseRows (%s)"
-                         . P.show
-
-          parseWords :: B.ByteString -> B.ByteString -> String
-          parseWords ld wd = compose
-            [ printf "System.Console.Hawk.Representable.parseWords (%s)" (P.show wd)
-            , parseRows ld
-            ]
+          parseWords :: String
+          parseWords = printf
+                       (qualify "parseWords (%s) (%s)")
+                       (P.show linesDelim)
+                       (P.show wordsDelim)
+          qualify :: String -> String
+          qualify s = "(System.Console.Hawk.Representable." ++ s ++ ")"
 
 getUsage :: IO String
 getUsage = do

@@ -49,12 +49,19 @@ listMapWords = L.map
 parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
 parseRows delim str = dropLastIfEmpty $ BS.split delim str
 
--- special case for space
-parseWords :: SC8.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
-parseWords delim strs = L.map f strs
-    where f = if delim == SC8.singleton ' '
-                then L.filter  (not . C8.null) . BS.split delim
-                else BS.split delim
+---- special case for space
+parseWords :: SC8.ByteString -> SC8.ByteString -> C8.ByteString -> [[C8.ByteString]]
+parseWords rowsDelim columnsDelim str = let rows = parseRows rowsDelim str
+                                        in L.map f rows
+    where f = if columnsDelim == SC8.singleton ' '
+                then L.filter  (not . C8.null) . BS.split columnsDelim
+                else BS.split columnsDelim
+         
+--parseWords :: SC8.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
+--parseWords delim strs = L.map f strs
+--    where f = if delim == SC8.singleton ' '
+--                then L.filter  (not . C8.null) . BS.split delim
+--                else BS.split delim
 
 runOnInput :: Maybe FilePath -- ^ the input file or stdout when Nothing
             -> (C8.ByteString -> IO ()) -- ^ the action to run on the input
