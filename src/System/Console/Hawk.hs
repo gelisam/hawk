@@ -126,9 +126,8 @@ hawk config opts extFile expr_str file = do
         Left ie -> printErrors ie -- error hanling!
         Right f -> f
     where 
-          evalExpr = printf
-                     "System.Console.Hawk.Representable.printRows %s (%s)"
-                     (P.show ignoreErrors) expr_str
+          evalExpr :: String
+          evalExpr = printf "%s (%s)" printRows expr_str
           mapStreamExpr = runExpr [printRows, listMap expr_str]
           mapLinesExpr = runExpr [printRows,listMap expr_str,parseRows]
           mapWordsExpr = runExpr [printRows,listMap expr_str,parseWords]
