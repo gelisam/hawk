@@ -26,8 +26,9 @@ import System.Console.Hawk.Lock
 
 
 defaultModules :: [(String,Maybe String)]
-defaultModules = [("System.Console.Hawk.Representable",
-                   Just "System.Console.Hawk.Representable")]
+defaultModules = [(representable, Just representable)]
+  where
+    representable = "System.Console.Hawk.Representable"
 
 defaultPrelude :: String
 defaultPrelude = unlines
