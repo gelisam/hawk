@@ -22,6 +22,8 @@ import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.ByteString as B
+import Language.Haskell.Exts.Parser (ParseResult (..), parseType)
+import Language.Haskell.Exts.Syntax (Type (..))
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
@@ -114,7 +116,10 @@ hawk config opts extFile expr_str file = do
         
         -- eval program based on the existence of a delimiter
         case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_) -> interpret evalExpr   (as :: IO ())
+            (EvalMode,_) -> do
+              type_string <- typeOf expr_str
+              let ParseOk t = parseType type_string
+              interpret (magicExpr t) (as :: IO ())
             (ApplyMode,StreamFormat) -> interpret streamExpr (as :: IO ())
             (ApplyMode,LinesFormat)  -> interpret linesExpr  (as :: IO ())
             (ApplyMode,WordsFormat)  -> interpret wordsExpr  (as :: IO ())
@@ -126,6 +131,14 @@ hawk config opts extFile expr_str file = do
         Left ie -> printErrors ie -- error hanling!
         Right f -> f
     where 
+          magicExpr :: Type -> String
+          magicExpr (TyForall _ _ t)              = magicExpr t
+          magicExpr (TyParen t)                   = magicExpr t
+          magicExpr (TyFun (TyList (TyList _)) _) = wordsExpr     -- [[a]] -> b, parse as words
+          magicExpr (TyFun (TyList _) _)          = linesExpr     -- [a] -> b, parse as lines
+          magicExpr (TyFun _ _)                   = mapLinesExpr  -- a -> b, map lines
+          magicExpr _                             = evalExpr      -- a, eval
+          
           evalExpr :: String
           evalExpr = printf "%s (%s)" printRows expr_str
           mapStreamExpr = runExpr [printRows, listMap expr_str]
