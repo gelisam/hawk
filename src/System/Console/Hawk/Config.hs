@@ -29,6 +29,14 @@ defaultModules :: [(String,Maybe String)]
 defaultModules = [("System.Console.Hawk.Representable",
                    Just "System.Console.Hawk.Representable")]
 
+defaultPrelude :: String
+defaultPrelude = unlines
+               [ "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
+               , "import Prelude"
+               , "import qualified Data.ByteString.Lazy.Char8 as B"
+               , "import qualified Data.List as L"
+               ]
+
 -- --
 -- From now the code is heavy, it needs a refactoring (renaming)
 
@@ -44,12 +52,7 @@ recompileConfigIfNeeded = withLock $ do
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
-        writeFile configFile $
-            unlines
-            [ "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
-            , "import Prelude"
-            , "import qualified Data.ByteString.Lazy.Char8 as B"
-            , "import qualified Data.List as L"]
+        writeFile configFile defaultPrelude
     configInfosFile <- getConfigInfosFile
     configInfosExists <- doesFileExist configInfosFile
     if configInfosExists
