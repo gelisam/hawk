@@ -19,56 +19,56 @@ import Test.Hspec
 spec :: Spec
 spec = describe "repr" $ do
     it "can convert boolean values" $ do
-        repr True `shouldBe` ["True"]
-        repr False `shouldBe` ["False"]
+        repr "\t" True `shouldBe` ["True"]
+        repr "\t" False `shouldBe` ["False"]
 
     it "can convert char values" $ example $
-        repr 'c' `shouldBe` ["c"]
+        repr "\t" 'c' `shouldBe` ["c"]
 
     it "can convert double values" $ example $
-        repr (1.1::Double) `shouldBe` ["1.1"]
+        repr "\t" (1.1::Double) `shouldBe` ["1.1"]
 
     it "can convert float values" $ example $
-        repr (1.1::Float) `shouldBe` ["1.1"]
+        repr "\t" (1.1::Float) `shouldBe` ["1.1"]
 
     it "can convert int values" $ example $
-        repr (1::Int) `shouldBe` ["1"]
+        repr "\t" (1::Int) `shouldBe` ["1"]
 
     it "can convert integer values" $ example $
-        repr (1::Integer) `shouldBe` ["1"]
+        repr "\t" (1::Integer) `shouldBe` ["1"]
 
     it "can convert maybe values" $ do 
-        example $ repr (Nothing::Maybe ()) `shouldBe` [""]
-        example $ repr (Just 1::Maybe Int) `shouldBe` ["1"]
-        example $ repr (Just (Just True)) `shouldBe` ["True"]
+        example $ repr "\t" (Nothing::Maybe ()) `shouldBe` [""]
+        example $ repr "\t" (Just 1::Maybe Int) `shouldBe` ["1"]
+        example $ repr "\t" (Just (Just True)) `shouldBe` ["True"]
 
     it "can convert unit value" $
-        repr () `shouldBe` [""]
+        repr "\t" () `shouldBe` [""]
 
     it "can convert string values" $ do
-        example $ repr "" `shouldBe` [""]
-        example $ repr "word" `shouldBe` ["word"]
-        example $ repr "word word" `shouldBe` ["word word"]
+        example $ repr "\t" "" `shouldBe` [""]
+        example $ repr "\t" "word" `shouldBe` ["word"]
+        example $ repr "\t" "word word" `shouldBe` ["word word"]
 
     it "can convert tuple values" $ do
-        example $ repr (1,True) `shouldBe` ["1","True"]
-        example $ repr ((1,2),False) `shouldBe` ["1\t2","False"]
+        example $ repr "\t" (1,True) `shouldBe` ["1","True"]
+        example $ repr "\t" ((1,2),False) `shouldBe` ["1\t2","False"]
 
     it "can convert list values" $ do
-        repr ([]::[()]) `shouldBe` []
-        example $ repr [True] `shouldBe` ["True"]
-        example $ repr [True,False] `shouldBe` ["True","False"]
-        example $ repr [Just 1,Nothing] `shouldBe` ["1",""]
-        example $ repr [[1,2,3],[4,5,6]] `shouldBe` ["1\t2\t3","4\t5\t6"]
-        example $ repr ["w w","w w"] `shouldBe` ["w w","w w"]
-        example $ repr [["w w"],["w w"]] `shouldBe` ["w w","w w"]
+        repr "\t" ([]::[()]) `shouldBe` []
+        example $ repr "\t" [True] `shouldBe` ["True"]
+        example $ repr "\t" [True,False] `shouldBe` ["True","False"]
+        example $ repr "\t" [Just 1,Nothing] `shouldBe` ["1",""]
+        example $ repr "\t" [[1,2,3],[4,5,6]] `shouldBe` ["1\t2\t3","4\t5\t6"]
+        example $ repr "\t" ["w w","w w"] `shouldBe` ["w w","w w"]
+        example $ repr "\t" [["w w"],["w w"]] `shouldBe` ["w w","w w"]
 
     it "can convert map values" $ do
-        repr (M.empty::Map Bool Bool) `shouldBe` []
-        example $ repr (M.fromList [(1,2),(3,4)]) `shouldBe` ["1\t2","3\t4"]
-        example $ repr ([M.fromList [(1,2),(3,4)]]) `shouldBe` ["1 2\t3 4"]
+        repr "\t" (M.empty::Map Bool Bool) `shouldBe` []
+        example $ repr "\t" (M.fromList [(1,2),(3,4)]) `shouldBe` ["1\t2","3\t4"]
+        example $ repr "\t" ([M.fromList [(1,2),(3,4)]]) `shouldBe` ["1 2\t3 4"]
 
     it "can convert set values" $ do
-        repr (S.empty::Set Bool) `shouldBe` []
-        example $ repr (S.fromList [1,2,3,4]) `shouldBe` ["1","2","3","4"]
-        example $ repr ([S.fromList [1,2]]) `shouldBe` ["1\t2"]
+        repr "\t" (S.empty::Set Bool) `shouldBe` []
+        example $ repr "\t" (S.fromList [1,2,3,4]) `shouldBe` ["1","2","3","4"]
+        example $ repr "\t" ([S.fromList [1,2]]) `shouldBe` ["1\t2"]

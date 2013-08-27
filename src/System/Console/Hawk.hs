@@ -124,7 +124,7 @@ hawk config opts extFile expr_str file = do
 
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
-        Right f -> f
+        Right f -> f >> IO.putStrLn ""
     where 
           evalExpr :: String
           evalExpr = printf "%s (%s)" printRows expr_str
@@ -143,7 +143,10 @@ hawk config opts extFile expr_str file = do
           runExpr :: [String] -> String
           runExpr = printf (qualify "runExpr (%s) (%s)") (P.show file) . compose
           printRows :: String
-          printRows = printf (qualify "printRows (%s)") ignoreErrors
+          printRows = printf (qualify "printRows (%s) (%s) (%s)")
+                             ignoreErrors
+                             (P.show linesDelim)
+                             (P.show wordsDelim)
           
           parseRows :: String
           parseRows = printf (qualify "parseRows (%s)") (P.show linesDelim)

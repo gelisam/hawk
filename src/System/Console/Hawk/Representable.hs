@@ -92,16 +92,31 @@ runExprs fp f = runOnInput fp (sequence_ . f)
 -- 3
 -- 4
 class (Show a) => Rows a where
-    repr :: a -> [C8.ByteString]
-    repr = (:[]) . C8.pack . show
+    repr :: ByteString -- ^ column delimiter
+         -> a -- ^ value to represent
+         -> [C8.ByteString]
+    repr _ = (:[]) . C8.pack . show
 
-printRows :: forall a . (Rows a) => Bool -> a -> IO ()
-printRows b = printRows_ . repr
+printRows :: forall a . (Rows a) 
+          => Bool -- ^ if printRows will continue after errors
+          -> C8.ByteString -- ^ rows delimiter
+          -> C8.ByteString -- ^ columns delimiter
+          -> a -- ^ the value to print as rows
+          -> IO ()
+printRows b rowDelimiter columnDelimiter = printFirstRow_ . repr columnDelimiter
     where printRows_ [] = return ()
           printRows_ (x:xs) = do
-            f x
+            putStrAndDelim x
             handle ioExceptionsHandler (continue xs)
-          f = if b then handleErrors . C8.putStrLn else C8.putStrLn
+          printFirstRow_ [] = return ()
+          printFirstRow_ (x:xs) = do
+            putStrOnly x
+            handle ioExceptionsHandler (continue xs)
+          putStrAndDelim = if b then handleErrors . putDelimAndStr_
+                                else putDelimAndStr_
+          putStrOnly = if b then handleErrors . C8.putStr else C8.putStr
+          putDelimAndStr_ :: C8.ByteString -> IO ()
+          putDelimAndStr_ c = C8.putStr rowDelimiter >> C8.putStr c
           continue xs = IO.hFlush IO.stdout >> printRows_ xs
           ioExceptionsHandler e = case ioe_type e of
                                     ResourceVanished -> return ()
@@ -114,33 +129,35 @@ instance Rows Int
 instance Rows Integer
 
 instance Rows () where
-    repr = const [C8.empty]
+    repr _ = const [C8.empty]
 
 instance Rows Char where
-    repr = (:[]) . C8.singleton
+    repr _ = (:[]) . C8.singleton
 
 instance Rows ByteString where
-    repr = (:[])
+    repr _ = (:[])
 
 instance (Rows a) => Rows (Maybe a) where
-    repr = maybe [C8.empty] repr
+    repr d = maybe [C8.empty] (repr d)
 
 instance (Row a, Row b) => Rows (a,b) where
-    repr (x,y) = [repr' x,repr' y]
+    repr d (x,y) = [repr' d x,repr' d y]
 
 instance (Row a, Row b) => Rows (Map a b) where
-    repr = listAsRows . M.toList
+    repr d = listAsRows d . M.toList
 
 instance (ListAsRows a) => Rows (Set a) where
-    repr = listAsRows . S.toList
+    repr d = listAsRows d . S.toList
 
 
 
 -- Lists
 
 class (Row a) => ListAsRows a where
-    listAsRows :: [a] -> [ByteString]
-    listAsRows = L.map repr'
+    listAsRows :: ByteString -- ^ column delimiter
+               -> [a]
+               -> [ByteString]
+    listAsRows d = L.map (repr' d)
 
 instance ListAsRows ByteString
 instance ListAsRows Bool
@@ -155,16 +172,16 @@ instance (Row a,Row b) => ListAsRows (a,b)
 instance (Row a,Row b,Row c) => ListAsRows (a,b,c)
 
 instance ListAsRows Char where
-    listAsRows = (:[]) . C8.pack
+    listAsRows _ = (:[]) . C8.pack
 
 instance (ListAsRows a) => Rows [a] where
     repr = listAsRows
 
 instance (ListAsRow a,ListAsRows a) => ListAsRows (Set a) where
-    listAsRows = listAsRows . L.map S.toList
+    listAsRows d = listAsRows d . L.map S.toList
 
 instance (Row a,Row b) => ListAsRows (Map a b) where
-    listAsRows = listAsRows . L.map M.toList
+    listAsRows d = listAsRows d . L.map M.toList
 
 -- ---------------------------
 -- Row class and instances
@@ -181,8 +198,10 @@ instance (Row a,Row b) => ListAsRows (Map a b) where
 -- >>> Data.ByteString.Lazy.Char8.putStrLn $ repr' [1,2,3,4]
 -- 1 2 3 4
 class (Show a) => Row a where
-    repr' :: a -> ByteString
-    repr' = C8.pack . show
+    repr' :: ByteString -- ^ delimiter
+          -> a -- ^ value to represent
+          -> ByteString
+    repr' _ = C8.pack . show
 
 instance Row Bool
 instance Row Float
@@ -192,15 +211,19 @@ instance Row Integer
 instance Row ()
 
 instance Row Char where
-    repr' = C8.singleton
+    repr' _ = C8.singleton
 
-printRow :: forall a . (Row a) => Bool -> a -> IO ()
-printRow b = if b then handleErrors . f else f
-  where f = C8.putStrLn . repr'
+printRow :: forall a . (Row a)
+         => Bool -- ^ if printRow should continue after errors
+         -> ByteString -- ^ the column delimiter
+         -> a -- ^ the value to print
+         -> IO ()
+printRow b d = if b then handleErrors . f else f
+  where f = C8.putStrLn . repr' d
 
 class (Show a) => ListAsRow a where
-    listRepr :: [a] -> ByteString
-    listRepr = C8.intercalate "\t" . L.map (C8.pack . show)
+    listRepr :: ByteString -> [a] -> ByteString
+    listRepr d = C8.intercalate d . L.map (C8.pack . show)
 
 instance ListAsRow Bool
 instance ListAsRow Float
@@ -209,35 +232,37 @@ instance ListAsRow Integer
 instance ListAsRow ()
 
 instance (ListAsRow a) => ListAsRow [a] where
-    listRepr = C8.intercalate "\t" . L.map listRepr
+    -- todo check the first delimiter if it should be d
+    listRepr d = C8.intercalate d . L.map (listRepr d)
 
 instance ListAsRow Char where
-    listRepr = C8.pack
+    listRepr _ = C8.pack
 
 instance ListAsRow ByteString where
-    listRepr = C8.intercalate "\t"
+    listRepr d = C8.intercalate d
 
 instance (Row a,Row b) => ListAsRow (a,b) where
-    listRepr = C8.intercalate "\t" . L.map (\(x,y) -> C8.unwords [repr' x,repr' y])
+    listRepr d = C8.intercalate d . 
+                 L.map (\(x,y) -> C8.unwords [repr' d x,repr' d y])
 
 instance (ListAsRow a) => Row [a] where
     repr' = listRepr
 
 instance (ListAsRow a) => Row (Set a) where
-    repr' = listRepr . S.toList
+    repr' d = listRepr d . S.toList
 
 instance (Row a,Row b) => Row (Map a b) where
-    repr' = listRepr . M.toList
+    repr' d = listRepr d . M.toList
 
 instance Row ByteString where
-    repr' = id
+    repr' _ = id
 
 instance (Row a) => Row (Maybe a) where
-    repr' Nothing = C8.empty
-    repr' (Just x) = repr' x
+    repr' _ Nothing = C8.empty
+    repr' d (Just x) = repr' d x -- check if d is correct here
 
 instance (Row a,Row b) => Row (a,b) where
-    repr' (a,b) = repr' [repr' a,repr' b] 
+    repr' d (a,b) = repr' d [repr' d a,repr' d b] 
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
-    repr' (a,b,c) = repr' [repr' a,repr' b,repr' c]
+    repr' d (a,b,c) = repr' d [repr' d a,repr' d b,repr' d c]
