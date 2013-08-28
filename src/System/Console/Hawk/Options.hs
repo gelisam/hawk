@@ -79,5 +79,5 @@ options =
 compileOpts :: [String] -> Either [String] (Options,[String])
 compileOpts argv =
    case getOpt Permute options argv of
-      (os,nos,[]) -> Right (L.foldl (.) id os defaultOptions, nos)
+      (os,nos,[]) -> Right (L.foldl (.) id (L.reverse os) defaultOptions, nos)
       (_,_,errs) -> Left errs
