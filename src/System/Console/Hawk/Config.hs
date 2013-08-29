@@ -82,25 +82,23 @@ getOrCreateCacheDir = do
     createDirectoryIfMissing True cacheDir
     return cacheDir
 
--- retrieve the real configuration file, that is the configuration
--- file with a module name. If the configuration file doesn't have a module
--- name than create one and set it in a cache file
-getConfigFileWithModule :: FilePath -- ^ the user config file
-                        -> ByteString -- ^ module name in case the config file
-                                      --   doesn't have it
-                        -> FilePath -- ^ output file, used to put the config file
-                                    --   with the random module
-                        -> IO ByteString
-getConfigFileWithModule configFile defaultModuleName configFileWithModule = do
+-- extract the source from the prelude. which should be easy, given that the
+-- prelude syntax is Haskell source code. we just need to make a few ajustments.
+createSourceFile :: FilePath -- ^ the user config file
+                 -> ByteString -- ^ module name in case the config file
+                               --   doesn't have it
+                 -> FilePath -- ^ output file, used to put the config file
+                             --   with the random module
+                 -> IO ByteString
+createSourceFile configFile defaultModuleName sourceFile = do
     configCode <- C8.readFile configFile
-    let (configCodeWithModule,
-         moduleName) =
+    let (sourceCode, moduleName) =
          case getModuleName configCode of
            Just moduleName' -> (configCode,
                                 moduleName')
            Nothing          -> (addModule configFile defaultModuleName configCode,
                                 moduleName)
-    C8.writeFile configFileWithModule configCodeWithModule
+    C8.writeFile sourceFile sourceCode
     return moduleName
 
 -- add a module to a string representing a Haskell source file
@@ -148,18 +146,18 @@ recompileConfig = do
     
     currTime <- (filter isDigit . show <$> getCurrentTime)
     let compiledFile = cacheDir </> ("config" ++ currTime)
-    let configFileWithModule = compiledFile ++ ".hs"
-    moduleName <- getConfigFileWithModule configFile
-                                          (C8.pack $ "Hawk.M" ++ currTime)
-                                          configFileWithModule
-    compile configFileWithModule compiledFile cacheDir
+    let sourceFile = compiledFile ++ ".hs"
+    moduleName <- createSourceFile configFile
+                                   (C8.pack $ "Hawk.M" ++ currTime)
+                                   sourceFile
+    compile sourceFile compiledFile cacheDir
     lastModTime <- getModificationTime configFile
     configInfosFile <- getConfigInfosFile
-    writeFile configInfosFile $ unlines [configFileWithModule
+    writeFile configInfosFile $ unlines [sourceFile
                                          ,C8.unpack moduleName
                                          ,show lastModTime]
     
-    return (configFileWithModule,C8.unpack moduleName)
+    return (sourceFile,C8.unpack moduleName)
   where
     clean :: IO ()
     clean = do
