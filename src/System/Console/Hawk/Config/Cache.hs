@@ -69,7 +69,7 @@ cacheExtensions extensions = do
     extensions' :: [Interpreter.Extension]
     extensions' = map read extensions
 
-cacheModules :: [QualifiedModules] -> IO ()
+cacheModules :: [QualifiedModule] -> IO ()
 cacheModules modules = do
     modulesFile <- getModulesFile
     writeFile modulesFile $ show modules

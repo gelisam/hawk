@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config.Parse
     ( ExtensionName
-    , QualifiedModules
+    , QualifiedModule
     , parseExtensions
     , parseModules
     )
@@ -47,9 +47,9 @@ parseExtensions sourceFile = do
     getName (Symbol s) = s
 
 
-type QualifiedModules = (String, Maybe String)
+type QualifiedModule = (String, Maybe String)
 
-parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModules]
+parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
 parseModules sourceFile extensions = do
     result <- parseFileWithExts extensions' sourceFile
     Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
@@ -58,7 +58,7 @@ parseModules sourceFile extensions = do
     extensions' :: [Extension]
     extensions' = map read extensions
     
-    toHintModules :: ImportDecl -> [QualifiedModules]
+    toHintModules :: ImportDecl -> [QualifiedModule]
     toHintModules importDecl =
       case importDecl of
         ImportDecl _ (ModuleName mn) False _ _ Nothing _ -> [(mn,Nothing)]
