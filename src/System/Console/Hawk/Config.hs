@@ -90,17 +90,18 @@ getConfigFileWithModule :: FilePath -- ^ the user config file
                                       --   doesn't have it
                         -> FilePath -- ^ output file, used to put the config file
                                     --   with the random module
-                        -> IO (FilePath,ByteString)
-getConfigFileWithModule configFile moduleName configFileWithModule = do
+                        -> IO ByteString
+getConfigFileWithModule configFile defaultModuleName configFileWithModule = do
     configCode <- C8.readFile configFile
-    case getModuleName configCode of
-        Just moduleName' -> return (configFile,moduleName')
-        Nothing -> let configCodeWithModule = addModule configFile
-                                                        moduleName
-                                                        configCode
-                   in do
-                      C8.writeFile configFileWithModule configCodeWithModule
-                      return (configFileWithModule,moduleName)
+    let (configCodeWithModule,
+         moduleName) =
+         case getModuleName configCode of
+           Just moduleName' -> (configCode,
+                                moduleName')
+           Nothing          -> (addModule configFile defaultModuleName configCode,
+                                moduleName)
+    C8.writeFile configFileWithModule configCodeWithModule
+    return moduleName
 
 -- add a module to a string representing a Haskell source file
 addModule :: FilePath   -- ^ the user config file
@@ -147,10 +148,10 @@ recompileConfig = do
     
     currTime <- (filter isDigit . show <$> getCurrentTime)
     let compiledFile = cacheDir </> ("config" ++ currTime)
-    (configFileWithModule,moduleName) <- getConfigFileWithModule 
-                                               configFile
-                                               (C8.pack $ "Hawk.M" ++ currTime)
-                                               (compiledFile ++ ".hs")
+    let configFileWithModule = compiledFile ++ ".hs"
+    moduleName <- getConfigFileWithModule configFile
+                                          (C8.pack $ "Hawk.M" ++ currTime)
+                                          configFileWithModule
     compile configFileWithModule compiledFile cacheDir
     lastModTime <- getModificationTime configFile
     configInfosFile <- getConfigInfosFile
