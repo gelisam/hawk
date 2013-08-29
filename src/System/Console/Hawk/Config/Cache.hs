@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ImplicitParams, OverloadedStrings #-}
 module System.Console.Hawk.Config.Cache
     ( getConfigDir
     , getConfigFile
@@ -6,13 +6,18 @@ module System.Console.Hawk.Config.Cache
     , getConfigInfosFile
     , getExtensionsFile
     , getModulesFile
+    , getCompiledFile
+    , getSourceFile
+    , defaultModuleName
     , cacheExtensions
     , cacheModules
+    , cacheSource
     )
   where
 
 import Control.Applicative ((<$>))
 
+import qualified Data.ByteString.Char8 as B
 import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 
@@ -43,6 +48,19 @@ getExtensionsFile :: IO FilePath
 getExtensionsFile = getCacheDir <//> "extensions"
 
 
+getSourceBasename :: (?frozenTime :: String) => IO String
+getSourceBasename = getCacheDir <//> ("config" ++ ?frozenTime)
+
+getCompiledFile :: (?frozenTime :: String) => IO String
+getCompiledFile = getSourceBasename
+
+getSourceFile :: (?frozenTime :: String) => IO String
+getSourceFile = (++ ".hs") <$> getSourceBasename
+
+defaultModuleName :: (?frozenTime :: String) => String
+defaultModuleName = "Hawk.M" ++ ?frozenTime
+
+
 cacheExtensions :: [ExtensionName] -> IO ()
 cacheExtensions extensions = do
     extensionsFile <- getExtensionsFile
@@ -55,3 +73,8 @@ cacheModules :: [QualifiedModules] -> IO ()
 cacheModules modules = do
     modulesFile <- getModulesFile
     writeFile modulesFile $ show modules
+
+cacheSource :: (?frozenTime :: String) => B.ByteString -> IO ()
+cacheSource source = do
+    sourceFile <- getSourceFile
+    B.writeFile sourceFile source

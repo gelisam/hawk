@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ImplicitParams, OverloadedStrings #-}
 module System.Console.Hawk.Config (
       defaultModules
     , recompileConfigIfNeeded
@@ -16,6 +16,7 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.Time
+import Data.Maybe (fromJust)
 import System.EasyFile
 import Text.Printf
 
@@ -82,39 +83,35 @@ getOrCreateCacheDir = do
     createDirectoryIfMissing True cacheDir
     return cacheDir
 
--- extract the source from the prelude. which should be easy, given that the
--- prelude syntax is Haskell source code. we just need to make a few ajustments.
-createSourceFile :: FilePath -- ^ the user config file
-                 -> ByteString -- ^ module name in case the config file
-                               --   doesn't have it
-                 -> FilePath -- ^ output file, used to put the config file
-                             --   with the random module
-                 -> IO ByteString
-createSourceFile configFile defaultModuleName sourceFile = do
-    configCode <- C8.readFile configFile
-    let (sourceCode, moduleName) =
-         case getModuleName configCode of
-           Just moduleName' -> (configCode,
-                                moduleName')
-           Nothing          -> (addModule configFile defaultModuleName configCode,
-                                moduleName)
-    C8.writeFile sourceFile sourceCode
-    return moduleName
+-- adjust the prelude to make it loadable from hint.
+-- return the module name.
+createHintModule :: (?frozenTime :: String) => FilePath -> IO String
+createHintModule configFile = do
+    source <- adjustSource <$> C8.readFile configFile
+    cacheSource source
+    return $ forceModuleName source
+  where
+    adjustSource :: ByteString -> ByteString
+    adjustSource = addModuleIfMissing
+    
+    forceModuleName :: ByteString -> String
+    forceModuleName = C8.unpack . fromJust . getModuleName
+    
+    addModuleIfMissing :: ByteString -> ByteString
+    addModuleIfMissing s | getModuleName s == Nothing = addModule configFile s
+    addModuleIfMissing s | otherwise                  = s
 
 -- add a module to a string representing a Haskell source file
-addModule :: FilePath   -- ^ the user config file
-          -> ByteString -- ^ module name
-          -> ByteString -- ^ haskell code
-          -> ByteString -- ^ result
-addModule configFile moduleName code =
-    let strippedCode = C8.dropWhile isSpace code
+addModule :: (?frozenTime :: String) => FilePath -> ByteString -> ByteString
+addModule configFile source =
+    let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
                         then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
                              in (Just pragma, afterPragma)
                         else (Nothing,strippedCode)
         line :: Int -> ByteString
         line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
-        moduleLine = C8.unwords [C8.pack "module", moduleName, C8.pack "where"]
+        moduleLine = C8.pack $ unwords ["module", defaultModuleName, "where"]
     in case maybePragma of
         (Nothing,c) -> C8.unlines [moduleLine,c]
         (Just pragma,c) -> let n = 1 + C8.length (C8.filter (=='\n') pragma)
@@ -145,19 +142,20 @@ recompileConfig = do
     cacheModules modules
     
     currTime <- (filter isDigit . show <$> getCurrentTime)
-    let compiledFile = cacheDir </> ("config" ++ currTime)
-    let sourceFile = compiledFile ++ ".hs"
-    moduleName <- createSourceFile configFile
-                                   (C8.pack $ "Hawk.M" ++ currTime)
-                                   sourceFile
-    compile sourceFile compiledFile cacheDir
-    lastModTime <- getModificationTime configFile
-    configInfosFile <- getConfigInfosFile
-    writeFile configInfosFile $ unlines [sourceFile
-                                         ,C8.unpack moduleName
-                                         ,show lastModTime]
-    
-    return (sourceFile,C8.unpack moduleName)
+    let ?frozenTime = currTime in do
+      moduleName <- createHintModule configFile
+      
+      sourceFile <- getSourceFile
+      compiledFile <- getCompiledFile
+      compile sourceFile compiledFile cacheDir
+      
+      lastModTime <- getModificationTime configFile
+      configInfosFile <- getConfigInfosFile
+      writeFile configInfosFile $ unlines [sourceFile
+                                           ,moduleName
+                                           ,show lastModTime]
+      
+      return (sourceFile, moduleName)
   where
     clean :: IO ()
     clean = do
