@@ -17,6 +17,7 @@ import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.Time
 import Data.Maybe (fromJust)
+import Data.Monoid ((<>))
 import System.EasyFile
 import Text.Printf
 
@@ -85,18 +86,27 @@ getOrCreateCacheDir = do
 
 -- adjust the prelude to make it loadable from hint.
 -- return the module name.
-createHintModule :: (?frozenTime :: String) => FilePath -> IO String
-createHintModule configFile = do
+createHintModule :: (?frozenTime :: String)
+                 => FilePath
+                 -> [ExtensionName]
+                 -> [QualifiedModule]
+                 -> IO String
+createHintModule configFile extensions modules = do
     source <- adjustSource <$> C8.readFile configFile
     cacheSource source
     return $ forceModuleName source
   where
     adjustSource :: ByteString -> ByteString
-    adjustSource = addModuleIfMissing
+    adjustSource = addPreludeIfMissing . addModuleIfMissing
 
     addModuleIfMissing :: ByteString -> ByteString
     addModuleIfMissing s | getModuleName s == Nothing = addModule configFile s
     addModuleIfMissing s | otherwise                  = s
+    
+    addPreludeIfMissing :: ByteString -> ByteString
+    addPreludeIfMissing s | "NoImplicitPrelude" `elem` extensions = s
+    addPreludeIfMissing s | "Prelude" `elem` map fst modules      = s
+    addPreludeIfMissing s | otherwise = addImport "Prelude" configFile s
 
 -- add a module to a string representing a Haskell source file
 addModule :: (?frozenTime :: String) => FilePath -> ByteString -> ByteString
@@ -113,6 +123,21 @@ addModule configFile source =
         (Nothing,c) -> C8.unlines [moduleLine,c]
         (Just pragma,c) -> let n = 1 + C8.length (C8.filter (=='\n') pragma)
                             in C8.unlines [line 1,pragma,moduleLine,line n,c]
+
+-- add an import statement to a string representing a Haskell source file
+addImport :: String -> FilePath -> ByteString -> ByteString
+addImport moduleName configFile source =
+    let (premodule,postmodule)   = BSS.breakAfter "module " source
+        (prewhere,postwhere)     = BSS.breakAfter " where" postmodule
+        (prenewline,postnewline) = BSS.breakAfter "\n" postwhere
+        preimports = premodule <> prewhere <> prenewline
+        postimports = postnewline
+        line :: Int -> ByteString
+        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
+        importLine = C8.pack $ unwords ["import", moduleName]
+        n = 1 + C8.length (C8.filter (=='\n') preimports)
+        extraLines = C8.unlines [importLine, line n]
+    in preimports <> extraLines <> postimports
 
 
 -- get the module name from a file if it exists
@@ -144,7 +169,7 @@ recompileConfig = do
     
     currTime <- (filter isDigit . show <$> getCurrentTime)
     let ?frozenTime = currTime in do
-      moduleName <- createHintModule configFile
+      moduleName <- createHintModule configFile extensions modules
       
       sourceFile <- getSourceFile
       compiledFile <- getCompiledFile
