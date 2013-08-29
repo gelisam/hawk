@@ -93,10 +93,7 @@ createHintModule configFile = do
   where
     adjustSource :: ByteString -> ByteString
     adjustSource = addModuleIfMissing
-    
-    forceModuleName :: ByteString -> String
-    forceModuleName = C8.unpack . fromJust . getModuleName
-    
+
     addModuleIfMissing :: ByteString -> ByteString
     addModuleIfMissing s | getModuleName s == Nothing = addModule configFile s
     addModuleIfMissing s | otherwise                  = s
@@ -126,6 +123,10 @@ getModuleName bs = case BSS.indices (C8.pack "module") bs of
                            . C8.takeWhile (\c -> isAlphaNum c || c == '.')
                            . C8.dropWhile isSpace
                            . C8.drop (i + 6) $ bs
+
+-- same, but crash if there is no module
+forceModuleName :: ByteString -> String
+forceModuleName = C8.unpack . fromJust . getModuleName
 
 
 -- TODO: error handling
