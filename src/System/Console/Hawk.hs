@@ -55,11 +55,7 @@ initInterpreter config moduleFile extensionsFile = do
 
         let modules = requiredModules ++ userModules
 
-        let modulesWithPrelude = if "Prelude" `L.notElem` fmap P.fst modules
-                                    then ("Prelude",Nothing):modules
-                                    else modules
-
-        setImportsQ modulesWithPrelude
+        setImportsQ modules
     where loadFromFile :: FilePath -> IO [(String,Maybe String)]
           loadFromFile fp = P.read <$> IO.readFile fp
 
@@ -114,24 +110,29 @@ hawk config opts extFile expr_str file = do
         
         -- eval program based on the existence of a delimiter
         case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_) -> interpret evalExpr   (as :: IO ())
-            (ApplyMode,StreamFormat) -> interpret streamExpr (as :: IO ())
-            (ApplyMode,LinesFormat)  -> interpret linesExpr  (as :: IO ())
-            (ApplyMode,WordsFormat)  -> interpret wordsExpr  (as :: IO ())
-            (MapMode,StreamFormat) -> interpret mapStreamExpr (as :: IO ())
-            (MapMode,LinesFormat)  -> interpret mapLinesExpr  (as :: IO ())
-            (MapMode,WordsFormat) -> interpret mapWordsExpr (as :: IO ())
+            (EvalMode,_)             -> interpret' evalExpr
+            (ApplyMode,StreamFormat) -> interpret' streamExpr
+            (ApplyMode,LinesFormat)  -> interpret' linesExpr
+            (ApplyMode,WordsFormat)  -> interpret' wordsExpr
+            (MapMode,StreamFormat)   -> interpret' mapStreamExpr
+            (MapMode,LinesFormat)    -> interpret' mapLinesExpr
+            (MapMode,WordsFormat)    -> interpret' mapWordsExpr
 
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
-        Right f -> f >> IO.putStrLn ""
+        Right () -> IO.putStrLn ""
     where 
+          interpret' expr = interpret (unsafe expr) (as :: ())
+          
+          unsafe :: String -> String
+          unsafe = printf "System.IO.Unsafe.unsafePerformIO (%s)"
+          
           evalExpr :: String
           evalExpr = printf "%s (%s)" printRows expr_str
           mapStreamExpr = runExpr [printRows, listMap expr_str]
           mapLinesExpr = runExpr [printRows,listMap expr_str,parseRows]
           mapWordsExpr = runExpr [printRows,listMap expr_str,parseWords]
-          listMap = printf (qualify "listMap (%s)")
+          listMap = printf (repr "listMap (%s)")
           streamExpr = runExpr [printRows, expr_str]
           linesExpr = runExpr [printRows, expr_str, parseRows]
           wordsExpr = runExpr [printRows, expr_str, parseWords]
@@ -139,25 +140,29 @@ hawk config opts extFile expr_str file = do
           linesDelim = optLinesDelim opts
           wordsDelim = optWordsDelim opts
           compose :: [String] -> String
-          compose = L.intercalate "." . P.map (printf "(%s)")
+          compose = L.intercalate (prel ".") . P.map (printf "(%s)")
           runExpr :: [String] -> String
-          runExpr = printf (qualify "runExpr (%s) (%s)") (P.show file) . compose
+          runExpr = printf (repr "runExpr (%s) (%s)") (prel $ P.show file) . compose
           printRows :: String
-          printRows = printf (qualify "printRows (%s) (%s) (%s)")
+          printRows = printf (repr "printRows (P.%s) (%s) (%s)")
                              ignoreErrors
                              (P.show linesDelim)
                              (P.show wordsDelim)
           
           parseRows :: String
-          parseRows = printf (qualify "parseRows (%s)") (P.show linesDelim)
+          parseRows = printf (repr "parseRows (%s)") (P.show linesDelim)
 
           parseWords :: String
           parseWords = printf
-                       (qualify "parseWords (%s) (%s)")
+                       (repr "parseWords (%s) (%s)")
                        (P.show linesDelim)
                        (P.show wordsDelim)
-          qualify :: String -> String
-          qualify s = "(System.Console.Hawk.Representable." ++ s ++ ")"
+          
+          qualify :: String -> String -> String
+          qualify moduleName = printf "%s.%s" moduleName
+          
+          prel = qualify "Prelude"
+          repr = qualify "System.Console.Hawk.Representable"
 
 getUsage :: IO String
 getUsage = do

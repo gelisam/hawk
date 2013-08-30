@@ -27,10 +27,13 @@ import System.Console.Hawk.Config.Parse
 import System.Console.Hawk.Lock
 
 
-defaultModules :: [(String,Maybe String)]
-defaultModules = [(representable, Just representable)]
+defaultModules :: [QualifiedModule]
+defaultModules = map fully_qualified [ "Prelude"
+                                     , "System.Console.Hawk.Representable"
+                                     , "System.IO.Unsafe"
+                                     ]
   where
-    representable = "System.Console.Hawk.Representable"
+    fully_qualified x = (x, Just x)
 
 defaultPrelude :: String
 defaultPrelude = unlines
