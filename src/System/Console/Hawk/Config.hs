@@ -18,6 +18,7 @@ import System.EasyFile
 import System.Console.Hawk.Config.Base
 import System.Console.Hawk.Config.Cache
 import System.Console.Hawk.Config.Compile
+import System.Console.Hawk.Config.Extend
 import System.Console.Hawk.Config.Parse
 import System.Console.Hawk.Lock
 
@@ -119,7 +120,7 @@ recompileConfig' configFile
     modules <- parseModules configFile extensions
     cacheModules modulesFile modules
     
-    source <- parseSource configFile extensions modules
+    source <- extendSource configFile extensions modules <$> parseSource configFile
     cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
