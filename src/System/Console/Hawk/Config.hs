@@ -7,6 +7,7 @@ module System.Console.Hawk.Config (
     , getModulesFile
     , parseModules
     , recompileConfig
+    , recompileConfig'
 ) where
 
 import Control.Applicative ((<$>))
@@ -174,7 +175,7 @@ recompileConfig = do
                      configInfosFile
 
 recompileConfig' :: (?frozenTime::String)
-                 => FilePath -- ^ config file
+                 => FilePath -- ^ config file (prelude.hs)
                  -> FilePath -- ^ cache dir
                  -> FilePath -- ^ source file
                  -> FilePath -- ^ output extensions cache file
