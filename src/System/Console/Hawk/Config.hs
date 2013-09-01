@@ -85,11 +85,10 @@ recompileConfigIfNeeded = withLock $ do
 -- adjust the prelude to make it loadable from hint.
 -- return the generated source.
 parseHintModule :: FilePath
-                -> FilePath
                 -> [ExtensionName]
                 -> [QualifiedModule]
                 -> IO ByteString
-parseHintModule sourceFile configFile extensions modules = do
+parseHintModule configFile extensions modules = do
     adjustSource <$> C8.readFile configFile
   where
     adjustSource :: ByteString -> ByteString
@@ -192,7 +191,7 @@ recompileConfig' configFile
     modules <- parseModules configFile extensions
     cacheModules modulesFile modules
     
-    source <- parseHintModule sourceFile configFile extensions modules
+    source <- parseHintModule configFile extensions modules
     cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
