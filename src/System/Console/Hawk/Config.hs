@@ -83,16 +83,14 @@ recompileConfigIfNeeded = withLock $ do
       else recompileConfig
 
 -- adjust the prelude to make it loadable from hint.
--- return the module name.
-createHintModule :: FilePath
-                 -> FilePath
-                 -> [ExtensionName]
-                 -> [QualifiedModule]
-                 -> IO String
-createHintModule sourceFile configFile extensions modules = do
-    source <- adjustSource <$> C8.readFile configFile
-    cacheSource sourceFile source
-    return $ forceModuleName source
+-- return the generated source.
+parseHintModule :: FilePath
+                -> FilePath
+                -> [ExtensionName]
+                -> [QualifiedModule]
+                -> IO ByteString
+parseHintModule sourceFile configFile extensions modules = do
+    adjustSource <$> C8.readFile configFile
   where
     adjustSource :: ByteString -> ByteString
     adjustSource = addPreludeIfMissing . addModuleIfMissing
@@ -194,10 +192,12 @@ recompileConfig' configFile
     modules <- parseModules configFile extensions
     cacheModules modulesFile modules
     
-    moduleName <- createHintModule sourceFile configFile extensions modules
+    source <- parseHintModule sourceFile configFile extensions modules
+    cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
     
+    let moduleName = forceModuleName source
     lastModTime <- getModificationTime configFile
     writeFile configInfosFile $ unlines [sourceFile
                                          ,moduleName
