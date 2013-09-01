@@ -1,4 +1,4 @@
-{-# LANGUAGE ImplicitParams, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config.Cache
     ( getConfigDir
     , getConfigFile
@@ -48,17 +48,17 @@ getExtensionsFile :: IO FilePath
 getExtensionsFile = getCacheDir <//> "extensions"
 
 
-getSourceBasename :: (?frozenTime :: String) => IO String
-getSourceBasename = getCacheDir <//> ("config" ++ ?frozenTime)
+getSourceBasename :: IO String
+getSourceBasename = getCacheDir <//> "cached_prelude"
 
-getCompiledFile :: (?frozenTime :: String) => IO String
+getCompiledFile :: IO String
 getCompiledFile = getSourceBasename
 
-getSourceFile :: (?frozenTime :: String) => IO String
+getSourceFile :: IO String
 getSourceFile = (++ ".hs") <$> getSourceBasename
 
-defaultModuleName :: (?frozenTime :: String) => String
-defaultModuleName = "Hawk.M" ++ ?frozenTime
+defaultModuleName :: String
+defaultModuleName = "System.Console.Hawk.CachedPrelude"
 
 
 cacheExtensions :: FilePath
@@ -75,8 +75,7 @@ cacheModules :: FilePath
              -> IO ()
 cacheModules modulesFile modules = writeFile modulesFile $ show modules
 
-cacheSource :: (?frozenTime :: String)
-            => FilePath
+cacheSource :: FilePath
             -> B.ByteString
             -> IO ()
 cacheSource sourceFile source = B.writeFile sourceFile source
