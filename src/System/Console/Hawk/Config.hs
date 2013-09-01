@@ -116,12 +116,14 @@ recompileConfig' configFile
     createDirectoryIfMissing True cacheDir
     
     extensions <- parseExtensions configFile
+    orig_modules <- parseModules configFile extensions
+    orig_source <- parseSource configFile
+    
+    let modules = extendModules extensions orig_modules
+    let source = extendSource configFile extensions orig_modules orig_source
+    
     cacheExtensions extensionsFile extensions
-    
-    modules <- extendModules extensions <$> parseModules configFile extensions
     cacheModules modulesFile modules
-    
-    source <- extendSource configFile extensions modules <$> parseSource configFile
     cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
