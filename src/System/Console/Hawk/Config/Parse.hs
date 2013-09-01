@@ -11,9 +11,7 @@ module System.Console.Hawk.Config.Parse
 import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as C8
-import Data.Char
 import Data.Maybe
-import Data.Monoid ((<>))
 import Language.Haskell.Exts ( parseFileWithExts )
 import Language.Haskell.Exts.Extension ( Extension (..) )
 import Language.Haskell.Exts.Parser
