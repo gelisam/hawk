@@ -2,14 +2,18 @@ module System.Console.Hawk.TestUtils where
 
 import Control.Applicative
   ( (<$>) )
+import Control.Exception
+  ( bracket_ )
 import Data.List
   ( foldl'
   , isSuffixOf
   , isPrefixOf )
 import System.Directory
-  ( getDirectoryContents
+  ( createDirectory 
+  , getDirectoryContents
   , getTemporaryDirectory
-  , removeFile)
+  , removeFile
+  , removeDirectoryRecursive)
 import System.FilePath
   ( FilePath
   , (</>)
@@ -24,7 +28,7 @@ nextFilePath :: FilePath -- ^ directory
 nextFilePath dir pre post = do
     contents <- getDirectoryContents dir
     let max = foldl maybeTakeNum 0 contents
-    return $ pre ++ show max ++ post
+    return $ pre ++ show (max+1) ++ post
     where maybeTakeNum :: Int -> String -> Int
           maybeTakeNum acc str =
             if pre `isPrefixOf` str && post `isSuffixOf` str
@@ -34,22 +38,37 @@ nextFilePath dir pre post = do
           lpre = length pre
           lnum str = length str - lpre - length post
 
-withTempFile :: FilePath -- ^ directory
-             -> String -- ^ file template
-             -> (FilePath -> IO a) -- ^ action to be run with the temp file
-             -> IO a
-withTempFile dir template action = do
+withTempFilePath :: FilePath -- ^ directory
+                 -> String -- ^ file template
+                 -> (FilePath -> IO a) -- ^ action to be run with the temp file
+                 -> Bool
+                 -> IO a
+withTempFilePath dir template action isDir = do
     let pre = dropExtension template
     let post = takeExtension template
     tempFileName <- ((</>) dir) <$> nextFilePath dir pre post
-    writeFile tempFileName ""
-    res <- action tempFileName
-    removeFile tempFileName
-    return res
+    bracket_ (create tempFileName) (delete tempFileName) (action tempFileName)
+  where create fp = if isDir
+                      then createDirectory fp
+                      else writeFile fp "" 
+        delete fp = if isDir
+                      then removeDirectoryRecursive fp
+                      else removeFile fp
 
-withTempFile' :: String -- ^ file template
-              -> (FilePath -> IO a) -- ^ action to be run with the temp file
-              -> IO a
-withTempFile' template action = do
+withTempFilePath' :: String -- ^ file template
+                  -> (FilePath -> IO a) -- ^ action to be run with the temp file
+                  -> Bool
+                  -> IO a
+withTempFilePath' template action isDir = do
     tempDir <- getTemporaryDirectory
-    withTempFile tempDir template action
+    withTempFilePath tempDir template action isDir
+
+withTempFile' :: String
+              -> (FilePath -> IO a)
+              -> IO a
+withTempFile' template action = withTempFilePath' template action False
+
+withTempDir' :: String
+             -> (FilePath -> IO a)
+             -> IO a
+withTempDir' template action = withTempFilePath' template action True
