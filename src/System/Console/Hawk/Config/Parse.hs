@@ -10,9 +10,7 @@ module System.Console.Hawk.Config.Parse
 
 import Control.Applicative ((<$>))
 
-import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as C8
-import qualified Data.ByteString.Search as BSS
 import Data.Char
 import Data.Maybe
 import Data.Monoid ((<>))
@@ -75,5 +73,5 @@ parseModules sourceFile extensions = do
 
 -- the configuration format is designed to look like a Haskell module,
 -- so we just return the whole file.
-parseSource :: FilePath -> IO ByteString
+parseSource :: FilePath -> IO Source
 parseSource = C8.readFile

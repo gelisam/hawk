@@ -20,21 +20,21 @@ import System.Console.Hawk.Config.Base
 extendSource :: FilePath
              -> [ExtensionName]
              -> [QualifiedModule]
-             -> ByteString
-             -> ByteString
+             -> Source
+             -> Source
 extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
-    addModuleIfMissing :: ByteString -> ByteString
+    addModuleIfMissing :: Source -> Source
     addModuleIfMissing s | getModuleName s == Nothing = addModule configFile s
     addModuleIfMissing s | otherwise                  = s
     
-    addPreludeIfMissing :: ByteString -> ByteString
+    addPreludeIfMissing :: Source -> Source
     addPreludeIfMissing s | "NoImplicitPrelude" `elem` extensions = s
     addPreludeIfMissing s | "Prelude" `elem` map fst modules      = s
     addPreludeIfMissing s | otherwise = addImport "Prelude" configFile s
 
 -- add a module to a string representing a Haskell source file
-addModule :: FilePath -> ByteString -> ByteString
+addModule :: FilePath -> Source -> Source
 addModule configFile source =
     let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
@@ -50,7 +50,7 @@ addModule configFile source =
                             in C8.unlines [line 1,pragma,moduleLine,line n,c]
 
 -- add an import statement to a string representing a Haskell source file
-addImport :: String -> FilePath -> ByteString -> ByteString
+addImport :: String -> FilePath -> Source -> Source
 addImport moduleName configFile source =
     let (premodule,postmodule)   = BSS.breakAfter "module " source
         (prewhere,postwhere)     = BSS.breakAfter " where" postmodule
@@ -66,7 +66,7 @@ addImport moduleName configFile source =
 
 
 -- get the module name from a file if it exists
-getModuleName :: ByteString -> Maybe ByteString
+getModuleName :: Source -> Maybe ByteString
 getModuleName bs = case BSS.indices (C8.pack "module") bs of
                     [] -> Nothing
                     (i:_) -> Just
@@ -75,5 +75,5 @@ getModuleName bs = case BSS.indices (C8.pack "module") bs of
                            . C8.drop (i + 6) $ bs
 
 -- same, but crash if there is no module
-forceModuleName :: ByteString -> String
+forceModuleName :: Source -> String
 forceModuleName = C8.unpack . fromJust . getModuleName

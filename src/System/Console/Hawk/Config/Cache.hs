@@ -20,7 +20,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 
-import System.Console.Hawk.Config.Parse
+import System.Console.Hawk.Config.Base
 
 
 (<//>) :: IO FilePath -- the left filepath in the IO monad
@@ -72,6 +72,6 @@ cacheModules :: FilePath
 cacheModules modulesFile modules = writeFile modulesFile $ show modules
 
 cacheSource :: FilePath
-            -> B.ByteString
+            -> Source
             -> IO ()
-cacheSource sourceFile source = B.writeFile sourceFile source
+cacheSource = B.writeFile
