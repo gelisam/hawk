@@ -118,7 +118,7 @@ recompileConfig' configFile
     extensions <- parseExtensions configFile
     cacheExtensions extensionsFile extensions
     
-    modules <- parseModules configFile extensions
+    modules <- extendModules extensions <$> parseModules configFile extensions
     cacheModules modulesFile modules
     
     source <- extendSource configFile extensions modules <$> parseSource configFile

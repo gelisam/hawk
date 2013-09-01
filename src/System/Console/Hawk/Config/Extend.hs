@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config.Extend
-    ( extendSource
+    ( extendModules
+    , extendSource
     , getModuleName
     )
   where
@@ -14,6 +15,16 @@ import Data.Monoid ((<>))
 import Text.Printf
 
 import System.Console.Hawk.Config.Base
+
+
+extendModules :: [ExtensionName]
+              -> [QualifiedModule]
+              -> [QualifiedModule]
+extendModules extensions modules = addIfNecessary (shouldAddPrelude extensions modules)
+                                                  (unqualified_prelude:)
+                                                  modules
+  where
+    unqualified_prelude = ("Prelude", Nothing)
 
 
 -- adjust the prelude to make it loadable from hint.
