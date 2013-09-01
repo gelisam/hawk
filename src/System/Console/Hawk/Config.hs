@@ -1,4 +1,4 @@
-{-# LANGUAGE ImplicitParams, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config (
       defaultModules
     , defaultPrelude
@@ -84,8 +84,7 @@ recompileConfigIfNeeded = withLock $ do
 
 -- adjust the prelude to make it loadable from hint.
 -- return the module name.
-createHintModule :: (?frozenTime :: String)
-                 => FilePath
+createHintModule :: FilePath
                  -> FilePath
                  -> [ExtensionName]
                  -> [QualifiedModule]
@@ -108,7 +107,7 @@ createHintModule sourceFile configFile extensions modules = do
     addPreludeIfMissing s | otherwise = addImport "Prelude" configFile s
 
 -- add a module to a string representing a Haskell source file
-addModule :: (?frozenTime :: String) => FilePath -> ByteString -> ByteString
+addModule :: FilePath -> ByteString -> ByteString
 addModule configFile source =
     let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
@@ -156,25 +155,22 @@ forceModuleName = C8.unpack . fromJust . getModuleName
 -- TODO: error handling
 recompileConfig :: IO (String,String)
 recompileConfig = do
-  currTime <- (filter isDigit . show <$> getCurrentTime)
-  let ?frozenTime = currTime in do
-    configFile <- getConfigFile
-    cacheDir <- getCacheDir
-    sourceFile <- getSourceFile
-    extensionFile <- getExtensionsFile
-    modulesFile <- getModulesFile
-    compiledFile <- getCompiledFile
-    configInfosFile <- getConfigInfosFile
-    recompileConfig' configFile
-                     cacheDir
-                     sourceFile
-                     extensionFile
-                     modulesFile
-                     compiledFile
-                     configInfosFile
+  configFile <- getConfigFile
+  cacheDir <- getCacheDir
+  sourceFile <- getSourceFile
+  extensionFile <- getExtensionsFile
+  modulesFile <- getModulesFile
+  compiledFile <- getCompiledFile
+  configInfosFile <- getConfigInfosFile
+  recompileConfig' configFile
+                   cacheDir
+                   sourceFile
+                   extensionFile
+                   modulesFile
+                   compiledFile
+                   configInfosFile
 
-recompileConfig' :: (?frozenTime::String)
-                 => FilePath -- ^ config file
+recompileConfig' :: FilePath -- ^ config file
                  -> FilePath -- ^ cache dir
                  -> FilePath -- ^ source file
                  -> FilePath -- ^ output extensions cache file
