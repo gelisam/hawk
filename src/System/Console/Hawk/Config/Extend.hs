@@ -24,14 +24,25 @@ extendSource :: FilePath
              -> Source
 extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
-    addModuleIfMissing :: Source -> Source
-    addModuleIfMissing s | parseModuleName s == Nothing = addModule configFile s
-    addModuleIfMissing s | otherwise                    = s
-    
-    addPreludeIfMissing :: Source -> Source
-    addPreludeIfMissing s | "NoImplicitPrelude" `elem` extensions = s
-    addPreludeIfMissing s | "Prelude" `elem` map fst modules      = s
-    addPreludeIfMissing s | otherwise = addImport "Prelude" configFile s
+    addModuleIfMissing s = addIfNecessary (shouldAddModule s)
+                                          (addModule configFile)
+                                          s
+    addPreludeIfMissing = addIfNecessary (shouldAddPrelude extensions modules)
+                                         (addImport "Prelude" configFile)
+
+
+addIfNecessary :: Bool -> (a -> a) -> a -> a
+addIfNecessary True  f x = f x
+addIfNecessary False _ x = x
+
+shouldAddModule :: Source -> Bool
+shouldAddModule = (== Nothing) . parseModuleName 
+
+shouldAddPrelude :: [ExtensionName] -> [QualifiedModule] -> Bool
+shouldAddPrelude extensions _ | "NoImplicitPrelude" `elem` extensions = False
+shouldAddPrelude _ modules    | "Prelude" `elem` map fst modules      = False
+shouldAddPrelude _ _          | otherwise                             = True
+
 
 -- add a module to a string representing a Haskell source file
 addModule :: FilePath -> Source -> Source
