@@ -4,11 +4,13 @@ module System.Console.Hawk.Config.Parse
     , QualifiedModule
     , parseExtensions
     , parseModules
+    , parseSource
     )
   where
 
 import Control.Applicative ((<$>))
 
+import qualified Data.ByteString.Char8 as C8
 import Data.Maybe
 import Language.Haskell.Exts ( parseFileWithExts )
 import Language.Haskell.Exts.Extension ( Extension (..) )
@@ -20,6 +22,8 @@ import Language.Haskell.Exts.Syntax
 import System.Exit
 import Text.Printf
 
+import System.Console.Hawk.Config.Base
+
 
 getResult :: FilePath -> ParseResult a -> IO a
 getResult _ (ParseOk x) = return x
@@ -27,8 +31,6 @@ getResult sourceFile (ParseFailed srcLoc err) = do
     putStrLn $ printf "error parsing file %s:%d: %s" sourceFile (show srcLoc) err
     exitFailure
 
-
-type ExtensionName = String
 
 parseExtensions :: FilePath -> IO [ExtensionName]
 parseExtensions sourceFile = do
@@ -46,8 +48,6 @@ parseExtensions sourceFile = do
     getName (Ident  s) = s
     getName (Symbol s) = s
 
-
-type QualifiedModule = (String, Maybe String)
 
 parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
 parseModules sourceFile extensions = do
@@ -67,3 +67,9 @@ parseModules sourceFile extensions = do
         ImportDecl _ (ModuleName mn) True _ _ Nothing _ -> [(mn,Just mn)]
         ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
                               [(mn,Just s)]
+
+
+-- the configuration format is designed to look like a Haskell module,
+-- so we just return the whole file.
+parseSource :: FilePath -> IO Source
+parseSource = C8.readFile
