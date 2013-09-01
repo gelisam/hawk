@@ -20,6 +20,8 @@ import Language.Haskell.Exts.Syntax
 import System.Exit
 import Text.Printf
 
+import System.Console.Hawk.Config.Base
+
 
 getResult :: FilePath -> ParseResult a -> IO a
 getResult _ (ParseOk x) = return x
@@ -27,8 +29,6 @@ getResult sourceFile (ParseFailed srcLoc err) = do
     putStrLn $ printf "error parsing file %s:%d: %s" sourceFile (show srcLoc) err
     exitFailure
 
-
-type ExtensionName = String
 
 parseExtensions :: FilePath -> IO [ExtensionName]
 parseExtensions sourceFile = do
@@ -46,8 +46,6 @@ parseExtensions sourceFile = do
     getName (Ident  s) = s
     getName (Symbol s) = s
 
-
-type QualifiedModule = (String, Maybe String)
 
 parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
 parseModules sourceFile extensions = do

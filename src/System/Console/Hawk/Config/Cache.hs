@@ -8,7 +8,6 @@ module System.Console.Hawk.Config.Cache
     , getModulesFile
     , getCompiledFile
     , getSourceFile
-    , defaultModuleName
     , cacheExtensions
     , cacheModules
     , cacheSource
@@ -56,9 +55,6 @@ getCompiledFile = getSourceBasename
 
 getSourceFile :: IO String
 getSourceFile = (++ ".hs") <$> getSourceBasename
-
-defaultModuleName :: String
-defaultModuleName = "System.Console.Hawk.CachedPrelude"
 
 
 cacheExtensions :: FilePath

@@ -22,6 +22,7 @@ import Data.Monoid ((<>))
 import System.EasyFile
 import Text.Printf
 
+import System.Console.Hawk.Config.Base
 import System.Console.Hawk.Config.Cache
 import System.Console.Hawk.Config.Compile
 import System.Console.Hawk.Config.Parse
