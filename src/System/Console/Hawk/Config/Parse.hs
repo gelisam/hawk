@@ -4,7 +4,7 @@ module System.Console.Hawk.Config.Parse
     , QualifiedModule
     , parseExtensions
     , parseModules
-    , parseHintModule
+    , parseSource
     , forceModuleName
     )
   where
@@ -76,11 +76,11 @@ parseModules sourceFile extensions = do
 
 -- adjust the prelude to make it loadable from hint.
 -- return the generated source.
-parseHintModule :: FilePath
-                -> [ExtensionName]
-                -> [QualifiedModule]
-                -> IO ByteString
-parseHintModule configFile extensions modules = do
+parseSource :: FilePath
+            -> [ExtensionName]
+            -> [QualifiedModule]
+            -> IO ByteString
+parseSource configFile extensions modules = do
     adjustSource <$> C8.readFile configFile
   where
     adjustSource :: ByteString -> ByteString

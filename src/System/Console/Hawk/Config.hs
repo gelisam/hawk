@@ -119,7 +119,7 @@ recompileConfig' configFile
     modules <- parseModules configFile extensions
     cacheModules modulesFile modules
     
-    source <- parseHintModule configFile extensions modules
+    source <- parseSource configFile extensions modules
     cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
