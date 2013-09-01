@@ -1,6 +1,7 @@
 {-# LANGUAGE ImplicitParams, OverloadedStrings #-}
 module System.Console.Hawk.Config (
       defaultModules
+    , defaultPrelude
     , recompileConfigIfNeeded
     , getExtensionsFile
     , getModulesFile
@@ -81,22 +82,17 @@ recompileConfigIfNeeded = withLock $ do
                  else return (fileName,moduleName)
       else recompileConfig
 
-getOrCreateCacheDir :: IO FilePath
-getOrCreateCacheDir = do
-    cacheDir <- getCacheDir
-    createDirectoryIfMissing True cacheDir
-    return cacheDir
-
 -- adjust the prelude to make it loadable from hint.
 -- return the module name.
 createHintModule :: (?frozenTime :: String)
                  => FilePath
+                 -> FilePath
                  -> [ExtensionName]
                  -> [QualifiedModule]
                  -> IO String
-createHintModule configFile extensions modules = do
+createHintModule sourceFile configFile extensions modules = do
     source <- adjustSource <$> C8.readFile configFile
-    cacheSource source
+    cacheSource sourceFile source
     return $ forceModuleName source
   where
     adjustSource :: ByteString -> ByteString
@@ -160,34 +156,60 @@ forceModuleName = C8.unpack . fromJust . getModuleName
 -- TODO: error handling
 recompileConfig :: IO (String,String)
 recompileConfig = do
-    clean
+  currTime <- (filter isDigit . show <$> getCurrentTime)
+  let ?frozenTime = currTime in do
     configFile <- getConfigFile
-    cacheDir <- getOrCreateCacheDir
+    cacheDir <- getCacheDir
+    sourceFile <- getSourceFile
+    extensionFile <- getExtensionsFile
+    modulesFile <- getModulesFile
+    compiledFile <- getCompiledFile
+    configInfosFile <- getConfigInfosFile
+    recompileConfig' configFile
+                     cacheDir
+                     sourceFile
+                     extensionFile
+                     modulesFile
+                     compiledFile
+                     configInfosFile
+
+recompileConfig' :: (?frozenTime::String)
+                 => FilePath -- ^ config file
+                 -> FilePath -- ^ cache dir
+                 -> FilePath -- ^ source file
+                 -> FilePath -- ^ output extensions cache file
+                 -> FilePath -- ^ output modules cache file
+                 -> FilePath -- ^ output compiled file
+                 -> FilePath -- ^ output config info path
+                 -> IO (String,String)
+recompileConfig' configFile
+                 cacheDir
+                 sourceFile
+                 extensionsFile
+                 modulesFile
+                 compiledFile
+                 configInfosFile = do
+    clean
+    createDirectoryIfMissing True cacheDir
     
     extensions <- parseExtensions configFile
-    cacheExtensions extensions
+    cacheExtensions extensionsFile extensions
     
     modules <- parseModules configFile extensions
-    cacheModules modules
+    cacheModules modulesFile modules
     
-    currTime <- (filter isDigit . show <$> getCurrentTime)
-    let ?frozenTime = currTime in do
-      moduleName <- createHintModule configFile extensions modules
-      
-      sourceFile <- getSourceFile
-      compiledFile <- getCompiledFile
-      compile sourceFile compiledFile cacheDir
-      
-      lastModTime <- getModificationTime configFile
-      configInfosFile <- getConfigInfosFile
-      writeFile configInfosFile $ unlines [sourceFile
-                                           ,moduleName
-                                           ,show lastModTime]
-      
-      return (sourceFile, moduleName)
+    moduleName <- createHintModule sourceFile configFile extensions modules
+    
+    compile sourceFile compiledFile cacheDir
+    
+    lastModTime <- getModificationTime configFile
+    writeFile configInfosFile $ unlines [sourceFile
+                                         ,moduleName
+                                         ,show lastModTime]
+    
+    return (sourceFile, moduleName)
   where
     clean :: IO ()
     clean = do
-        dir <- getCacheDir
-        dirExists <- doesDirectoryExist dir
-        when (dirExists) (removeDirectoryRecursive dir)
+        dirExists <- doesDirectoryExist cacheDir
+        when (dirExists) (removeDirectoryRecursive cacheDir)

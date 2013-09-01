@@ -61,20 +61,22 @@ defaultModuleName :: (?frozenTime :: String) => String
 defaultModuleName = "Hawk.M" ++ ?frozenTime
 
 
-cacheExtensions :: [ExtensionName] -> IO ()
-cacheExtensions extensions = do
-    extensionsFile <- getExtensionsFile
-    writeFile extensionsFile $ show extensions'
+cacheExtensions :: FilePath
+                -> [ExtensionName]
+                -> IO ()
+cacheExtensions extensionsFile extensions = 
+  writeFile extensionsFile $ show extensions'
   where
     extensions' :: [Interpreter.Extension]
     extensions' = map read extensions
 
-cacheModules :: [QualifiedModule] -> IO ()
-cacheModules modules = do
-    modulesFile <- getModulesFile
-    writeFile modulesFile $ show modules
+cacheModules :: FilePath
+             -> [QualifiedModule]
+             -> IO ()
+cacheModules modulesFile modules = writeFile modulesFile $ show modules
 
-cacheSource :: (?frozenTime :: String) => B.ByteString -> IO ()
-cacheSource source = do
-    sourceFile <- getSourceFile
-    B.writeFile sourceFile source
+cacheSource :: (?frozenTime :: String)
+            => FilePath
+            -> B.ByteString
+            -> IO ()
+cacheSource sourceFile source = B.writeFile sourceFile source
