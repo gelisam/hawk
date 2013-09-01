@@ -131,8 +131,8 @@ addImport moduleName configFile source =
         line :: Int -> ByteString
         line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
         importLine = C8.pack $ unwords ["import", moduleName]
-        n = 1 + C8.length (C8.filter (=='\n') preimports)
-        extraLines = C8.unlines [importLine, line n]
+        m = 1 + C8.length (C8.filter (=='\n') preimports)
+        extraLines = C8.unlines [importLine, line m]
     in preimports <> extraLines <> postimports
 
 
