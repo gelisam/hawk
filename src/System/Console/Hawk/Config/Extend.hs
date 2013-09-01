@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Config.Extend
     ( extendSource
-    , forceModuleName
+    , getModuleName
     )
   where
 
@@ -25,8 +25,8 @@ extendSource :: FilePath
 extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
     addModuleIfMissing :: Source -> Source
-    addModuleIfMissing s | getModuleName s == Nothing = addModule configFile s
-    addModuleIfMissing s | otherwise                  = s
+    addModuleIfMissing s | parseModuleName s == Nothing = addModule configFile s
+    addModuleIfMissing s | otherwise                    = s
     
     addPreludeIfMissing :: Source -> Source
     addPreludeIfMissing s | "NoImplicitPrelude" `elem` extensions = s
@@ -66,14 +66,14 @@ addImport moduleName configFile source =
 
 
 -- get the module name from a file if it exists
-getModuleName :: Source -> Maybe ByteString
-getModuleName bs = case BSS.indices (C8.pack "module") bs of
-                    [] -> Nothing
-                    (i:_) -> Just
-                           . C8.takeWhile (\c -> isAlphaNum c || c == '.')
-                           . C8.dropWhile isSpace
-                           . C8.drop (i + 6) $ bs
+parseModuleName :: Source -> Maybe ByteString
+parseModuleName bs = case BSS.indices (C8.pack "module") bs of
+                       [] -> Nothing
+                       (i:_) -> Just
+                              . C8.takeWhile (\c -> isAlphaNum c || c == '.')
+                              . C8.dropWhile isSpace
+                              . C8.drop (i + 6) $ bs
 
 -- same, but crash if there is no module
-forceModuleName :: Source -> String
-forceModuleName = C8.unpack . fromJust . getModuleName
+getModuleName :: Source -> String
+getModuleName = C8.unpack . fromJust . parseModuleName

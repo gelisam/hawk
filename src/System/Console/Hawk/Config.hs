@@ -126,7 +126,7 @@ recompileConfig' configFile
     
     compile sourceFile compiledFile cacheDir
     
-    let moduleName = forceModuleName source
+    let moduleName = getModuleName source
     lastModTime <- getModificationTime configFile
     writeFile configInfosFile $ unlines [sourceFile
                                          ,moduleName
