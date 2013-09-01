@@ -7,6 +7,8 @@ module System.Console.Hawk.Representable (
 
     Row  (repr')
   , Rows (repr)
+  , c8pack
+  , sc8pack
   , listMap
   , listMapWords
   , printRows
@@ -45,6 +47,14 @@ listMap = L.map
 
 listMapWords :: ([a] -> b) -> [[a]] -> [b]
 listMapWords = L.map
+
+c8pack :: String
+       -> C8.ByteString
+c8pack = C8.pack
+
+sc8pack :: String
+        -> SC8.ByteString
+sc8pack = SC8.pack
 
 parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
 parseRows delim str = dropLastIfEmpty $ BS.split delim str

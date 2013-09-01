@@ -122,7 +122,10 @@ hawk config opts extFile expr_str file = do
         Left ie -> printErrors ie -- error hanling!
         Right () -> IO.putStrLn ""
     where 
-          interpret' expr = interpret (unsafe expr) (as :: ())
+          interpret' expr = do
+            -- print the user expression
+            --lift $ IO.hPutStrLn IO.stderr expr 
+            interpret (unsafe expr) (as :: ())
           
           unsafe :: String -> String
           unsafe = printf "System.IO.Unsafe.unsafePerformIO (%s)"
@@ -133,6 +136,10 @@ hawk config opts extFile expr_str file = do
           mapLinesExpr = runExpr [printRows,listMap expr_str,parseRows]
           mapWordsExpr = runExpr [printRows,listMap expr_str,parseWords]
           listMap = printf (repr "listMap (%s)")
+          c8pack :: P.String -> P.String
+          c8pack = printf (repr "c8pack (%s)")
+          sc8pack :: P.String -> P.String
+          sc8pack = printf (repr "sc8pack (%s)")
           streamExpr = runExpr [printRows, expr_str]
           linesExpr = runExpr [printRows, expr_str, parseRows]
           wordsExpr = runExpr [printRows, expr_str, parseWords]
@@ -144,19 +151,20 @@ hawk config opts extFile expr_str file = do
           runExpr :: [String] -> String
           runExpr = printf (repr "runExpr (%s) (%s)") (prel $ P.show file) . compose
           printRows :: String
-          printRows = printf (repr "printRows (P.%s) (%s) (%s)")
-                             ignoreErrors
-                             (P.show linesDelim)
-                             (P.show wordsDelim)
+          printRows = printf (repr "printRows (%s) (%s) (%s)")
+                             (prel ignoreErrors)
+                             (c8pack $ P.show linesDelim)
+                             (c8pack $ P.show wordsDelim)
           
           parseRows :: String
-          parseRows = printf (repr "parseRows (%s)") (P.show linesDelim)
+          parseRows = printf (repr "parseRows (%s)")
+                             (sc8pack $ P.show linesDelim)
 
           parseWords :: String
           parseWords = printf
                        (repr "parseWords (%s) (%s)")
-                       (P.show linesDelim)
-                       (P.show wordsDelim)
+                       (sc8pack $ P.show linesDelim)
+                       (sc8pack $ P.show wordsDelim)
           
           qualify :: String -> String -> String
           qualify moduleName = printf "%s.%s" moduleName
