@@ -10,7 +10,7 @@ Command-line tools such as [awk](http://en.wikipedia.org/wiki/AWK) are best for 
 Hawk lets you write Haskell one-liners on the command-line, and continues to support you as your one-liner grows into ten, one hundred lines. When your command-line expression becomes too large, move some of it to `~/.hawk/prelude.hs`, a Haskell module which hosts your custom helper functions. Once that file becomes too crowded, simply move that file to the folder of your choice, as the first module of a new Haskell project.
 
 
-## Examples
+## Haskell Expressions
 
 The simplest way to use Hawk is to evaluate Haskell expressions.
 
@@ -38,16 +38,46 @@ To make it easier for other commands to process Hawk's output, we display one el
     4 5 6
     7 8 9
 
-The `unfoldr` function is not part of the Prelude, so in order to run the above, we need to add `import Data.List` to our `~/.hawk/prelude.hs`. While we're modifying it, let's also give a name to the above expression.
+The `unfoldr` function is not part of the Prelude, so in order to run the above, we need to add `import Data.List` to our `~/.hawk/prelude.hs`. While we're modifying the configuration file, let's also give a name to the above expression.
 
     > cat ~/.hawk/prelude.hs
-    {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
     import Data.List
+    
     splitEvery n = unfoldr (Just . splitAt n)
+    box9 = take 3 $ splitEvery 3 [1..]
 
-The `ExtendedDefaultRules` language pragma is important because without it, Haskell will often complain that our numeric literals have ambiguous types.
 
-    > hawk 'splitEvery 3 [1..]' | head -n 3
-    1 2 3
-    4 5 6
-    7 8 9
+## Text-manipulation modes
+
+Hawk can `--apply` a Haskell expression to its input, represented as a list of lists.
+
+    > hawk 'take 2 box9' | hawk -a transpose
+    1 4
+    2 5
+    3 6
+
+Different tools use different characters to separate columns, use `-d` to tell Hawk which one you need.
+
+    $ hawk -d',' box9
+    1,2,3
+    4,5,6
+    7,8,9
+
+As a special case, using `-d` without specifying a delimiter tells Hawk not to split lines into words. The input is then a `[ByteString]` instead of a `[[ByteString]]`. Similarly, `-D` will tell Hawk not to split the input into lines, so the input will be a `ByteString`. The next version of Hawk will use type inference to determine which of the three input modes is needed.
+
+    > hawk -ad 'takeWhile (/= "") . dropWhile (/= "Source-Repository head")' haskell-awk.cabal
+    Source-Repository head
+        type: git
+        location: https://github.com/gelisam/hawk
+
+Hawk also has a `--map` mode, in which the expression is applied to every line.
+
+    > hawk box9 | hawk -m '(!! 1)'
+    2
+    5
+    8
+
+
+## Installation
+
+To install the development version, clone this repository and use `cabal install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to `./cabal-dev/bin/hawk`.
