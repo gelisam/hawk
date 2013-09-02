@@ -107,30 +107,42 @@ class (Show a) => Rows a where
          -> [C8.ByteString]
     repr _ = (:[]) . C8.pack . show
 
+showRows :: forall a . (Rows a)
+         => C8.ByteString -- ^ rows delimiter
+         -> C8.ByteString -- ^ columns delimiter
+         -> a -- ^ value to print
+         -> C8.ByteString
+showRows rd cd = C8.intercalate rd . repr cd
+
 printRows :: forall a . (Rows a) 
           => Bool -- ^ if printRows will continue after errors
           -> C8.ByteString -- ^ rows delimiter
           -> C8.ByteString -- ^ columns delimiter
           -> a -- ^ the value to print as rows
           -> IO ()
-printRows b rowDelimiter columnDelimiter = printFirstRow_ . repr columnDelimiter
-    where printRows_ [] = return ()
-          printRows_ (x:xs) = do
-            putStrAndDelim x
-            handle ioExceptionsHandler (continue xs)
-          printFirstRow_ [] = return ()
-          printFirstRow_ (x:xs) = do
-            putStrOnly x
-            handle ioExceptionsHandler (continue xs)
-          putStrAndDelim = if b then handleErrors . putDelimAndStr_
-                                else putDelimAndStr_
-          putStrOnly = if b then handleErrors . C8.putStr else C8.putStr
-          putDelimAndStr_ :: C8.ByteString -> IO ()
-          putDelimAndStr_ c = C8.putStr rowDelimiter >> C8.putStr c
-          continue xs = IO.hFlush IO.stdout >> printRows_ xs
-          ioExceptionsHandler e = case ioe_type e of
-                                    ResourceVanished -> return ()
-                                    _ -> IO.hPrint IO.stderr e
+printRows _ rd cd v = handle handler printRows_
+  where handler e = case ioe_type e of
+                      ResourceVanished -> return ()
+                      _ -> IO.hPrint IO.stderr e
+        printRows_ = C8.putStrLn $ showRows rd cd v
+--printRows b rowDelimiter columnDelimiter = printFirstRow_ . repr columnDelimiter
+--    where printRows_ [] = return ()
+--          printRows_ (x:xs) = do
+--            putStrAndDelim x
+--            handle ioExceptionsHandler (continue xs)
+--          printFirstRow_ [] = return ()
+--          printFirstRow_ (x:xs) = do
+--            putStrOnly x
+--            handle ioExceptionsHandler (continue xs)
+--          putStrAndDelim = if b then handleErrors . putDelimAndStr_
+--                                else putDelimAndStr_
+--          putStrOnly = if b then handleErrors . C8.putStr else C8.putStr
+--          putDelimAndStr_ :: C8.ByteString -> IO ()
+--          putDelimAndStr_ c = C8.putStr rowDelimiter >> C8.putStr c
+--          continue xs = IO.hFlush IO.stdout >> printRows_ xs
+--          ioExceptionsHandler e = case ioe_type e of
+--                                    ResourceVanished -> return ()
+--                                    _ -> IO.hPrint IO.stderr e
 
 instance Rows Bool
 instance Rows Double
