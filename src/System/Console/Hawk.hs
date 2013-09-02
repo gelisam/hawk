@@ -113,75 +113,54 @@ hawk config opts extFile expr_str =
         
         -- eval program based on the existence of a delimiter
         case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_)             -> interpret' evalExpr
-            (ApplyMode,StreamFormat) -> interpret' streamExpr
-            (ApplyMode,LinesFormat)  -> interpret' linesExpr
-            (ApplyMode,WordsFormat)  -> interpret' wordsExpr
-            (MapMode,StreamFormat)   -> interpret' mapStreamExpr
-            (MapMode,LinesFormat)    -> interpret' mapLinesExpr
-            (MapMode,WordsFormat)    -> interpret' mapWordsExpr
+            (EvalMode,_)             -> interpret' $ evalExpr      expr_str
+            (ApplyMode,StreamFormat) -> interpret' $ streamExpr    expr_str
+            (ApplyMode,LinesFormat)  -> interpret' $ linesExpr     expr_str
+            (ApplyMode,WordsFormat)  -> interpret' $ wordsExpr     expr_str
+            (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr expr_str
+            (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  expr_str
+            (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  expr_str
     where 
           interpret' expr = do
             -- print the user expression
             -- lift $ IO.hPutStrLn IO.stderr expr 
-            --interpret (unsafe expr) (as :: ())
             interpret expr (as :: Data.ByteString.Lazy.ByteString
                                -> Data.ByteString.Lazy.ByteString)
-          --unsafe :: String -> String
-          --unsafe = printf "System.IO.Unsafe.unsafePerformIO (%s)"
-          
-          evalExpr :: String
-          evalExpr = printf "const (%s (%s))" showRows expr_str
-          mapStreamExpr = compose [showRows, listMap expr_str]
-          mapLinesExpr = compose [showRows,listMap expr_str,parseRows]
-          mapWordsExpr = compose [showRows,listMap expr_str,parseWords]
-          listMap = printf (repr "listMap (%s)")
-          c8pack :: P.String -> P.String
-          c8pack = printf (repr "c8pack (%s)")
-          sc8pack :: P.String -> P.String
-          sc8pack = printf (repr "sc8pack (%s)")
-          streamExpr = compose [showRows, expr_str]
-          linesExpr = compose [showRows, expr_str, parseRows]
-          wordsExpr = compose [showRows, expr_str, parseWords]
-          --ignoreErrors = P.show $ optIgnoreErrors opts
+          evalExpr = printf "const (%s (%s))" showRows
+          mapStreamExpr = streamExpr . listMap
+          mapLinesExpr = linesExpr . listMap
+          mapWordsExpr = wordsExpr . listMap
+          streamExpr expr = compose [showRows, expr]
+          linesExpr expr = compose [showRows, expr, parseRows]
+          wordsExpr expr = compose [showRows, expr, parseWords]
           linesDelim = optLinesDelim opts
           wordsDelim = optWordsDelim opts
           compose :: [String] -> String
           compose = L.intercalate (prel ".") . P.map (printf "(%s)")
-          --runExpr :: [String] -> String
-          --runExpr ss = let expr = compose ss
-          --             in printf (repr "runExpr (%s) (%s) (%s) (%s)")
-          --                       (prel $ P.show file)
-          --                       (hio "getInput")
-          --                       expr
-          --                       (hio "printOutput")
-          --runExpr = printf (repr "runExpr (%s) (%s)") (prel $ P.show file) . compose
+          listMap :: String -> String
+          listMap = printf (repr "listMap (%s)")
+          c8pack :: String -> String
+          c8pack = printf (repr "c8pack (%s)")
+          sc8pack :: String -> String
+          sc8pack = printf (repr "sc8pack (%s)")
           showRows :: String
           showRows = printf (repr "showRows (%s) (%s)")
                              (c8pack $ P.show linesDelim)
                              (c8pack $ P.show wordsDelim)
-         -- printRows :: String
-         -- printRows = printf (repr "printRows (%s) (%s) (%s)")
-         --                    (prel ignoreErrors)
-         --                    (c8pack $ P.show linesDelim)
-         --                    (c8pack $ P.show wordsDelim)
-          
           parseRows :: String
           parseRows = printf (repr "parseRows (%s)")
                              (sc8pack $ P.show linesDelim)
 
           parseWords :: String
-          parseWords = printf
-                       (repr "parseWords (%s) (%s)")
-                       (sc8pack $ P.show linesDelim)
-                       (sc8pack $ P.show wordsDelim)
+          parseWords = printf (repr "parseWords (%s) (%s)")
+                              (sc8pack $ P.show linesDelim)
+                              (sc8pack $ P.show wordsDelim)
           
           qualify :: String -> String -> String
           qualify moduleName = printf "%s.%s" moduleName
           
           prel = qualify "Prelude"
           repr = qualify "System.Console.Hawk.Representable"
-          --hio = qualify "System.Console.Hawk.IO"
 
 getUsage :: IO String
 getUsage = do
