@@ -65,7 +65,7 @@ Different tools use different characters to separate columns, use `-d` to tell H
 
 As a special case, using `-d` without specifying a delimiter tells Hawk not to split lines into words. The input is then a `[ByteString]` instead of a `[[ByteString]]`. Similarly, `-D` will tell Hawk not to split the input into lines, so the input will be a `ByteString`. The next version of Hawk will use type inference to determine which of the three input modes is needed.
 
-    > cat haskell-awk.cabal | hawk -d -a 'takeWhile (/= "") . dropWhile (/= "Source-Repository head")'
+    > hawk -ad 'takeWhile (/= "") . dropWhile (/= "Source-Repository head")' haskell-awk.cabal
     Source-Repository head
         type: git
         location: https://github.com/gelisam/hawk
