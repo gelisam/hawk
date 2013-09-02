@@ -42,6 +42,7 @@ Executable hawk
 
 Library
     exposed-modules: System.Console.Hawk.Representable
+                    ,System.Console.Hawk.IO
     ghc-options:    -Wall 
     hs-source-dirs: src
     build-depends: base

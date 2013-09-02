@@ -15,8 +15,9 @@ module System.Console.Hawk.Representable (
   , printRow
   , parseRows
   , parseWords
+  , showRows
   , runExpr
-  , runExprs
+--  , runExprs
 
 ) where
 
@@ -33,6 +34,8 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import GHC.IO.Exception (IOErrorType(ResourceVanished),IOException(ioe_type))
 import qualified System.IO as IO
+
+import qualified System.Console.Hawk.IO as HawkIO
 
 handleErrors :: IO () -> IO ()
 handleErrors = handle (\(e :: SomeException) -> IO.hPrint IO.stderr e)
@@ -73,20 +76,25 @@ parseWords rowsDelim columnsDelim str = let rows = parseRows rowsDelim str
 --                then L.filter  (not . C8.null) . BS.split delim
 --                else BS.split delim
 
-runOnInput :: Maybe FilePath -- ^ the input file or stdout when Nothing
-            -> (C8.ByteString -> IO ()) -- ^ the action to run on the input
-            -> IO ()
-runOnInput fp f = do
-    input <- maybe C8.getContents C8.readFile fp
-    f input
-    IO.hFlush IO.stdout
+--runOnInput :: Maybe FilePath -- ^ the input file or stdout when Nothing
+--            -> (C8.ByteString -> IO ()) -- ^ the action to run on the input
+--            -> IO ()
+--runOnInput fp f = do
+--    input <- maybe C8.getContents C8.readFile fp
+--    f input
+--    IO.hFlush IO.stdout
     -- TODO: we need also hFlush stderr?
 
-runExpr :: Maybe FilePath -> (C8.ByteString -> IO ()) -> IO ()
-runExpr = runOnInput
-
-runExprs :: Maybe FilePath -> (C8.ByteString -> [IO ()]) -> IO ()
-runExprs fp f = runOnInput fp (sequence_ . f)
+runExpr :: Maybe FilePath -- ^ if the input is a file
+        -> (Maybe FilePath -> IO C8.ByteString) -- ^ input reader
+        -> (C8.ByteString -> C8.ByteString)
+        -> (C8.ByteString -> IO ())
+        -> IO ()
+runExpr m i f o = i m >>= o . f
+--runExpr = runOnInput
+--
+--runExprs :: Maybe FilePath -> (C8.ByteString -> [IO ()]) -> IO ()
+--runExprs fp f = runOnInput fp (sequence_ . f)
 
 -- ------------------------
 -- Rows class and instances
@@ -120,11 +128,12 @@ printRows :: forall a . (Rows a)
           -> C8.ByteString -- ^ columns delimiter
           -> a -- ^ the value to print as rows
           -> IO ()
-printRows _ rd cd v = handle handler printRows_
-  where handler e = case ioe_type e of
-                      ResourceVanished -> return ()
-                      _ -> IO.hPrint IO.stderr e
-        printRows_ = C8.putStrLn $ showRows rd cd v
+printRows _ rd cd = HawkIO.printOutput . showRows rd cd
+--printRows _ rd cd v = handle handler printRows_ 
+--  where handler e = case ioe_type e of
+--                      ResourceVanished -> return ()
+--                      _ -> IO.hPrint IO.stderr e
+--        printRows_ = C8.putStrLn (showRows rd cd v) >> IO.hFlush IO.stdout
 --printRows b rowDelimiter columnDelimiter = printFirstRow_ . repr columnDelimiter
 --    where printRows_ [] = return ()
 --          printRows_ (x:xs) = do

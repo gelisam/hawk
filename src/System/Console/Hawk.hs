@@ -22,6 +22,8 @@ import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.Lazy
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
@@ -34,6 +36,7 @@ import Text.Printf (printf)
 import System.Console.Hawk.CabalDev
 import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
+import System.Console.Hawk.IO
 import System.Console.Hawk.Options
 
 
@@ -72,12 +75,13 @@ runHawk :: (String,String)
         -> Options
         -> [String]
         -> IO ()
-runHawk config os nos = let file = if L.length nos > 1
-                                    then Just (nos !! 1)
-                                    else Nothing
-                        in do
-                            extFile <- getExtensionsFile
-                            hawk config os extFile (L.head nos) file
+runHawk config os nos = do
+  let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
+  extFile <- getExtensionsFile
+  maybe_f <- hawk config os extFile (L.head nos)
+  case maybe_f of
+    Left ie -> printErrors ie
+    Right f -> getInput file >>= printOutput . f
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
@@ -101,10 +105,9 @@ hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
      -> FilePath              -- ^ The file containing the extensions
      -> String                -- ^ The user expression to evaluate
-     -> Maybe FilePath        -- ^ The input file
-     -> IO ()
-hawk config opts extFile expr_str file = do
-    maybe_f <- runLockedHawkInterpreter $ do
+     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
+hawk config opts extFile expr_str =
+    runLockedHawkInterpreter $ do
 
         initInterpreter config (optModuleFile opts) extFile
         
@@ -117,44 +120,51 @@ hawk config opts extFile expr_str file = do
             (MapMode,StreamFormat)   -> interpret' mapStreamExpr
             (MapMode,LinesFormat)    -> interpret' mapLinesExpr
             (MapMode,WordsFormat)    -> interpret' mapWordsExpr
-
-    case maybe_f of
-        Left ie -> printErrors ie -- error hanling!
-        Right () -> return () -- IO.putStrLn ""
     where 
           interpret' expr = do
             -- print the user expression
-            --lift $ IO.hPutStrLn IO.stderr expr 
-            interpret (unsafe expr) (as :: ())
-          
-          unsafe :: String -> String
-          unsafe = printf "System.IO.Unsafe.unsafePerformIO (%s)"
+            -- lift $ IO.hPutStrLn IO.stderr expr 
+            --interpret (unsafe expr) (as :: ())
+            interpret expr (as :: Data.ByteString.Lazy.ByteString
+                               -> Data.ByteString.Lazy.ByteString)
+          --unsafe :: String -> String
+          --unsafe = printf "System.IO.Unsafe.unsafePerformIO (%s)"
           
           evalExpr :: String
-          evalExpr = printf "%s (%s)" printRows expr_str
-          mapStreamExpr = runExpr [printRows, listMap expr_str]
-          mapLinesExpr = runExpr [printRows,listMap expr_str,parseRows]
-          mapWordsExpr = runExpr [printRows,listMap expr_str,parseWords]
+          evalExpr = printf "const (%s (%s))" showRows expr_str
+          mapStreamExpr = compose [showRows, listMap expr_str]
+          mapLinesExpr = compose [showRows,listMap expr_str,parseRows]
+          mapWordsExpr = compose [showRows,listMap expr_str,parseWords]
           listMap = printf (repr "listMap (%s)")
           c8pack :: P.String -> P.String
           c8pack = printf (repr "c8pack (%s)")
           sc8pack :: P.String -> P.String
           sc8pack = printf (repr "sc8pack (%s)")
-          streamExpr = runExpr [printRows, expr_str]
-          linesExpr = runExpr [printRows, expr_str, parseRows]
-          wordsExpr = runExpr [printRows, expr_str, parseWords]
-          ignoreErrors = P.show $ optIgnoreErrors opts
+          streamExpr = compose [showRows, expr_str]
+          linesExpr = compose [showRows, expr_str, parseRows]
+          wordsExpr = compose [showRows, expr_str, parseWords]
+          --ignoreErrors = P.show $ optIgnoreErrors opts
           linesDelim = optLinesDelim opts
           wordsDelim = optWordsDelim opts
           compose :: [String] -> String
           compose = L.intercalate (prel ".") . P.map (printf "(%s)")
-          runExpr :: [String] -> String
-          runExpr = printf (repr "runExpr (%s) (%s)") (prel $ P.show file) . compose
-          printRows :: String
-          printRows = printf (repr "printRows (%s) (%s) (%s)")
-                             (prel ignoreErrors)
+          --runExpr :: [String] -> String
+          --runExpr ss = let expr = compose ss
+          --             in printf (repr "runExpr (%s) (%s) (%s) (%s)")
+          --                       (prel $ P.show file)
+          --                       (hio "getInput")
+          --                       expr
+          --                       (hio "printOutput")
+          --runExpr = printf (repr "runExpr (%s) (%s)") (prel $ P.show file) . compose
+          showRows :: String
+          showRows = printf (repr "showRows (%s) (%s)")
                              (c8pack $ P.show linesDelim)
                              (c8pack $ P.show wordsDelim)
+         -- printRows :: String
+         -- printRows = printf (repr "printRows (%s) (%s) (%s)")
+         --                    (prel ignoreErrors)
+         --                    (c8pack $ P.show linesDelim)
+         --                    (c8pack $ P.show wordsDelim)
           
           parseRows :: String
           parseRows = printf (repr "parseRows (%s)")
@@ -171,6 +181,7 @@ hawk config opts extFile expr_str file = do
           
           prel = qualify "Prelude"
           repr = qualify "System.Console.Hawk.Representable"
+          --hio = qualify "System.Console.Hawk.IO"
 
 getUsage :: IO String
 getUsage = do

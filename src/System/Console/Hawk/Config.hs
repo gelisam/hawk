@@ -25,8 +25,11 @@ import System.Console.Hawk.Lock
 
 
 defaultModules :: [QualifiedModule]
-defaultModules = map fully_qualified [ "Prelude"
+defaultModules = map fully_qualified [ 
+                                       "Data.ByteString.Lazy.Char8"
+                                     , "Prelude"
                                      , "System.Console.Hawk.Representable"
+                                     , "System.Console.Hawk.IO"
                                      , "System.IO.Unsafe"
                                      ]
   where
