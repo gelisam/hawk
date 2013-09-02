@@ -70,7 +70,7 @@ Different tools use different characters to separate columns, use `-d` to tell H
     4,5,6
     7,8,9
 
-As a special case, using `-d` without specifying a delimiter tells Hawk not to split lines into words. The input is then a `[ByteString]` instead of a `[[ByteString]]`. Similarly, `-D` will tell Hawk not to split the input into lines, so the input will be a `ByteString`. Future version of Hawk will use type inference to determine which of the three input modes is needed.
+As a special case, using `-d` without specifying a delimiter tells Hawk not to split lines into words. The input is then a `[ByteString]` instead of a `[[ByteString]]`. Similarly, `-D` will tell Hawk not to split the input into lines, so the input will be a `ByteString`. The next version of Hawk will use type inference to determine which of the three input modes is needed.
 
     > cat haskell-awk.cabal | hawk -d -a 'takeWhile (/= "") . dropWhile (/= "Source-Repository head")'
     Source-Repository head
@@ -91,3 +91,20 @@ As usual in Haskell, type signatures are optional.
     Source-Repository head
         type: git
         location: https://github.com/gelisam/hawk
+
+
+## Map mode
+
+When operating on a stream of text, it is very common to apply the same transformation to each line. In Haskell, this is easily done using `map`.
+
+    > hawk box9 | hawk -a 'map ("0":)'
+    0 1 2 3
+    0 4 5 6
+    0 7 8 9
+
+Since mapping is so common, Hawk offers `--map` mode as a shortcut.
+
+    > hawk box9 | hawk -m '(!!1)'
+    2
+    5
+    8
