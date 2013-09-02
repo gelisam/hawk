@@ -108,3 +108,8 @@ Since mapping is so common, Hawk offers `--map` mode as a shortcut.
     2
     5
     8
+
+
+## Installation
+
+To install the development version, clone this repository and use `cabal install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to `./cabal-dev/bin/hawk`.
