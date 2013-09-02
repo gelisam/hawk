@@ -1,5 +1,5 @@
 Name:           haskell-awk
-Version:        0.3
+Version:        0.9
 Author:         Mario Pastorelli
 Maintainer:     pastorelli.mario@gmail.com
 Synopsis:       Haskell text processor for the command-line
