@@ -120,7 +120,7 @@ hawk config opts extFile expr_str file = do
 
     case maybe_f of
         Left ie -> printErrors ie -- error hanling!
-        Right () -> IO.putStrLn ""
+        Right () -> return () -- IO.putStrLn ""
     where 
           interpret' expr = do
             -- print the user expression
