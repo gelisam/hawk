@@ -86,7 +86,7 @@ runHawk config os nos = do
   maybe_f <- hawk config os extFile (L.head nos)
   case maybe_f of
     Left ie -> printErrors ie
-    Right f -> getInput file >>= printOutput . unQB . f . QB
+    Right f -> getInput file >>= printOutput . f
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
@@ -123,9 +123,9 @@ hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
      -> FilePath              -- ^ The file containing the extensions
      -> String                -- ^ The user expression to evaluate
-     -> IO (Either InterpreterError (QualifiedByteString -> QualifiedByteString))
-hawk config opts extFile expr_str =
-    runLockedHawkInterpreter $ do
+     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
+hawk config opts extFile expr_str = do
+    eitherErrorF <- runLockedHawkInterpreter $ do
 
         initInterpreter config (optModuleFile opts) extFile
         
@@ -138,6 +138,8 @@ hawk config opts extFile expr_str =
             (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr expr_str
             (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  expr_str
             (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  expr_str
+    
+    return ((\f -> unQB . f . QB) <$> eitherErrorF)
     where 
           interpret' expr = do
             -- print the user expression
