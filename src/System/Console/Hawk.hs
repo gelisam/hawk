@@ -47,12 +47,11 @@ import System.Console.Hawk.Options
 
 initInterpreter :: (String, String) -- ^ config file and module name
                 -> Maybe FilePath
-                -> FilePath
+                -> [Extension]
                 -> InterpreterT IO ()
-initInterpreter config moduleFile extensionsFile = do
-        extensions <- lift $ P.read <$> IO.readFile extensionsFile
+initInterpreter config moduleFile extensions = do
         
-        set [languageExtensions := (extensions::[Extension])]
+        set [languageExtensions := extensions]
 
         -- load the config file
         loadModules [P.fst config]
@@ -82,8 +81,8 @@ runHawk :: (String,String)
         -> IO ()
 runHawk config os nos = do
   let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
-  extFile <- getExtensionsFile
-  maybe_f <- hawk config os extFile (L.head nos)
+  extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
+  maybe_f <- hawk config os extensions (L.head nos)
   case maybe_f of
     Left ie -> printErrors ie
     Right f -> getInput file >>= printOutput . f
@@ -121,13 +120,13 @@ instance Typeable.Typeable QualifiedByteString where
 -- TODO missing error handling!
 hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
-     -> FilePath              -- ^ The file containing the extensions
+     -> [Extension]          -- ^ The extensions to enable
      -> String                -- ^ The user expression to evaluate
      -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
-hawk config opts extFile expr_str = do
+hawk config opts extensions expr_str = do
     eitherErrorF <- runLockedHawkInterpreter $ do
 
-        initInterpreter config (optModuleFile opts) extFile
+        initInterpreter config (optModuleFile opts) extensions
         
         -- eval program based on the existence of a delimiter
         case (optMode opts,streamFormat linesDelim wordsDelim) of
