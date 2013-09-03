@@ -46,25 +46,19 @@ import System.Console.Hawk.Options
 
 
 initInterpreter :: (String, String) -- ^ config file and module name
-                -> Maybe FilePath
+                -> [(String,Maybe String)] -- ^ the modules maybe qualified
                 -> [Extension]
                 -> InterpreterT IO ()
-initInterpreter config moduleFile extensions = do
+initInterpreter (preludeFile,preludeModule) userModules extensions = do
         
         set [languageExtensions := extensions]
 
         -- load the config file
-        loadModules [P.fst config]
+        loadModules [preludeFile]
 
         -- load the config module plus representable
-        let requiredModules = (P.snd config,Nothing):defaultModules
-        userModules <- lift $ maybe (return []) loadFromFile moduleFile
-
-        let modules = requiredModules ++ userModules
-
-        setImportsQ modules
-    where loadFromFile :: FilePath -> IO [(String,Maybe String)]
-          loadFromFile fp = P.read <$> IO.readFile fp
+        setImportsQ $ (preludeModule,Nothing):defaultModules
+                                           ++ userModules
 
 printErrors :: InterpreterError -> IO ()
 printErrors e = case e of
@@ -75,14 +69,17 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> IO.print e
 
-runHawk :: (String,String)
-        -> Options
+runHawk :: Options
+        ->  (String,String)
         -> [String]
         -> IO ()
-runHawk config os nos = do
+runHawk os prelude nos = do
   let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
+  let mode = optMode os
   extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
-  maybe_f <- hawk config os extensions (L.head nos)
+  modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
+
+  maybe_f <- hawk os prelude modules extensions (L.head nos)
   case maybe_f of
     Left ie -> printErrors ie
     Right f -> getInput file >>= printOutput . f
@@ -117,26 +114,26 @@ instance Typeable.Typeable QualifiedByteString where
                                           ++ tyConName tc }
                               trs
 
--- TODO missing error handling!
-hawk :: (String,String)      -- ^ The config file and module name
-     -> Options               -- ^ Program options
-     -> [Extension]          -- ^ The extensions to enable
-     -> String                -- ^ The user expression to evaluate
+hawk :: Options                -- ^ Program options
+     -> (String,String)         -- ^ The prelude file and module name
+     -> [(String,Maybe String)] -- ^ The modules maybe qualified
+     -> [Extension]             -- ^ The extensions to enable
+     -> String                  -- ^ The user expression to evaluate
      -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
-hawk config opts extensions expr_str = do
+hawk opts prelude modules extensions userExpr = do
     eitherErrorF <- runLockedHawkInterpreter $ do
 
-        initInterpreter config (optModuleFile opts) extensions
+        initInterpreter prelude modules extensions
         
         -- eval program based on the existence of a delimiter
         case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_)             -> interpret' $ evalExpr      expr_str
-            (ApplyMode,StreamFormat) -> interpret' $ streamExpr    expr_str
-            (ApplyMode,LinesFormat)  -> interpret' $ linesExpr     expr_str
-            (ApplyMode,WordsFormat)  -> interpret' $ wordsExpr     expr_str
-            (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr expr_str
-            (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  expr_str
-            (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  expr_str
+            (EvalMode,_)             -> interpret' $ evalExpr      userExpr
+            (ApplyMode,StreamFormat) -> interpret' $ streamExpr    userExpr
+            (ApplyMode,LinesFormat)  -> interpret' $ linesExpr     userExpr
+            (ApplyMode,WordsFormat)  -> interpret' $ wordsExpr     userExpr
+            (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr userExpr
+            (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  userExpr
+            (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
     
     return ((\f -> unQB . f . QB) <$> eitherErrorF)
     where 
@@ -206,4 +203,4 @@ main = do
                               else recompileConfigIfNeeded
                 if L.null notOpts || optHelp opts
                   then getUsage >>= IO.putStr
-                  else runHawk config opts notOpts
+                  else runHawk opts config notOpts
