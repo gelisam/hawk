@@ -30,6 +30,7 @@ defaultModules = map fully_qualified [
                                      , "System.Console.Hawk.Representable"
                                      , "System.Console.Hawk.IO"
                                      , "System.IO.Unsafe"
+                                     , "Data.ByteString.Lazy.Char8"
                                      ]
   where
     fully_qualified x = (x, Just x)
@@ -40,7 +41,6 @@ defaultPrelude = unlines
                , "import Prelude"
                , "import qualified Data.ByteString.Lazy.Char8 as B"
                , "import qualified Data.List as L"
-               , "import Data.ByteString.Lazy.Char8 (ByteString)"
                ]
 
 -- --

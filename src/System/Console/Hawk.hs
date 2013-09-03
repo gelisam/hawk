@@ -21,6 +21,11 @@ import Data.Function
 import Data.Ord
 import Data.Maybe
 import Data.String
+import qualified Data.Typeable.Internal as Typeable
+import Data.Typeable.Internal
+  (Typeable
+  ,TypeRep(..)
+  ,tyConName)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy
@@ -81,7 +86,7 @@ runHawk config os nos = do
   maybe_f <- hawk config os extFile (L.head nos)
   case maybe_f of
     Left ie -> printErrors ie
-    Right f -> getInput file >>= printOutput . f
+    Right f -> getInput file >>= printOutput . unQB . f . QB
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
@@ -100,12 +105,25 @@ streamFormat ld wd = if B.null ld
                                 then LinesFormat
                                 else WordsFormat
 
+-- | 'ByteString' wrapper used to override the 'ByteString' @typeOf@ into
+-- a qualified version
+-- @typeOf (ByteString.pack "test") == "ByteString"@
+-- @typeof (QualifiedByteString $ ByteString.pack "test") == "Data.ByteString.Lazy.Char8.Bytestring"@
+newtype QualifiedByteString = QB { unQB :: LB.ByteString }
+
+instance Typeable.Typeable QualifiedByteString where
+  typeOf (QB bs) = let TypeRep fp tc trs = Typeable.typeOf bs
+                   in TypeRep fp
+                              tc{ tyConName = "Data.ByteString.Lazy.Char8."
+                                          ++ tyConName tc }
+                              trs
+
 -- TODO missing error handling!
 hawk :: (String,String)      -- ^ The config file and module name
      -> Options               -- ^ Program options
      -> FilePath              -- ^ The file containing the extensions
      -> String                -- ^ The user expression to evaluate
-     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
+     -> IO (Either InterpreterError (QualifiedByteString -> QualifiedByteString))
 hawk config opts extFile expr_str =
     runLockedHawkInterpreter $ do
 
@@ -124,8 +142,7 @@ hawk config opts extFile expr_str =
           interpret' expr = do
             -- print the user expression
             -- lift $ IO.hPutStrLn IO.stderr expr 
-            interpret expr (as :: Data.ByteString.Lazy.ByteString
-                               -> Data.ByteString.Lazy.ByteString)
+            interpret expr (as :: QualifiedByteString -> QualifiedByteString)
           evalExpr = printf "const (%s (%s))" showRows
           mapStreamExpr = streamExpr . listMap
           mapLinesExpr = linesExpr . listMap
