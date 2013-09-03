@@ -7,6 +7,7 @@ import Test.Framework
 --import qualified Hawk.Test as HSPTest
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Config.Test as ConfigTest
+import qualified System.Console.Hawk.Test as HawkTest
 
 import Test.DocTest (doctest)
 import Test.Hspec (hspec)
@@ -16,4 +17,5 @@ main = do
     hspec $ do
         ReprTest.spec
         ConfigTest.spec
+    HawkTest.run
     doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
