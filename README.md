@@ -1,6 +1,7 @@
 # Hawk
 
-Command-line text processor using Haskell. It is [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html) but using a functional paradigm.
+Command-line lazy text processor using Haskell.
+Like [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html) but functional.
 
 ## Examples
 
@@ -59,7 +60,7 @@ import qualified Data.List as L
 ## Text format
 
 Hawk reads and write text in a tabular format typical of the command-line.
-Hawk decode and encode into list of lines, where a line is a list of words. It
+Hawk decodes and encodes into list of lines, where a line is a list of words. It
 is possible to use `show` to see the "real form" of the data:
 
 ```bash
