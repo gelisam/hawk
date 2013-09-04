@@ -14,7 +14,7 @@ Evaluate an expression:
 Apply an expression to stdin:
 
 ```bash
-> hawk '[1 .. 4]' | hawk -a reverse
+> seq 1 4 | hawk -a reverse
 4
 3
 2
@@ -24,7 +24,7 @@ Apply an expression to stdin:
 Map an expression to each line of stdin:
 
 ```bash
-> hawk '[(1,2),(3,4)]' | hawk -m '!! 1'
+> echo '1 2\n3 4' | hawk -m '!! 1'
 2
 4
 ```
