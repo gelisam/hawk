@@ -63,7 +63,7 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
 printErrors :: InterpreterError -> IO ()
 printErrors e = case e of
                   WontCompile es' -> do
-                    IO.hPutStrLn IO.stderr "\nWon't typecheck:"
+                    IO.hPutStrLn IO.stderr "\nWon't compile:"
                     forM_ es' $ \e' ->
                       case e' of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
