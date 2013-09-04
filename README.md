@@ -1,83 +1,89 @@
 # Hawk
 
-Transform text from the command-line using Haskell expressions.
+Command-line text processor using Haskell. It is [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html) but using a functional paradigm.
 
+## Examples
 
-## About
+Evaluate an expression:
 
-Command-line tools such as [awk](http://en.wikipedia.org/wiki/AWK) are best for one-liners, while compiled languages such as [Haskell](http://www.haskell.org) are intended for larger projects, spanning several modules and thousands of lines of code.
+```bash
+> hawk '2 ^ 100'
+1267650600228229401496703205376
+```
 
-Hawk lets you write Haskell one-liners on the command-line, and continues to support you as your one-liner grows into ten, one hundred lines. When your command-line expression becomes too large, move some of it to `~/.hawk/prelude.hs`, a Haskell module which hosts your custom helper functions. Once that file becomes too crowded, simply move that file to the folder of your choice, as the first module of a new Haskell project.
+Apply an expression to stdin:
 
+```bash
+> hawk '[1 .. 4]' | hawk -a reverse
+4
+3
+2
+1
+```
 
-## Haskell Expressions
+Map an expression to each line of stdin:
 
-The simplest way to use Hawk is to evaluate Haskell expressions.
+```bash
+> hawk '[(1,2),(3,4)]' | hawk -m '!! 1'
+2
+4
+```
 
-    > hawk '2 ^ 100'
-    1267650600228229401496703205376
+## Configure Hawk
 
-So far, so [`bc`](http://en.wikipedia.org/wiki/Bc_%28programming_language%29). Or python, or any other language with builtin arbitrary-precision arithmetic. But does any of those languages support lazy lists? Bash and Haskell both do!
+The Hawk configuration is stored in `$HOME/prelude.hs`, a standard
+Haskell file in which the user can define the extensions to use, the modules
+to import and frequently used functions.
 
-    > hawk '[2 ^ i | i <- [0..]]' | grep '^1' | head
-    1
-    16
-    128
-    1024
-    16384
-    131072
-    1048576
-    16777216
-    134217728
-    1073741824
+For instance, with the default configuration `hawk 'box 3 3 [1..]'` won't compile.
+Adding `box` to `$HOME/prelude.hs` will make it available in `hawk`:
 
-To make it easier for other commands to process Hawk's output, we display one element per line instead of using Haskell's `[1,2,4,...]` syntax. For the same reason, we display lists of lists as tables.
+```bash
+> hawk 'box 3 3 [1..]'
 
-    > hawk 'unfoldr (Just . splitAt 3) [1..]' | head -n 3
-    1 2 3
-    4 5 6
-    7 8 9
+Won't compile:
+    Not in scope: `box'
 
-The `unfoldr` function is not part of the Prelude, so in order to run the above, we need to add `import Data.List` to our `~/.hawk/prelude.hs`. While we're modifying the configuration file, let's also give a name to the above expression.
+> cat $HOME/.hawk/prelude.hs
+{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
+import Prelude
+import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.List as L
+> echo 'box r c = L.take r . L.unfoldr (Just . splitAt c)' >> $HOME/.hawk/prelude.hs
+> hawk 'box 3 3 [1..]'
+1 2 3
+4 5 6
+7 8 9
+```
 
-    > cat ~/.hawk/prelude.hs
-    import Data.List
-    
-    splitEvery n = unfoldr (Just . splitAt n)
-    box9 = take 3 $ splitEvery 3 [1..]
+## Text format
 
+Hawk reads and write text in a tabular format typical of the command-line.
+Hawk decode and encode into list of lines, where a line is a list of words. It
+is possible to use `show` to see the "real form" of the data:
 
-## Text-manipulation modes
+```bash
+> seq 1 4 | hawk -a id
+1
+2
+3
+4
+> seq 1 10 | hawk -a show
+[["1"],["2"],["3"],["4"]]
+```
 
-Hawk can `--apply` a Haskell expression to its input, represented as a list of lists.
+The default lines delimiter is `\n` and the default words delimiter is space.
+They can be changed with the options `-D` and `-d`:
 
-    > hawk 'take 2 box9' | hawk -a transpose
-    1 4
-    2 5
-    3 6
-
-Different tools use different characters to separate columns, use `-d` to tell Hawk which one you need.
-
-    $ hawk -d',' box9
-    1,2,3
-    4,5,6
-    7,8,9
-
-As a special case, using `-d` without specifying a delimiter tells Hawk not to split lines into words. The input is then a `[ByteString]` instead of a `[[ByteString]]`. Similarly, `-D` will tell Hawk not to split the input into lines, so the input will be a `ByteString`. The next version of Hawk will use type inference to determine which of the three input modes is needed.
-
-    > hawk -ad 'takeWhile (/= "") . dropWhile (/= "Source-Repository head")' haskell-awk.cabal
-    Source-Repository head
-        type: git
-        location: https://github.com/gelisam/hawk
-
-Hawk also has a `--map` mode, in which the expression is applied to every line.
-
-    > hawk box9 | hawk -m '(!! 1)'
-    2
-    5
-    8
-
+```bash
+seq 1 4 | tr '\n' ',' | hawk -D',' -a show
+[["1"],["2"],["3"],["4"]]
+```
 
 ## Installation
 
-To install the development version, clone this repository and use `cabal install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to `./cabal-dev/bin/hawk`.
+To install the development version, clone this repository and use `cabal
+install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal
+installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to
+`./cabal-dev/bin/hawk`. The first run will create a default configuration into
+`$HOME/.hawk/prelude.hs` if it doesn't exist.
