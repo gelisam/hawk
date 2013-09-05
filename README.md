@@ -32,12 +32,12 @@ Map an expression to each line of stdin:
 
 ## Configure Hawk
 
-The Hawk configuration is stored in `$HOME/prelude.hs`, a standard
+The Hawk configuration is stored in `~/.hawk/prelude.hs`, a standard
 Haskell file in which the user can define the extensions to use, the modules
 to import and frequently used functions.
 
 For instance, with the default configuration `hawk 'box 3 3 [1..]'` won't compile.
-Adding `box` to `$HOME/prelude.hs` will make it available in `hawk`:
+Adding `box` to `~/.hawk/prelude.hs` will make it available in `hawk`:
 
 ```bash
 > hawk 'box 3 3 [1..]'
@@ -45,12 +45,12 @@ Adding `box` to `$HOME/prelude.hs` will make it available in `hawk`:
 Won't compile:
     Not in scope: `box'
 
-> cat $HOME/.hawk/prelude.hs
+> cat ~/.hawk/prelude.hs
 {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
 import Prelude
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.List as L
-> echo 'box r c = L.take r . L.unfoldr (Just . splitAt c)' >> $HOME/.hawk/prelude.hs
+> echo 'box r c = L.take r . L.unfoldr (Just . splitAt c)' >> ~/.hawk/prelude.hs
 > hawk 'box 3 3 [1..]'
 1 2 3
 4 5 6
@@ -87,4 +87,4 @@ To install the development version, clone this repository and use `cabal
 install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal
 installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to
 `./cabal-dev/bin/hawk`. The first run will create a default configuration into
-`$HOME/.hawk/prelude.hs` if it doesn't exist.
+`~/.hawk/prelude.hs` if it doesn't exist.
