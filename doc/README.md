@@ -40,7 +40,7 @@ The above example illustrates how to create a new helper function `between`, and
 
 ## When should I use Hawk?
 
-At the moment, Hawk is best at filtering and reorganizing collections of "opaque" strings organized in a table or as a sequence of lines. A simple example would be to emulate [head](http://en.wikipedia.org/wiki/Head_%28Unix%29), while a more advanced example would be to parse a python-style indentation-based syntax and to convert it to a lisp-style representation of that tree structure.
+At the moment, Hawk is best at filtering and reorganizing collections of strings organized in a table or as a sequence of lines. Many standard command-line tools can be easily approximated using [very short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools); for example, here is a simplified version of [`head`](http://en.wikipedia.org/wiki/Head_%28Unix%29).
 
 ```bash
 > seq 10 | hawk -a 'L.take 3'
@@ -48,6 +48,21 @@ At the moment, Hawk is best at filtering and reorganizing collections of "opaque
 2
 3
 ```
+
+The original `head`, of course, is shorter and has more options. Hawk is useful when there isn't already a standard unix tool for what you need. For example, there is a standard tool for flipping tables vertically, but there is no tool for flipping them horizontally:
+
+```bash
+> printf "1 2 3\n4 5 6\n7 8 9\n" | tac
+7 8 9
+4 5 6
+1 2 3
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -m 'L.reverse'
+3 2 1
+6 5 4
+9 8 7
+```
+
+Similarly-short expressions could be used to transpose, rotate, flatten, and so on. With a bit more effort, much more involved transformations are also possible. For example, here we use a helper function to parse the input's indentation structure into a tree, and we use a few concatenations to shape this tree into a lisp-style expression.
 
 ```bash
 > cat example.in
@@ -59,6 +74,7 @@ foo
 > $ hawk -ad 'postorder (\x xs -> "("<>x<>(B.concat(L.map(" "<>)xs))<>")")' example.in
 (foo (bar1) (bar2 (baz)) (bar3))
 ```
+([prelude.hs](postorder/prelude.hs))
 
 Numerical operations are possible, but a bit inconvenient because we expose the input as a collection of ByteString values, which need to be [unpacked](http://hackage.haskell.org/packages/archive/bytestring/latest/doc/html/Data-ByteString-Lazy-Char8.html#v:unpack) and [read](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:read) before being manipulated.
 
