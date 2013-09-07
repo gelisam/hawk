@@ -28,7 +28,7 @@ By adding custom function definitions to `~/.hawk/prelude.hs`, it is easy to `-
         2790
 ```
 
-For more details, see the [documentation](doc.md).
+For more details, see the [documentation](doc/README.md).
 
 
 ## Installation
