@@ -6,6 +6,8 @@ import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.List as L
 import           Data.Monoid
 
+mconcatMap f = mconcat . map f
+
 postorder :: (ByteString -> [a] -> a) -> [ByteString] -> [a]
 postorder call [] = []
 postorder call (f:xs) = call f' ys

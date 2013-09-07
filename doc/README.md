@@ -73,7 +73,7 @@ foo
   bar2
     baz
   bar3
-> $ hawk -ad 'postorder (\x xs -> "("<>x<>(B.concat(L.map(" "<>)xs))<>")")' example.in
+> hawk -ad 'postorder (\x xs -> "(" <>x <> mconcatMap (" "<>) xs <> ")")' example.in
 (foo (bar1) (bar2 (baz)) (bar3))
 ```
 ([prelude.hs](postorder/prelude.hs))
