@@ -35,7 +35,7 @@ Hawk lets you write Haskell one-liners on the command-line, and continues to sup
 
 The above example illustrates how to create a new helper function `between`, and how to use it from Hawk. Whenever we use such helper functions, we will link to an example prelude containing the required definitions, like this:
 
-([prelude.hs](doc/between/prelude.hs))
+([prelude.hs](between/prelude.hs))
 
 
 ## When should I use Hawk?
