@@ -19,14 +19,14 @@ That behaviour was similar to the standard unix tool [`cut`](http://en.m.wikiped
 By adding custom function definitions to `~/.hawk/prelude.hs`, it is easy to `--apply` much more advanced manipulations to the input:
 
 ```bash
-> ps aux | hawk -a 'tree (!!1) (!!2) . tail' | head -n 6
-188
-  189
-    20509
-    20611
-  190
-    2790
+> ps -eo 'pid,ppid,comm' | hawk -a 'fmap (drop 2) . tree (!! 0) (!! 1) . tail'
+[...]
+login
+  -bash
+    ps
+    hawk
 ```
+([prelude.hs](doc/tree/prelude.hs))
 
 For more details, see the [documentation](doc/README.md).
 
