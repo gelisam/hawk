@@ -78,7 +78,7 @@ foo
 ```
 ([prelude.hs](postorder/prelude.hs))
 
-Numerical operations are possible, but a bit inconvenient because we expose the input as a collection of ByteString values, which need to be [unpacked](http://hackage.haskell.org/packages/archive/bytestring/latest/doc/html/Data-ByteString-Lazy-Char8.html#v:unpack) and [read](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:read) before being manipulated.
+Numerical operations are possible, but a bit inconvenient because Hawk exposes its input as a collection of ByteString values, which need to be [unpacked](http://hackage.haskell.org/packages/archive/bytestring/latest/doc/html/Data-ByteString-Lazy-Char8.html#v:unpack) and [read](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:read) before being manipulated.
 
 ```bash
 > seq 3 | hawk -ad 'sum . L.map (read . B.unpack)'
@@ -86,9 +86,32 @@ Numerical operations are possible, but a bit inconvenient because we expose the 
 ```
 
 
-## Hawk Modes
+## Flags
 
-(todo)
+Without any flag, Hawk simply evaluates the given Haskell expressions.
+
+```bash
+> hawk '2 ^ 100'
+1267650600228229401496703205376
+```
+
+In order to transform the input, it is necessary to use one of Hawk's two other modes, `--apply` and `--map`.
+
+```bash
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'L.take 2'
+1 2 3
+4 5 6
+```
+
+With the first mode, we `--apply` the user expression to the entire input. With the second, the expression is applied to each line, using `map`.
+
+```bash
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -m 'L.take 2'
+1 2
+4 5
+7 8
+```
+
 
 ## Input Formats
 
