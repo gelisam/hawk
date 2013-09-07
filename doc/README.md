@@ -7,7 +7,7 @@
 1
 ```
 
-Hawk is a command-line tool for manipulating text. Like [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), the command supports an open-ended set of text transformations expressed via an expression language. In the case of Hawk, the expression language is [Haskell](http://www.haskell.org/), whose basics are assumed to be familar to the reader.
+Hawk is a command-line tool for manipulating text. Like [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), it supports an open-ended set of text transformations expressed via an expression language. In the case of Hawk, the expression language is [Haskell](http://www.haskell.org/), whose basics are assumed to be familar to the reader.
 
 
 ## Overview
@@ -22,7 +22,7 @@ Command-line tools such as [awk](http://en.wikipedia.org/wiki/AWK) are best for 
 6
 ```
 
-Hawk lets you write Haskell one-liners on the command-line, and continues to support you as your one-liner grows into ten, one hundred lines. When your command-line expression becomes too large, move some of it to `~/.hawk/prelude.hs`, a Haskell module which hosts your custom helper functions. Once that file becomes too crowded, simply move that file to the folder of your choice, as the first module of a new Haskell project.
+Hawk lets you write Haskell one-liners on the command-line. When your one-liner grows too large to fit on a single line, move some of it to `~/.hawk/prelude.hs`, a Haskell module which hosts your custom helper functions.
 
 ```bash
 > echo 'between x y = L.takeWhile (/=y) . L.dropWhile (/=x)' >> ~/.hawk/prelude.hs
@@ -36,6 +36,8 @@ Hawk lets you write Haskell one-liners on the command-line, and continues to sup
 The above example illustrates how to create a new helper function `between`, and how to use it from Hawk. Whenever we use such helper functions, we will link to an example prelude containing the required definitions, like this:
 
 ([prelude.hs](between/prelude.hs))
+
+If your prelude becomes too crowded, it might be a sign that your task is too big for Hawk. Simply move your prelude file to the folder of your choice, as the first module of a new Haskell project.
 
 
 ## When should I use Hawk?
