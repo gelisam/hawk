@@ -42,7 +42,7 @@ import System.Console.Hawk.Config.Base
 getResult :: FilePath -> ParseResult a -> IO a
 getResult _ (ParseOk x) = return x
 getResult sourceFile (ParseFailed srcLoc err) = do
-    putStrLn $ printf "error parsing file %s:%d: %s" sourceFile (show srcLoc) err
+    putStrLn $ printf "error parsing file %s:%s: %s" sourceFile (show srcLoc) err
     exitFailure
 
 
