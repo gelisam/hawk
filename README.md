@@ -16,7 +16,7 @@ PID
 
 That behaviour was similar to the standard unix tool [`cut`](http://en.m.wikipedia.org/wiki/Cut_%28Unix%29). Many other standard command-line tools can be easily approximated using [other short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
 
-By adding custom function definitions to `~/.hawk/prelude.hs`, it is easy to `--apply` much more advanced manipulations to the input:
+By adding custom function definitions to `~/.hawk/prelude.hs`, it is easy to `--apply` much more advanced manipulations to the input.
 
 ```bash
 > ps -eo 'pid,ppid,comm' | hawk -a 'fmap (drop 2) . tree (!! 0) (!! 1) . tail'
@@ -27,6 +27,8 @@ login
     hawk
 ```
 ([prelude.hs](doc/tree/prelude.hs))
+
+The above asks `ps` to output three columns: the process id, the parent process id, and the command name. Then, Hawk runs the output through three more steps. First, the headers row is stripped off by `tail`. Next, the remaining rows are arranged as a tree, using the first two columns as keys and parent keys. Finally, `drop 2` removes those two columns from the output, resulting in a tree of command names.
 
 For more details, see the [documentation](doc/README.md).
 
