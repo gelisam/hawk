@@ -115,7 +115,40 @@ With the first mode, we `--apply` the user expression to the entire input. With 
 
 ## Input Formats
 
-(todo)
+By default, Hawk reads and writes text in a tabular format typical of the command-line: whitespace-separated columns. Hawk represents such a table as a list of lists.
+
+```bash
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[ByteString]] -> [[ByteString]]'
+1 2 3
+4 5 6
+7 8 9
+```
+
+Other common `--delimiter`s for tables include tabs and commas.
+
+```bash
+> printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'id'
+1	2	3
+4	5	6
+7	8	9
+```
+
+```bash
+> printf "1,2,3\n4,5,6\n7,8,9\n" | hawk -ad, id
+1,2,3
+4,5,6
+7,8,9
+```
+
+It is also possible to change the line-delimiter.
+
+```bash
+> printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
+x1*x2 + y1*y2 + z1*z2
+```
+
+(todo: line-based input, bytestream input)
+
 
 ## Output Formats
 
