@@ -4,9 +4,7 @@ import           Prelude
 import qualified Data.ByteString.Lazy.Char8 as B
 import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.List as L
-import           Data.Monoid
-
-mconcatMap f = mconcat . map f
+import           Text.Printf
 
 postorder :: (ByteString -> [a] -> a) -> [ByteString] -> [a]
 postorder call [] = []
