@@ -149,7 +149,16 @@ It is also possible to change the line-delimiter.
 x1*x2 + y1*y2 + z1*z2
 ```
 
-(todo: line-based input, bytestream input)
+Of course, tables are not the only common command-line format. If you don't need lines to be separated into words, simply pass an empty `--delimiter`.
+
+```bash
+> seq 3 | hawk -d -a 'id :: [ByteString] -> [ByteString]'
+1
+2
+3
+```
+
+(todo: input, bytestream input)
 
 
 ## Output Formats
