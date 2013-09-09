@@ -112,6 +112,8 @@ With the first mode, we `--apply` the user expression to the entire input. With 
 7 8
 ```
 
+In a future version of Hawk, type inference will be used to infer the appropriate mode. See the `magic` branch for a prototype.
+
 
 ## Input Formats
 
