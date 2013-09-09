@@ -19,11 +19,14 @@
 -- installed libraries. If hawk has been installed with cabal-dev, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
-module System.Console.Hawk.CabalDev (runHawkInterpreter) where
+module System.Console.Hawk.CabalDev
+    ( extraGhcArgs
+    , runHawkInterpreter
+    ) where
 
 import Data.Functor
 import Data.List
-import Language.Haskell.Interpreter (InterpreterT, InterpreterError, runInterpreter)
+import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
 import System.Directory (getDirectoryContents)
 import System.Environment (getExecutablePath)
@@ -59,13 +62,18 @@ cabalDevPackageFile dir = do
     let [file] = filter isPackageFile files
     return $ printf (path "%s/%s") dir file
 
+extraGhcArgs :: IO [String]
+extraGhcArgs = do
+    cabalDev <- cabalDevDir
+    case cabalDev of
+      Nothing -> return []
+      Just dir -> do packageFile <- cabalDevPackageFile dir
+                     let arg = printf "-package-db %s" packageFile
+                     return [arg]
+
 -- a version of runInterpreter which can load libraries
 -- installed along hawk's cabal-dev folder, if applicable.
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
 runHawkInterpreter mx = do
-    cabalDev <- cabalDevDir
-    case cabalDev of
-      Nothing -> runInterpreter mx
-      Just dir -> do packageFile <- cabalDevPackageFile dir
-                     let arg = printf "-package-db %s" packageFile
-                     unsafeRunInterpreterWithArgs [arg] mx
+    args <- extraGhcArgs
+    unsafeRunInterpreterWithArgs args mx

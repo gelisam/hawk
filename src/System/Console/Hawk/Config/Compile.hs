@@ -24,6 +24,8 @@ import System.Exit
 import System.IO
 import System.Process
 
+import System.Console.Hawk.CabalDev (extraGhcArgs)
+
 
 -- compile a haskell file
 -- TODO: this should return the error instead of print it and exit
@@ -32,14 +34,18 @@ compile :: FilePath -- ^ the source file
         -> FilePath -- ^ the directory used for compiler files
         -> IO ()
 compile sourceFile outputFile dir = do
+    let basicArgs = [ "--make"
+                    , sourceFile
+                    , "-i"
+                    , "-ilib"
+                    , "-fforce-recomp"
+                    , "-v0"
+                    , "-o",outputFile]
+    extraArgs <- extraGhcArgs
+    let args = basicArgs ++ extraArgs
     compExitCode <-
-            waitForProcess =<< runProcess "ghc" ["--make"
-                                               , sourceFile
-                                               , "-i"
-                                               , "-ilib"
-                                               , "-fforce-recomp"
-                                               , "-v0"
-                                               , "-o",outputFile]
+            waitForProcess =<< runProcess "ghc"
+                                          args
                                           (Just dir)
                                           Nothing
                                           Nothing
