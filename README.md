@@ -5,11 +5,11 @@ Transform text from the command-line using Haskell expressions. Similar to [awk]
 
 ## Examples
 
-The Haskell expression `(!! 1)` takes the second element from a list. Using Hawk to `--map` this expression over all input lines, we can extract the second column of the output of `ps aux`.
+The Haskell expression `(!! 1)` takes the second element from a list. Using Hawk to `--map` this expression over all input lines, we can extract the second column of the output of `ps`.
 
 ```bash
-> ps aux | hawk -m '(!! 1)' | head -n3
-PID
+> ps -eo 'pid,ppid,comm' | hawk -m '(!! 1)' | head -n3
+PPID
 20509
 188
 ```
