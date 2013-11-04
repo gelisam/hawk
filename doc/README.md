@@ -12,7 +12,7 @@ Hawk is a command-line tool for manipulating text. Like [awk](http://cm.bell-lab
 
 ## Overview: one-liners and beyond
 
-Command-line tools such as [awk](http://en.wikipedia.org/wiki/AWK) are best for one-liners, while compiled languages such as [Haskell](http://www.haskell.org) are intended for larger projects, spanning several modules and thousands of lines of code. Hawk fills the gap between those two extremes.
+Command-line tools such as awk are best for one-liners, while compiled languages such as Haskell are intended for larger projects, spanning several modules and thousands of lines of code. Hawk fills the gap between those two extremes.
 
 ```bash
 > seq 10 | hawk -ad 'L.takeWhile (/="7") . L.dropWhile (/="3")'
