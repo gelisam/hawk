@@ -31,7 +31,7 @@ Executable hawk
                   , directory
                   , easy-file
                   , filepath
-                  , haskell-src-exts
+                  , haskell-src-exts >= 1.14
                   , hint
                   , MonadCatchIO-mtl
                   , network
@@ -67,7 +67,7 @@ Test-suite reference
                       , hspec
                       , HUnit
                       , easy-file
-                      , haskell-src-exts
+                      , haskell-src-exts >= 1.14
                       , hint
                       , filepath
                       , network
