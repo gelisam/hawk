@@ -27,7 +27,7 @@ import Control.Applicative ((<$>))
 import qualified Data.ByteString.Char8 as C8
 import Data.Maybe
 import Language.Haskell.Exts ( parseFileWithExts )
-import Language.Haskell.Exts.Extension ( Extension (..) )
+import Language.Haskell.Exts.Extension ( parseExtension, Extension (..) )
 import Language.Haskell.Exts.Parser
     ( getTopPragmas
     , ParseResult (..)
@@ -70,7 +70,7 @@ parseModules sourceFile extensions = do
     return $ concatMap toHintModules importDeclarations
   where
     extensions' :: [Extension]
-    extensions' = map read extensions
+    extensions' = map parseExtension extensions
     
     toHintModules :: ImportDecl -> [QualifiedModule]
     toHintModules importDecl =
