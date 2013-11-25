@@ -164,6 +164,12 @@ hawk opts prelude modules extensions userExpr = do
           wordsExpr expr = compose [showRows, expr, parseWords]
           linesDelim = optLinesDelim opts
           wordsDelim = optWordsDelim opts
+          outLinesDelim = case optOutLinesDelim opts of
+                            Nothing -> linesDelim
+                            Just delim -> delim
+          outWordsDelim = case optOutWordsDelim opts of
+                            Nothing -> wordsDelim
+                            Just delim -> delim
           compose :: [String] -> String
           compose = L.intercalate (prel ".") . P.map (printf "(%s)")
           listMap :: String -> String
@@ -174,8 +180,8 @@ hawk opts prelude modules extensions userExpr = do
           sc8pack = printf (repr "sc8pack (%s)")
           showRows :: String
           showRows = printf (repr "showRows (%s) (%s)")
-                             (c8pack $ P.show linesDelim)
-                             (c8pack $ P.show wordsDelim)
+                             (c8pack $ P.show outLinesDelim)
+                             (c8pack $ P.show outWordsDelim)
           parseRows :: String
           parseRows = printf (repr "parseRows (%s)")
                              (sc8pack $ P.show linesDelim)

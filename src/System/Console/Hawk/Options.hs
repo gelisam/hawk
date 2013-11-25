@@ -29,6 +29,8 @@ data Modes = EvalMode | ApplyMode | MapMode
 data Options = Options { optMode :: Modes 
                        , optLinesDelim :: ByteString
                        , optWordsDelim :: ByteString
+                       , optOutLinesDelim :: Maybe ByteString
+                       , optOutWordsDelim :: Maybe ByteString
                        , optRecompile :: Bool
                        , optHelp :: Bool
                        , optIgnoreErrors :: Bool
@@ -39,6 +41,8 @@ defaultOptions :: Options
 defaultOptions = Options { optMode = EvalMode
                          , optLinesDelim = C8.singleton '\n'
                          , optWordsDelim = C8.singleton ' '
+                         , optOutLinesDelim = Nothing 
+                         , optOutWordsDelim =  Nothing
                          , optRecompile = False
                          , optHelp = False
                          , optIgnoreErrors = False
@@ -57,6 +61,8 @@ options =
  -- delimiters
  [ Option ['D'] ["lines-delimiter"] (OptArg delimiterAction "<delim>") delimiterHelp
  , Option ['d'] ["words-delimiter"] (OptArg wordsDelimAction "<delim>") wordsDelimHelp
+ , Option ['O'] ["output-lines-delim"] (OptArg outDelimAction "<delim>") outDelimHelp
+ , Option ['o'] ["output-words-delim"] (OptArg outWordsDelimAction "<delim>") outWordsDelimHelp
 
  -- modes
  , Option ['a'] ["apply"] (NoArg $ setMode ApplyMode) applyHelp
@@ -67,7 +73,13 @@ options =
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
  , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
-    where delimiterAction ms o = let d = case ms of
+    where outDelimAction d o = o{ optOutLinesDelim = fmap C8.pack d }
+          outDelimHelp = "output lines delimiter, default " ++
+                         "is equal to the input lines delimiter (-D)"
+          outWordsDelimAction d o = o{ optOutWordsDelim = fmap C8.pack d }
+          outWordsDelimHelp = "output words delimiter, default " ++
+                              "is equal to the input words delimiter (-d)"
+          delimiterAction ms o = let d = case ms of
                                             Nothing -> C8.pack ""
                                             Just "" -> C8.pack ""
                                             Just s -> delimiter $ C8.pack s
