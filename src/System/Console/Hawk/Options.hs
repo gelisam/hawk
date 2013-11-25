@@ -73,10 +73,10 @@ options =
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
  , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
-    where outDelimAction d o = o{ optOutLinesDelim = fmap C8.pack d }
+    where outDelimAction d o = o{ optOutLinesDelim = fmap (delimiter . C8.pack) d }
           outDelimHelp = "output lines delimiter, default " ++
                          "is equal to the input lines delimiter (-D)"
-          outWordsDelimAction d o = o{ optOutWordsDelim = fmap C8.pack d }
+          outWordsDelimAction d o = o{ optOutWordsDelim = fmap (delimiter . C8.pack) d }
           outWordsDelimHelp = "output words delimiter, default " ++
                               "is equal to the input words delimiter (-d)"
           delimiterAction ms o = let d = case ms of
