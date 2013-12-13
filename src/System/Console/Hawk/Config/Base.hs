@@ -12,9 +12,14 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-module Main where
+module System.Console.Hawk.Config.Base where
 
-import qualified System.Console.Hawk as Hawk
+import Data.ByteString.Char8
 
-main :: IO ()
-main = Hawk.main
+
+type ExtensionName = String
+type QualifiedModule = (String, Maybe String)
+type Source = ByteString
+
+defaultModuleName :: String
+defaultModuleName = "System.Console.Hawk.CachedPrelude"

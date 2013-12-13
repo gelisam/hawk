@@ -1,105 +1,38 @@
-HSL
-===
+# Hawk
 
-An experimental branch of [HSL](https://github.com/ssadler/hsl), a Haskell text processor for the command-line.
-
-There are many other similar tools: [eddie](https://code.google.com/p/eddie/), [HSProcess](https://github.com/melrief/HSProcess/), and of course the original [HSL](https://github.com/ssadler/hsl).
-
-This experimental branch differs from those other tools by relying on type inference to guess how you need the input to be parsed. With `eddie` and `HSProcess`, command-line flags are used to tell the tool whether you want your Haskell expression to be applied to each line or to the entire stream. In contrast, my version uses the type of your Haskell expression to decide how to apply it:
-
-    -- reverse :: [a] -> [a],
-    -- so we split the input into lines
-    > seq 3 | hsl reverse
-    3
-    2
-    1
-
-    -- swap :: (a, b) -> (b, a),
-    -- so we split each line into two fields
-    > printf "A\t1\nB\t2" | hsl swap
-    1	A
-    2	B
-
-    -- [5,4..1] :: [Int],
-    -- not a function, so we ignore the input
-    > hsl [5,4..1]
-    5
-    4
-    3
-    2
-    1
-
-More Examples
-========
-
-Since each line is a `ByteString` and not a `[Char]`, we can easily infer whether you intend to reverse lines or characters:
-
-    > printf 'Hello\nWorld'  | hsl B.reverse
-    olleH
-    dlroW
-
-Full Haskell syntax is supported. Go crazy!
-
-    > printf "hello\nworld\n" | hsl 'take 2 . repeat . head . filter (B.isPrefixOf "w")'
-    world
-    world
-
-A few builtins, such as `hist`, are provided for convenience. 
-
-    > cat src/HSL/* | hsl 'take 5 . reverse . hist . B.words . B.concat'
-    41	->
-    37	=
-    20	where
-    17	tb
-    17	Scalar
-
-You can add your own builtins to `src/HSL/Stdlib.hs`. Send us yours in a pull request!
+Transform text from the command-line using Haskell expressions. Similar to [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), but using Haskell as the text-processing language.
 
 
-JSON
-====
+## Examples
 
-One of HSL's most useful builtin is `json`. It's like `cut`, but for JSON!
+The Haskell expression `(!! 1)` takes the second element from a list. Using Hawk to `--map` this expression over all input lines, we can extract the second column of the output of `ps`.
 
-More concretely, if you have a file with one JSON expression per line, `json` lets you easily specify a path from which to extract elements.
+```bash
+> ps -eo 'pid,ppid,comm' | hawk -m '(!! 1)' | head -n3
+PPID
+20509
+188
+```
 
-    > cat cat_memes.json 
-    {"name": "nyan", "year": 2011}
-    {"name": "longcat", "year": 2007}
-    {"name": "ceiling cat", "year": 2006}
-    {"name": "invisible bike cat", "year": 2008}
-    > cat cat_memes.json | hsl 'sort . json i "year"'
-    2006
-    2007
-    2008
-    2011
+That behaviour was similar to the standard unix tool [`cut`](http://en.m.wikipedia.org/wiki/Cut_%28Unix%29). Many other standard command-line tools can be easily approximated using [other short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
 
-The `i` argument specifies the type of the result. `i` (Int), `s` (ByteString)
-and `f` (Float) are provided for this purpose. The following are equivalent:
+By adding custom function definitions to `~/.hawk/prelude.hs`, it is easy to `--apply` much more advanced manipulations to the input.
 
-    > printf '[1,2]\n[3,4]' | hsl 'json (undefined::(Int,Int)) ""'
-    1	2
-    3	4
+```bash
+> ps -eo 'pid,ppid,comm' | hawk -a 'fmap (drop 2) . tree (!! 0) (!! 1) . tail'
+[...]
+login
+  -bash
+    ps
+    hawk
+```
+([prelude.hs](doc/tree/prelude.hs))
 
-    > printf '[1,2]\n[3,4]' | hsl 'json (i,i) ""'
-    1	2
-    3	4
+The above asks `ps` to output three columns: the process id, the parent process id, and the command name. Then, Hawk runs the output through three more steps. First, the headers row is stripped off by `tail`. Next, the remaining rows are arranged as a tree, using the first two columns as keys and parent keys. Finally, `drop 2` removes those two columns from the output, resulting in a tree of command names.
 
-The empty string in the above example is an empty path, referring to the entire JSON expression. The general syntax for paths is illustrated in the following example:
-
-    > echo '{"a":{"b":["Hello","World"]}}' | hsl 'json s "a b 0"'
-    Hello
-
-If you need to extract more than one value per line, use `json2` or `json3`.
-
-    > echo '{"born":1938, "age":75}' | hsl 'map (uncurry (+)) . json2 (i,i) "born" "age"'
-    2013
+For more details, see the [documentation](doc/README.md).
 
 
-Installing
-==========
+## Installation
 
-    > git clone 'https://github.com/ssadler/hsl.git' && cd hsl
-    > # Install dependencies... You probably already have them (?)
-    > echo 'alias hsl="'`pwd`'/hsl"' >> ~/.bashrc
-
+To install the development version, clone this repository and use `cabal install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to `./cabal-dev/bin/hawk`. The first run will create a `~/.hawk/prelude.hs` skeleton from which you can import more modules and implement your custom transformations.

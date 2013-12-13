@@ -12,9 +12,5 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-module Main where
-
-import qualified System.Console.Hawk as Hawk
-
-main :: IO ()
-main = Hawk.main
+import Distribution.Simple
+main = defaultMain

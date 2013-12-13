@@ -1,0 +1,77 @@
+Name:           haskell-awk
+Version:        0.9
+Author:         Mario Pastorelli
+Maintainer:     pastorelli.mario@gmail.com
+Synopsis:       Haskell text processor for the command-line
+Description:    Hawk is a command line utility to process streams of text
+                using Haskell code. It is intended to be used in a UNIX
+                pipeline. It offers a configuration system to personalize
+                imported modules and a way to represent values on the console.
+Category:       Console
+License:        PublicDomain
+License-File:   LICENSE
+Build-Type:     Simple
+Cabal-version:  >=1.10
+Extra-Source-Files: src/System/Console/Hawk.hs
+                  , src/System/Console/Hawk/*.hs
+                  , README.md
+                  , tests/System/Console/Hawk/Representable/Test.hs
+
+Source-Repository head
+    type: git
+    location: https://github.com/gelisam/hawk
+
+Executable hawk
+    Main-is:        Main.hs
+    Default-Language: Haskell98
+    ghc-options:    -Wall
+    build-depends:  base >= 4.6 && < 5
+                  , bytestring
+                  , containers
+                  , directory
+                  , easy-file
+                  , filepath
+                  , haskell-src-exts >= 1.14
+                  , hint
+                  , MonadCatchIO-mtl
+                  , network
+                  , stringsearch
+                  , process
+                  , time
+    hs-source-dirs: src
+
+Library
+    exposed-modules: System.Console.Hawk.Representable
+                    ,System.Console.Hawk.IO
+    ghc-options:    -Wall 
+    hs-source-dirs: src
+    build-depends: base
+                 , bytestring
+                 , containers
+                 , stringsearch
+    Default-Language: Haskell98
+
+Test-suite reference
+  Hs-Source-Dirs:       src,tests
+  Main-Is:              RunTests.hs
+  Type:                 exitcode-stdio-1.0
+  Ghc-Options:          -Wall
+  Build-Depends:        base
+                      , bytestring
+                      , containers
+                      , directory
+                      , doctest >= 0.8
+                      , test-framework
+                      , test-framework-hunit
+                      , temporary
+                      , hspec
+                      , HUnit
+                      , easy-file
+                      , haskell-src-exts >= 1.14
+                      , hint
+                      , filepath
+                      , network
+                      , process
+                      , stringsearch
+                      , time
+  Default-Language: Haskell98
