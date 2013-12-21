@@ -295,7 +295,7 @@ import qualified Data.List as L
 
 Using this file it is possible to use all the functions of `Prelude` in Hawk.
 It is also possible to use `ByteString` and `List` functions using the two
-qualifiers
+qualifiers:
 
 ```bash
 > seq 3 | hawk -a 'L.length'
