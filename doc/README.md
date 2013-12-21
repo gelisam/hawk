@@ -85,6 +85,14 @@ Numerical operations are possible, but a bit inconvenient because Hawk exposes i
 6
 ```
 
+It is possible to populate `~/.hawk/prelude.hs` with some utility functions
+for easy conversion from ByteString.
+
+```bash
+> seq 3 | hawk -ad 'sum . L.map toInt'
+6
+```
+([prelude.hs](conversions/prelude.hs))
 
 ## Flags
 
