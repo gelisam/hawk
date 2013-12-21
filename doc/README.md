@@ -125,7 +125,18 @@ In a future version of Hawk, type inference will be used to infer the appropriat
 
 ## Input Formats
 
-By default, Hawk reads and writes text in a tabular format typical of the command-line: whitespace-separated columns. Hawk represents such a table as a list of lists.
+By default, Hawk reads and writes text in a tabular format typical of the
+command-line: each line is seen as whitespace-separated columns. The lines
+separator is the newline character. To better understand how Hawk sees the
+input, just call the [show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show) function:
+
+```bash
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'show'
+[["1","2","3"],["4","5","6"],["7","8","9"]]
+```
+
+So internally Hawk represents the input as a table, that is a list of lists
+of ByteString. The function that the user provides works on that datatype.
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[ByteString]] -> [[ByteString]]'
@@ -134,7 +145,7 @@ By default, Hawk reads and writes text in a tabular format typical of the comman
 7 8 9
 ```
 
-Other common `--delimiter`s for tables include tabs and commas.
+It is possible to change the `--words-delimiter` for tables using `-d`.
 
 ```bash
 > printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'id'
@@ -150,26 +161,36 @@ Other common `--delimiter`s for tables include tabs and commas.
 7,8,9
 ```
 
-It is also possible to change the line-delimiter.
+It is also possible to change the `--lines-delimiter` using `-D`.
 
 ```bash
 > printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
 x1*x2 + y1*y2 + z1*z2
 ```
 
-Of course, tables are not the only common command-line format. If you don't need lines to be separated into words, simply pass an empty `--delimiter`.
+Of course, tables are not the only common command-line format. If you don't
+need lines to be separated into words, simply pass an empty `--words-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -a 'id :: [ByteString] -> [ByteString]'
-1
-2
-3
+> seq 3 | hawk -d -a 'show :: [ByteString] -> String'
+["1","2","3"]
+```
+
+It is also possible to remove the lines separator and work directly on the
+ByteString by passing an empty `--lines-delimiter`.
+
+```bash
+> seq 3 | hawk -d -D -a 'show :: ByteString -> String'
 ```
 
 (todo: input, bytestream input)
 
 
 ## Output Formats
+
+By default, Hawk reads and writes text in a tabular format typical of the
+command-line: each line is seen as whitespace-separated columns. The lines
+separator is the newline character. To better understand how Hawk sees the
 
 (todo)
 
