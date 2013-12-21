@@ -280,8 +280,32 @@ be used to change the format of the given input.
 1*2*3+4*5*6
 ```
 
-(todo)
-
 ## User Prelude
 
-(todo)
+The file `~/.hawk/prelude.hs` contains the Hawk context and can be used to
+customize Hawk. If the directory `~/.hawk` doesn't
+exist, Hawk creates it the first time is run with a default `prelude.hs` file
+
+```haskell
+{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
+import Prelude
+import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.List as L
+```
+
+Using this file it is possible to use all the functions of `Prelude` in Hawk.
+It is also possible to use `ByteString` and `List` functions using the two
+qualifiers
+
+```bash
+> seq 3 | hawk -a 'L.length'
+3
+```
+
+The `prelude.hs` file can be seen as a regular Haskell file with some limitations:
+
+- only the `LANGUAGE` [pragma](http://www.haskell.org/ghc/docs/7.0.3/html/users_guide/pragmas.html) is supported
+- [import modules](http://www.haskell.org/haskellwiki/Import) is restricted to
+importing them totally: there is no way to import only a part of a module, so
+something like `import Prelude (try)` won't import only try from the `Prelude`
+module. The support is planned for future releases
