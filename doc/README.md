@@ -181,6 +181,7 @@ ByteString by passing an empty `--lines-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -D -a 'show :: ByteString -> String'
+"1\n2\n3\n"
 ```
 
 (todo: input, bytestream input)
@@ -188,9 +189,7 @@ ByteString by passing an empty `--lines-delimiter`.
 
 ## Output Formats
 
-By default, Hawk reads and writes text in a tabular format typical of the
-command-line: each line is seen as whitespace-separated columns. The lines
-separator is the newline character. To better understand how Hawk sees the
+Hawk writes text in a tabular format typical of the command-line. 
 
 (todo)
 
