@@ -94,7 +94,7 @@ for easy conversion from ByteString.
 ```
 ([prelude.hs](conversions/prelude.hs))
 
-## Flags
+## Modes
 
 Without any flag, Hawk simply evaluates the given Haskell expressions.
 
@@ -176,8 +176,7 @@ need lines to be separated into words, simply pass an empty `--words-delimiter`.
 ["1","2","3"]
 ```
 
-It is also possible to remove the lines separator and work directly on the
-ByteString by passing an empty `--lines-delimiter`.
+Finally, to work directly on the ByteString just pass an empty `--lines-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -D -a 'show :: ByteString -> String'
@@ -189,7 +188,97 @@ ByteString by passing an empty `--lines-delimiter`.
 
 ## Output Formats
 
-Hawk writes text in a tabular format typical of the command-line. 
+Hawk writes text in a tabular format typical of the command-line.
+
+The type of the user function must be compatible with this tabular format.
+Recall that, in Hawk, tabular means list of lists of ByteString where the first
+list is the list of lines, the second list is the list of words for each line
+and the ByteString is the content of a single cell.
+
+For the cell content type, any type that is instance of
+[Show](http://hackage.haskell.org/package/base-4.6.0.1/docs/Prelude.html#t:Show)
+is valid.
+
+For the list of words, any type that is instance of
+[Row](https://raw.github.com/gelisam/hawk/master/src/System/Console/Hawk/Representable.hs) can be used. All standard data types are instance of this class.
+
+For the list of lines, any type that is instance of
+[Rows](https://raw.github.com/gelisam/hawk/master/src/System/Console/Hawk/Representable.hs) can be used. All standard data types are instance of this class.
+
+Let's do some examples to better understand how this works.
+
+```bash
+> hawk '[[B.pack "1",B.pack "2"], [B.pack "3",B.pack "4"]]'
+1 2
+3 4
+```
+
+The given expression creates a list of lists of ByteString, that is exactly the
+type that Hawk uses. The output is created using the default delimiter for words,
+that is space, and lines, that is newline. Note that the whole expression is
+what we called list of lines, while the expressions `[B.pack "1",B.pack "2"]`
+and `[B.pack "3",B.pack "4"]` are list of words and `B.pack "1"`, `B.pack "2"`
+, `B.pack "3"` and `B.pack "4"` are the cell values.
+
+Changing the type of the cell values is still valid if the given type is instance
+of `Show`. For examples, we can use String or Float instead of ByteString.
+
+```bash
+> hawk '[["1","2"], ["3","4"]]'     
+1 2
+3 4
+```
+
+```bash
+> hawk '[[1,2], [3,4]] :: [[Float]]'
+1.0 2.0
+3.0 4.0
+```
+
+In the examples above we used list as type for the list of words and for the
+list of lines but what happens when we use other types? Each type has its own
+representation but usually if the type is a container then it is represented
+like a list (of words or lines) else it is represented as itself.
+
+```bash
+> hawk '1 :: Double'
+1.0
+```
+
+```bash
+> hawk '(True,False)'
+True
+False
+```
+
+```bash
+> hawk '[(1,2),(3,4)] :: [(Int,Float)]'
+1 2.0
+3 4.0
+```
+
+The output delimiters for words and lines are by default the same delimiters
+used for the input. They can be changed using `--output-words-delim` and
+`--output-lines-delim`.
+
+```bash
+> hawk -O' or ' '(True,False)'                  
+True or False
+```
+
+```bash
+> hawk -o'\t' '[(1,2),(3,4.0)] :: [(Int,Float)]'
+1	2.0
+3	4.0
+```
+
+Combining the input delimiters options with the output delimiters options can
+be used to change the format of the given input.
+
+```bash
+> > echo '1 2 3\n4 5 6'  | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id' 
+1*2*3+4*5*6
+```
 
 (todo)
 
