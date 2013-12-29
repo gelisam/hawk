@@ -185,16 +185,49 @@ instance Rows ByteString where
 instance (Rows a) => Rows (Maybe a) where
     repr d = maybe [C8.empty] (repr d)
 
-instance (Row a, Row b) => Rows (a,b) where
-    repr d (x,y) = [repr' d x,repr' d y]
-
 instance (Row a, Row b) => Rows (Map a b) where
     repr d = listAsRows d . M.toList
 
 instance (ListAsRows a) => Rows (Set a) where
     repr d = listAsRows d . S.toList
 
+instance (Row a, Row b) => Rows (a,b) where
+    repr d (x,y) = [repr' d x,repr' d y]
 
+instance (Row a, Row b, Row c) => Rows (a,b,c) where
+    repr d (a,b,c) = [repr' d a, repr' d b, repr' d c]
+
+instance (Row a, Row b, Row c, Row d) => Rows (a,b,c,d) where
+    repr d (a,b,c,e) = [repr' d a, repr' d b, repr' d c, repr' d e]
+
+instance (Row a, Row b, Row c, Row d, Row e) => Rows (a,b,c,d,e) where
+    repr d (a,b,c,e,f) = [repr' d a, repr' d b, repr' d c, repr' d e, repr' d f]
+
+instance (Row a, Row b, Row c, Row d, Row e, Row f) => Rows (a,b,c,d,e,f) where
+    repr d (a,b,c,e,f,g) = [repr' d a, repr' d b, repr' d c,repr' d e
+                           ,repr' d f, repr' d g]
+
+instance (Row a, Row b, Row c, Row d, Row e, Row f, Row g)
+       => Rows (a,b,c,d,e,f,g) where
+    repr d (a,b,c,e,f,g,h) = [repr' d a, repr' d b, repr' d c,repr' d e
+                             ,repr' d f, repr' d g, repr' d h]
+
+instance (Row a, Row b, Row c, Row d, Row e, Row f, Row g, Row h)
+       => Rows (a,b,c,d,e,f,g,h) where
+    repr d (a,b,c,e,f,g,h,i) = [repr' d a, repr' d b, repr' d c, repr' d e
+                               ,repr' d f, repr' d g, repr' d h, repr' d i]
+
+instance (Row a, Row b, Row c, Row d, Row e, Row f, Row g, Row h, Row i)
+       => Rows (a,b,c,d,e,f,g,h,i) where
+    repr d (a,b,c,e,f,g,h,i,l) = [repr' d a, repr' d b, repr' d c, repr' d e
+                                 ,repr' d f, repr' d g, repr' d h, repr' d i
+                                 , repr' d l]
+
+instance (Row a, Row b, Row c, Row d, Row e, Row f, Row g, Row h, Row i, Row l)
+       => Rows (a,b,c,d,e,f,g,h,i,l) where
+    repr d (a,b,c,e,f,g,h,i,l,m) = [repr' d a, repr' d b, repr' d c, repr' d e
+                                   ,repr' d f, repr' d g, repr' d h, repr' d i
+                                   ,repr' d l, repr' d m]
 
 -- Lists
 
@@ -215,6 +248,16 @@ instance ListAsRows ()
 instance (ListAsRow a,ListAsRows a) => ListAsRows [a]
 instance (Row a,Row b) => ListAsRows (a,b)
 instance (Row a,Row b,Row c) => ListAsRows (a,b,c)
+instance (Row a,Row b,Row c,Row d) => ListAsRows (a,b,c,d)
+instance (Row a,Row b,Row c,Row d,Row e) => ListAsRows (a,b,c,d,e)
+instance (Row a,Row b,Row c,Row d,Row e,Row f) => ListAsRows (a,b,c,d,e,f)
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g) => ListAsRows (a,b,c,d,e,f,g)
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h)
+  => ListAsRows (a,b,c,d,e,f,g,h)
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i)
+  => ListAsRows (a,b,c,d,e,f,g,h,i)
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
+  => ListAsRows (a,b,c,d,e,f,g,h,i,l)
 
 instance ListAsRows Char where
     listAsRows _ = (:[]) . C8.pack
@@ -307,7 +350,71 @@ instance (Row a) => Row (Maybe a) where
     repr' d (Just x) = repr' d x -- check if d is correct here
 
 instance (Row a,Row b) => Row (a,b) where
-    repr' d (a,b) = repr' d [repr' d a,repr' d b] 
+    repr' d (a,b) = repr' d a `C8.append` (d `C8.append` repr' d b)
+    --repr' d (a,b) = repr' d [repr' d a,repr' d b] 
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
-    repr' d (a,b,c) = repr' d [repr' d a,repr' d b,repr' d c]
+    repr' d (a,b,c) =  repr' d a `C8.append` (d `C8.append`
+                      (repr' d b `C8.append` (d `C8.append` repr' d c)))
+
+instance (Row a,Row b,Row c,Row d) => Row (a,b,c,d) where
+    repr' d (a,b,c,e) = repr' d a `C8.append` (d `C8.append`
+                        (repr' d b `C8.append` (d `C8.append`
+                        (repr' d c `C8.append` (d `C8.append` repr' d e)))))
+
+instance (Row a,Row b,Row c,Row d,Row e) => Row (a,b,c,d,e) where
+    repr' d (a,b,c,e,f) = repr' d a `C8.append` (d `C8.append`
+                        (repr' d b `C8.append` (d `C8.append`
+                        (repr' d c `C8.append` (d `C8.append`
+                        (repr' d e `C8.append` repr' d f))))))
+
+instance (Row a,Row b,Row c,Row d,Row e,Row f) => Row (a,b,c,d,e,f) where
+    repr' d (a,b,c,e,f,g) = repr' d a `C8.append` (d `C8.append`
+                            (repr' d b `C8.append` (d `C8.append`
+                            (repr' d c `C8.append` (d `C8.append`
+                            (repr' d e `C8.append` (d `C8.append`
+                            (repr' d f `C8.append` (d `C8.append` repr' d g)))))))))
+
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g) => Row (a,b,c,d,e,f,g) where
+    repr' d (a,b,c,e,f,g,h) = repr' d a `C8.append` (d `C8.append`
+                              (repr' d b `C8.append` (d `C8.append`
+                              (repr' d c `C8.append` (d `C8.append`
+                              (repr' d e `C8.append` (d `C8.append`
+                              (repr' d f `C8.append` (d `C8.append`
+                              (repr' d g `C8.append` (d `C8.append` repr' d h)))))))))))
+
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h)
+        => Row (a,b,c,d,e,f,g,h) where
+    repr' d (a,b,c,e,f,g,h,i) =
+        repr' d a `C8.append` (d `C8.append`
+       (repr' d b `C8.append` (d `C8.append`
+       (repr' d c `C8.append` (d `C8.append`
+       (repr' d e `C8.append` (d `C8.append`
+       (repr' d f `C8.append` (d `C8.append`
+       (repr' d g `C8.append` (d `C8.append`
+       (repr' d h `C8.append` (d `C8.append` repr' d i)))))))))))))
+
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i)
+        => Row (a,b,c,d,e,f,g,h,i) where
+    repr' d (a,b,c,e,f,g,h,i,l) =
+        repr' d a `C8.append` (d `C8.append`
+       (repr' d b `C8.append` (d `C8.append`
+       (repr' d c `C8.append` (d `C8.append`
+       (repr' d e `C8.append` (d `C8.append`
+       (repr' d f `C8.append` (d `C8.append`
+       (repr' d g `C8.append` (d `C8.append`
+       (repr' d h `C8.append` (d `C8.append`
+       (repr' d i `C8.append` (d `C8.append` repr' d l)))))))))))))))
+
+instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
+        => Row (a,b,c,d,e,f,g,h,i,l) where
+    repr' d (a,b,c,e,f,g,h,i,l,m) =
+        repr' d a `C8.append` (d `C8.append`
+       (repr' d b `C8.append` (d `C8.append`
+       (repr' d c `C8.append` (d `C8.append`
+       (repr' d e `C8.append` (d `C8.append`
+       (repr' d f `C8.append` (d `C8.append`
+       (repr' d g `C8.append` (d `C8.append`
+       (repr' d h `C8.append` (d `C8.append`
+       (repr' d i `C8.append` (d `C8.append`
+       (repr' d l `C8.append` (d `C8.append` repr' d m)))))))))))))))))
