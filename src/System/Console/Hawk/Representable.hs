@@ -366,7 +366,7 @@ instance (Row a,Row b,Row c,Row d,Row e) => Row (a,b,c,d,e) where
     repr' d (a,b,c,e,f) = repr' d a `C8.append` (d `C8.append`
                         (repr' d b `C8.append` (d `C8.append`
                         (repr' d c `C8.append` (d `C8.append`
-                        (repr' d e `C8.append` repr' d f))))))
+                        (repr' d e `C8.append` (d `C8.append` repr' d f)))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f) => Row (a,b,c,d,e,f) where
     repr' d (a,b,c,e,f,g) = repr' d a `C8.append` (d `C8.append`

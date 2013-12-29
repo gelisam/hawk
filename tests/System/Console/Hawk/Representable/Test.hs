@@ -30,8 +30,22 @@ import System.Console.Hawk.Representable
 
 import Test.Hspec 
 
-spec :: Spec
-spec = describe "repr" $ do
+
+reprSpec' :: Spec
+reprSpec' = describe "repr'" $ do
+    it "can convert tuple values" $ do
+      example $ repr' " " (1,True) `shouldBe` "1 True"
+      example $ repr' " " (1,True,2) `shouldBe` "1 True 2"
+      example $ repr' " " (1,2,3,4) `shouldBe` "1 2 3 4"
+      example $ repr' " " (1,2,3,4,5) `shouldBe` "1 2 3 4 5"
+      example $ repr' " " (1,2,3,4,5,6) `shouldBe` "1 2 3 4 5 6"
+      example $ repr' " " (1,2,3,4,5,6,7) `shouldBe` "1 2 3 4 5 6 7"
+      example $ repr' " " (1,2,3,4,5,6,7,8) `shouldBe` "1 2 3 4 5 6 7 8"
+      example $ repr' " " (1,2,3,4,5,6,7,8,9) `shouldBe` "1 2 3 4 5 6 7 8 9"
+      example $ repr' " " (1,2,3,4,5,6,7,8,9,10) `shouldBe` "1 2 3 4 5 6 7 8 9 10"
+
+reprSpec :: Spec
+reprSpec = describe "repr" $ do
     it "can convert boolean values" $ do
         repr "\t" True `shouldBe` ["True"]
         repr "\t" False `shouldBe` ["False"]
@@ -67,6 +81,14 @@ spec = describe "repr" $ do
     it "can convert tuple values" $ do
         example $ repr "\t" (1,True) `shouldBe` ["1","True"]
         example $ repr "\t" ((1,2),False) `shouldBe` ["1\t2","False"]
+        example $ repr "\t" (1,2,3) `shouldBe` ["1","2","3"]
+        example $ repr "\t" (1,2,3,4) `shouldBe` ["1","2","3","4"]
+        example $ repr "\t" (1,2,3,4,5) `shouldBe` ["1","2","3","4","5"]
+        example $ repr "\t" (1,2,3,4,5,6) `shouldBe` ["1","2","3","4","5","6"]
+        example $ repr "\t" (1,2,3,4,5,6,7) `shouldBe` ["1","2","3","4","5","6","7"]
+        example $ repr "\t" (1,2,3,4,5,6,7,8) `shouldBe` ["1","2","3","4","5","6","7","8"]
+        example $ repr "\t" (1,2,3,4,5,6,7,8,9) `shouldBe` ["1","2","3","4","5","6","7","8","9"]
+        example $ repr "\t" (1,2,3,4,5,6,7,8,9,10) `shouldBe` ["1","2","3","4","5","6","7","8","9","10"]
 
     it "can convert list values" $ do
         repr "\t" ([]::[()]) `shouldBe` []
