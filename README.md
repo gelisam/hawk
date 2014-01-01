@@ -2,7 +2,6 @@
 
 Transform text from the command-line using Haskell expressions. Similar to [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), but using Haskell as the text-processing language.
 
-
 ## Examples
 
 In [Unix](http://en.wikipedia.org/wiki/Unix) the file `/etc/passwd` is used to
@@ -50,7 +49,10 @@ interval of the input:
 
 For more details, see the [documentation](doc/README.md).
 
-
 ## Installation
 
-To install the development version, clone this repository and use `cabal install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to `./cabal-dev/bin/hawk`. The first run will create a `~/.hawk/prelude.hs` skeleton from which you can import more modules and implement your custom transformations.
+To install the development version, clone this repository and use `cabal
+install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal
+installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to
+`./cabal-dev/bin/hawk`. The first run will create a default configuration into
+`~/.hawk/prelude.hs` if it doesn't exist.
