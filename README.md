@@ -29,18 +29,18 @@ using awk:
 While Hawk and awk have similar use cases, the philosophy behind the two is very
 different. Instead of creating an ad-hoc language like awk does, Hawk uses
 Haskell and can easily use all the libraries available for it.
-There are many standard command-line tools can be easily approximated using
+There are many standard command-line tools that can be easily approximated using
 [short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
 The Hawk runtime environment is made to be fully customizable: there is
 a [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude)
 which contains imported modules, language extensions and
 user defined functions. This file can be populated with functions to use inside
-Hawk. For instance, we could add a `takeFromTo` function that gets elements in an
+Hawk. For instance, we could add a `takeNFrom` function that gets elements in an
 interval of the input:
 
 ```bash
-> echo 'takeFromTo i c = take c . drop i' >> ~/.hawk/prelude.hs
-> seq 0 100 | hawk -a 'takeFromTo 10 3'
+> echo 'takeNFrom i c = take c . drop i' >> ~/.hawk/prelude.hs
+> seq 0 100 | hawk -a 'takeNFrom 10 3'
 10
 11
 12
