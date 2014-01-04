@@ -20,9 +20,10 @@ The first field is the username. We can use Hawk to list all usernames as follow
 root
 ```
 
-The `-d` option tells Hawk to use `:` as word delimiters and `-m head` will
-map [head](http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-List.html#v:head) over each line extracting the user. The same result can be achieved
-using awk:
+The `-d` option tells Hawk to use `:` as word delimiters, causing the first line to be interpreted as `["root", "x", "0", "0", "root", "/root", "/bin/bash"]`.
+The `-m` tells Hawk to map a function over each line of the input. In this case, this means to extract the first word of each line, which happens to be the username.
+
+We could of course have achieved identical results by using awk instead of Hawk:
 
 ```bash
 > cat /etc/passwd | awk -F: '{print $1}'
