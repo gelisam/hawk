@@ -18,7 +18,7 @@ The first field is the username. To extract every user registered in the system 
 > cat /etc/passwd | hawk -d: -m 'head'
 ```
 
-The `-d` option tells Hawk to use colon as words separator and `-m head` will
+The `-d` option tells Hawk to use ':' as word delimiters and `-m head` will
 map [head](http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-List.html#v:head) over each line extracting the user. The same result can be achieved
 using awk:
 
