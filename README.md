@@ -6,7 +6,7 @@ Transform text from the command-line using Haskell expressions. Similar to [awk]
 
 In [Unix](http://en.wikipedia.org/wiki/Unix) the file `/etc/passwd` is used to
 keep track of every registered user in the system. Each entry in the file
-contains column-separated informations about a single user, like:
+contains colon-separated informations about a single user, like:
 
 ```
 root:x:0:0:root:/root:/bin/bash
@@ -18,7 +18,7 @@ The first field is the username. To extract every user registered in the system 
 > cat /etc/passwd | hawk -d: -m 'head'
 ```
 
-The `-d` option tells Hawk to use column as words separator and `-m head` will
+The `-d` option tells Hawk to use colon as words separator and `-m head` will
 map [head](http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-List.html#v:head) over each line extracting the user. The same result can be achieved
 using awk:
 
