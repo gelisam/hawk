@@ -21,7 +21,7 @@ root
 ```
 
 The `-d` option tells Hawk to use `:` as word delimiters, causing the first line to be interpreted as `["root", "x", "0", "0", "root", "/root", "/bin/bash"]`.
-The `-m` tells Hawk to map a function over each line of the input. In this case, this means to extract the first word of each line, which happens to be the username.
+The `-m` tells Hawk to map a function over each line of the input. In this case, the function `head` extracts the first word of the line, which happens to be the username.
 
 We could of course have achieved identical results by using awk instead of Hawk:
 
