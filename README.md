@@ -31,15 +31,13 @@ root
 ```
 
 While Hawk and awk have similar use cases, the philosophy behind the two is very
-different. Instead of creating an ad-hoc language like awk does, Hawk uses
-Haskell and can easily use all the libraries available for it.
+different. Awk uses a specialized language designed to concisely express many text transformations,
+while Hawk uses the general-purpose language Haskell, which is also known for being concise, among other things.
 There are many standard command-line tools that can be easily approximated using
 [short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
-The Hawk runtime environment is made to be fully customizable: there is
-a [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude)
-which contains imported modules, language extensions and
-user defined functions. This file can be populated with functions to use inside
-Hawk. For instance, we could add a `takeNFrom` function that gets elements in an
+
+Another important difference is that while awk one-liners are self-contained, Hawk encourages the use of libraries and user-defined functions. By adding function definitions, module imports and language pragmas to Hawk's user-configurable [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude), those functions, libraries and language extensions become available to Hawk one-liners.
+For instance, we could add a `takeNFrom` function that gets elements in an
 interval of the input:
 
 ```bash
