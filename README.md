@@ -11,7 +11,6 @@ For example:
 
 ```
 root:x:0:0:root:/root:/bin/bash
-lucy:x:1:1:lucy:/home/lucy:/bin/bash
 ```
 
 The first field is the username. We can use Hawk to list all usernames as follows:
@@ -19,7 +18,6 @@ The first field is the username. We can use Hawk to list all usernames as follow
 ```bash
 > cat /etc/passwd | hawk -d: -m 'head'
 root
-lucy
 ```
 
 The `-d` option tells Hawk to use `:` as word delimiters and `-m head` will
