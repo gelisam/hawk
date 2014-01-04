@@ -27,6 +27,7 @@ We could of course have achieved identical results by using awk instead of Hawk:
 
 ```bash
 > cat /etc/passwd | awk -F: '{print $1}'
+root
 ```
 
 While Hawk and awk have similar use cases, the philosophy behind the two is very
