@@ -37,12 +37,11 @@ There are many standard command-line tools that can be easily approximated using
 [short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
 
 Another important difference is that while awk one-liners are self-contained, Hawk encourages the use of libraries and user-defined functions. By adding function definitions, module imports and language pragmas to Hawk's user-configurable [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude), those functions, libraries and language extensions become available to Hawk one-liners.
-For instance, we could add a `takeNFrom` function that gets elements in an
-interval of the input:
+For instance, we could add a `takeNFrom` function extracting n elements starting from element i:
 
 ```bash
-> echo 'takeNFrom i c = take c . drop i' >> ~/.hawk/prelude.hs
-> seq 0 100 | hawk -a 'takeNFrom 10 3'
+> echo 'takeNFrom n i = take n . drop i' >> ~/.hawk/prelude.hs
+> seq 0 100 | hawk -a 'takeNFrom 3 10'
 10
 11
 12
