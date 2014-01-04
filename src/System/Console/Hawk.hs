@@ -173,21 +173,21 @@ hawk opts prelude modules extensions userExpr = do
           compose :: [String] -> String
           compose = L.intercalate (prel ".") . P.map (printf "(%s)")
           listMap :: String -> String
-          listMap = printf (repr "listMap (%s)")
+          listMap = printf (runtime "listMap (%s)")
           c8pack :: String -> String
-          c8pack = printf (repr "c8pack (%s)")
+          c8pack = printf (runtime "c8pack (%s)")
           sc8pack :: String -> String
-          sc8pack = printf (repr "sc8pack (%s)")
+          sc8pack = printf (runtime "sc8pack (%s)")
           showRows :: String
-          showRows = printf (repr "showRows (%s) (%s)")
+          showRows = printf (runtime "showRows (%s) (%s)")
                              (c8pack $ P.show outLinesDelim)
                              (c8pack $ P.show outWordsDelim)
           parseRows :: String
-          parseRows = printf (repr "parseRows (%s)")
+          parseRows = printf (runtime "parseRows (%s)")
                              (sc8pack $ P.show linesDelim)
 
           parseWords :: String
-          parseWords = printf (repr "parseWords (%s) (%s)")
+          parseWords = printf (runtime "parseWords (%s) (%s)")
                               (sc8pack $ P.show linesDelim)
                               (sc8pack $ P.show wordsDelim)
           
@@ -195,7 +195,7 @@ hawk opts prelude modules extensions userExpr = do
           qualify moduleName = printf "%s.%s" moduleName
           
           prel = qualify "Prelude"
-          repr = qualify "System.Console.Hawk.Representable"
+          runtime = qualify "System.Console.Hawk.Runtime"
 
 getUsage :: IO String
 getUsage = do

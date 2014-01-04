@@ -12,103 +12,22 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-{-# LANGUAGE ExistentialQuantification
-           , ExtendedDefaultRules
-           , OverloadedStrings
-           , ScopedTypeVariables #-}
-
 module System.Console.Hawk.Representable (
 
     Row  (repr')
   , Rows (repr)
-  , c8pack
-  , sc8pack
-  , listMap
-  , listMapWords
-  , printRows
-  , printRow
-  , parseRows
-  , parseWords
-  , showRows
-  , runExpr
---  , runExprs
 
 ) where
 
 import Prelude
-import Control.Exception (SomeException,handle)
-import qualified Data.ByteString.Char8 as SC8
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)
 import qualified Data.List as L
 import Data.Set (Set)
 import qualified Data.Set as S
-import qualified Data.ByteString.Lazy.Search as BS
 import Data.Map (Map)
 import qualified Data.Map as M
-import GHC.IO.Exception (IOErrorType(ResourceVanished),IOException(ioe_type))
-import qualified System.IO as IO
 
-import qualified System.Console.Hawk.IO as HawkIO
-
-handleErrors :: IO () -> IO ()
-handleErrors = handle (\(e :: SomeException) -> IO.hPrint IO.stderr e)
-
-dropLastIfEmpty :: [C8.ByteString] -> [C8.ByteString]
-dropLastIfEmpty [] = []
-dropLastIfEmpty (x:[]) = if C8.null x then [] else [x]
-dropLastIfEmpty (x:xs) = x:dropLastIfEmpty xs
-
-listMap :: (a -> b) -> [a] -> [b]
-listMap = L.map
-
-listMapWords :: ([a] -> b) -> [[a]] -> [b]
-listMapWords = L.map
-
-c8pack :: String
-       -> C8.ByteString
-c8pack = C8.pack
-
-sc8pack :: String
-        -> SC8.ByteString
-sc8pack = SC8.pack
-
-parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
-parseRows delim str = dropLastIfEmpty $ BS.split delim str
-
----- special case for space
-parseWords :: SC8.ByteString -> SC8.ByteString -> C8.ByteString -> [[C8.ByteString]]
-parseWords rowsDelim columnsDelim str = let rows = parseRows rowsDelim str
-                                        in L.map f rows
-    where f = if columnsDelim == SC8.singleton ' '
-                then L.filter  (not . C8.null) . BS.split columnsDelim
-                else BS.split columnsDelim
-         
---parseWords :: SC8.ByteString -> [C8.ByteString] -> [[C8.ByteString]]
---parseWords delim strs = L.map f strs
---    where f = if delim == SC8.singleton ' '
---                then L.filter  (not . C8.null) . BS.split delim
---                else BS.split delim
-
---runOnInput :: Maybe FilePath -- ^ the input file or stdout when Nothing
---            -> (C8.ByteString -> IO ()) -- ^ the action to run on the input
---            -> IO ()
---runOnInput fp f = do
---    input <- maybe C8.getContents C8.readFile fp
---    f input
---    IO.hFlush IO.stdout
-    -- TODO: we need also hFlush stderr?
-
-runExpr :: Maybe FilePath -- ^ if the input is a file
-        -> (Maybe FilePath -> IO C8.ByteString) -- ^ input reader
-        -> (C8.ByteString -> C8.ByteString)
-        -> (C8.ByteString -> IO ())
-        -> IO ()
-runExpr m i f o = i m >>= o . f
---runExpr = runOnInput
---
---runExprs :: Maybe FilePath -> (C8.ByteString -> [IO ()]) -> IO ()
---runExprs fp f = runOnInput fp (sequence_ . f)
 
 -- ------------------------
 -- Rows class and instances
@@ -129,43 +48,6 @@ class (Show a) => Rows a where
          -> [C8.ByteString]
     repr _ = (:[]) . C8.pack . show
 
-showRows :: forall a . (Rows a)
-         => C8.ByteString -- ^ rows delimiter
-         -> C8.ByteString -- ^ columns delimiter
-         -> a -- ^ value to print
-         -> C8.ByteString
-showRows rd cd = C8.intercalate rd . repr cd
-
-printRows :: forall a . (Rows a) 
-          => Bool -- ^ if printRows will continue after errors
-          -> C8.ByteString -- ^ rows delimiter
-          -> C8.ByteString -- ^ columns delimiter
-          -> a -- ^ the value to print as rows
-          -> IO ()
-printRows _ rd cd = HawkIO.printOutput . showRows rd cd
---printRows _ rd cd v = handle handler printRows_ 
---  where handler e = case ioe_type e of
---                      ResourceVanished -> return ()
---                      _ -> IO.hPrint IO.stderr e
---        printRows_ = C8.putStrLn (showRows rd cd v) >> IO.hFlush IO.stdout
---printRows b rowDelimiter columnDelimiter = printFirstRow_ . repr columnDelimiter
---    where printRows_ [] = return ()
---          printRows_ (x:xs) = do
---            putStrAndDelim x
---            handle ioExceptionsHandler (continue xs)
---          printFirstRow_ [] = return ()
---          printFirstRow_ (x:xs) = do
---            putStrOnly x
---            handle ioExceptionsHandler (continue xs)
---          putStrAndDelim = if b then handleErrors . putDelimAndStr_
---                                else putDelimAndStr_
---          putStrOnly = if b then handleErrors . C8.putStr else C8.putStr
---          putDelimAndStr_ :: C8.ByteString -> IO ()
---          putDelimAndStr_ c = C8.putStr rowDelimiter >> C8.putStr c
---          continue xs = IO.hFlush IO.stdout >> printRows_ xs
---          ioExceptionsHandler e = case ioe_type e of
---                                    ResourceVanished -> return ()
---                                    _ -> IO.hPrint IO.stderr e
 
 instance Rows Bool
 instance Rows Double
@@ -300,14 +182,6 @@ instance Row ()
 
 instance Row Char where
     repr' _ = C8.singleton
-
-printRow :: forall a . (Row a)
-         => Bool -- ^ if printRow should continue after errors
-         -> ByteString -- ^ the column delimiter
-         -> a -- ^ the value to print
-         -> IO ()
-printRow b d = if b then handleErrors . f else f
-  where f = C8.putStrLn . repr' d
 
 class (Show a) => ListAsRow a where
     listRepr :: ByteString -> [a] -> ByteString

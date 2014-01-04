@@ -41,8 +41,9 @@ import System.Console.Hawk.Lock
 defaultModules :: [QualifiedModule]
 defaultModules = map fully_qualified [ 
                                        "Prelude"
-                                     , "System.Console.Hawk.Representable"
                                      , "System.Console.Hawk.IO"
+                                     , "System.Console.Hawk.Representable"
+                                     , "System.Console.Hawk.Runtime"
                                      , "System.IO.Unsafe"
                                      , "Data.ByteString.Lazy.Char8"
                                      ]
