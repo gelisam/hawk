@@ -22,7 +22,7 @@ root
 lucy
 ```
 
-The `-d` option tells Hawk to use ':' as word delimiters and `-m head` will
+The `-d` option tells Hawk to use `:` as word delimiters and `-m head` will
 map [head](http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-List.html#v:head) over each line extracting the user. The same result can be achieved
 using awk:
 
