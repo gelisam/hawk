@@ -16,6 +16,8 @@ The first field is the username. To extract every user registered in the system 
 
 ```bash
 > cat /etc/passwd | hawk -d: -m 'head'
+root
+...
 ```
 
 The `-d` option tells Hawk to use ':' as word delimiters and `-m head` will
