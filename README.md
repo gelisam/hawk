@@ -6,18 +6,20 @@ Transform text from the command-line using Haskell expressions. Similar to [awk]
 
 In [Unix](http://en.wikipedia.org/wiki/Unix) the file `/etc/passwd` is used to
 keep track of every registered user in the system. Each entry in the file
-contains colon-separated informations about a single user, like:
+contains information about a single user, using a simple colon-separated format.
+For example:
 
 ```
 root:x:0:0:root:/root:/bin/bash
+lucy:x:1:1:lucy:/home/lucy:/bin/bash
 ```
 
-The first field is the username. To extract every user registered in the system you can do:
+The first field is the username. We can use Hawk to list all usernames as follows:
 
 ```bash
 > cat /etc/passwd | hawk -d: -m 'head'
 root
-...
+lucy
 ```
 
 The `-d` option tells Hawk to use ':' as word delimiters and `-m head` will
