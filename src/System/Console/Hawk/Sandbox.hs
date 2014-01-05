@@ -55,27 +55,13 @@ path = map replaceSeparator where
 -- its binary has been placed in a special folder.
 -- 
 -- return something like (Just "/.../cabal-dev")
-sandboxedDir :: Sandbox -> IO (Maybe String)
-sandboxedDir sandbox = do
+sandboxDir :: Sandbox -> IO (Maybe String)
+sandboxDir sandbox = do
     (dir, _) <- splitFileName <$> getExecutablePath
     let suffix = folder sandbox ++ "/bin/"
     if path suffix `isSuffixOf` dir
       then return $ Just $ take (length dir - length "/bin/") dir
       else return $ Nothing
-
--- if hawk has been compiled by cabal-dev,
--- its binary has been placed in a cabal-dev folder.
--- 
--- return something like (Just "/.../cabal-dev")
-cabalDevDir :: IO (Maybe String)
-cabalDevDir = sandboxedDir cabalDev
-
--- if hawk has been compiled in a cabal sandbox,
--- its binary has been placed in a .cabal-sandbox folder.
--- 
--- return something like (Just "/.../.cabal-sandbox")
-cabalSandboxDir :: IO (Maybe String)
-cabalSandboxDir = sandboxedDir cabalSandbox
 
 -- something like "packages-7.6.3.conf"
 isCabalDevPackageFile :: String -> Bool
@@ -102,7 +88,7 @@ cabalSandboxPackageFile dir = do
 
 extraGhcArgs :: IO [String]
 extraGhcArgs = do
-    cabalSandbox <- cabalSandboxDir
+    cabalSandbox <- sandboxDir cabalSandbox
     case cabalSandbox of
       Nothing -> return []
       Just dir -> do packageFile <- cabalSandboxPackageFile dir
