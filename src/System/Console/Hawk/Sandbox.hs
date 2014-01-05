@@ -12,11 +12,11 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
--- Extra steps to be performed if hawk was installed from cabal-dev.
+-- Extra steps to be performed if hawk was installed from a sandbox.
 -- 
 -- Extra steps are needed because the hawk binary needs runtime access
 -- to the hawk library, but the hint library only knows about the globally-
--- installed libraries. If hawk has been installed with cabal-dev, its
+-- installed libraries. If hawk has been installed with a sandbox, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
 module System.Console.Hawk.Sandbox
@@ -43,6 +43,10 @@ data Sandbox = Sandbox
 cabalDev, cabalSandbox :: Sandbox
 cabalDev = Sandbox "cabal-dev" "packages-" ".conf"
 cabalSandbox = Sandbox ".cabal-sandbox" "" "-packages.conf.d"
+
+-- all the sandbox systems we support.
+sandboxes :: [Sandbox]
+sandboxes = [cabalDev, cabalSandbox]
 
 
 -- convert slashes to backslashes if needed
@@ -75,15 +79,18 @@ getPackageFile sandbox dir = do
     let [file] = filter (isPackageFile sandbox) files
     return $ printf (path "%s/%s") dir file
 
-
-extraGhcArgs :: IO [String]
-extraGhcArgs = do
-    sandboxDir <- getSandboxDir cabalSandbox
+sandboxSpecificGhcArgs :: Sandbox -> IO [String]
+sandboxSpecificGhcArgs sandbox = do
+    sandboxDir <- getSandboxDir sandbox
     case sandboxDir of
       Nothing -> return []
-      Just dir -> do packageFile <- getPackageFile cabalSandbox dir
+      Just dir -> do packageFile <- getPackageFile sandbox dir
                      let arg = printf "-package-db %s" packageFile
                      return [arg]
+
+
+extraGhcArgs :: IO [String]
+extraGhcArgs = concat <$> mapM sandboxSpecificGhcArgs sandboxes
 
 -- a version of runInterpreter which can load libraries
 -- installed along hawk's sandbox folder, if applicable.
