@@ -55,8 +55,8 @@ path = map replaceSeparator where
 -- its binary has been placed in a special folder.
 -- 
 -- return something like (Just "/.../cabal-dev")
-sandboxDir :: Sandbox -> IO (Maybe String)
-sandboxDir sandbox = do
+getSandboxDir :: Sandbox -> IO (Maybe String)
+getSandboxDir sandbox = do
     (dir, _) <- splitFileName <$> getExecutablePath
     let suffix = folder sandbox ++ "/bin/"
     if path suffix `isSuffixOf` dir
@@ -69,25 +69,19 @@ isPackageFile sandbox f = packageFilePrefix sandbox `isPrefixOf` f
                        && packageFileSuffix sandbox `isSuffixOf` f
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
-cabalDevPackageFile :: String -> IO String
-cabalDevPackageFile dir = do
+getPackageFile :: Sandbox -> String -> IO String
+getPackageFile sandbox dir = do
     files <- getDirectoryContents dir
-    let [file] = filter (isPackageFile cabalDev) files
+    let [file] = filter (isPackageFile sandbox) files
     return $ printf (path "%s/%s") dir file
 
--- something like "/.../cabal-dev/package-7.6.3.conf"
-cabalSandboxPackageFile :: String -> IO String
-cabalSandboxPackageFile dir = do
-    files <- getDirectoryContents dir
-    let [file] = filter (isPackageFile cabalSandbox) files
-    return $ printf (path "%s/%s") dir file
 
 extraGhcArgs :: IO [String]
 extraGhcArgs = do
-    cabalSandbox <- sandboxDir cabalSandbox
-    case cabalSandbox of
+    sandboxDir <- getSandboxDir cabalSandbox
+    case sandboxDir of
       Nothing -> return []
-      Just dir -> do packageFile <- cabalSandboxPackageFile dir
+      Just dir -> do packageFile <- getPackageFile cabalSandbox dir
                      let arg = printf "-package-db %s" packageFile
                      return [arg]
 
