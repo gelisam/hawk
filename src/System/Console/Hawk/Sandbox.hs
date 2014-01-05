@@ -34,6 +34,17 @@ import System.FilePath (pathSeparator, splitFileName)
 import Text.Printf (printf)
 
 
+data Sandbox = Sandbox
+  { folder :: FilePath
+  , packageFilePrefix :: String
+  , packageFileSuffix :: String
+  }
+
+cabalDev, cabalSandbox :: Sandbox
+cabalDev = Sandbox "cabal-dev" "packages-" ".conf"
+cabalSandbox = Sandbox ".cabal-sandbox" "" "-packages.conf.d"
+
+
 -- convert slashes to backslashes if needed
 path :: String -> String
 path = map replaceSeparator where
