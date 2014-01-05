@@ -28,9 +28,9 @@ import Test.Hspec (hspec)
 
 main :: IO ()
 main = do
+    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
         ConfigTest.spec
     HawkTest.run
-    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
