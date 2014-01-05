@@ -71,7 +71,7 @@ options =
  -- other options
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
- , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
+-- , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
     where outDelimAction d o = o{ optOutLinesDelim = fmap (delimiter . C8.pack) d }
           outDelimHelp = "output lines delimiter, default " ++
@@ -98,8 +98,8 @@ options =
           mapHelp = "map <expr> to the stream"
 
           helpHelp = "print this help message and exit"
-          keepGoingAction o = o{ optIgnoreErrors = True}
-          keepGoingHelp = "keep going when one line fails"
+          --keepGoingAction o = o{ optIgnoreErrors = True}
+          --keepGoingHelp = "keep going when one line fails"
           setMode m o = o{ optMode = m }
 
 compileOpts :: [String] -> Either [String] (Options,[String])
