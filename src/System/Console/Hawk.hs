@@ -52,7 +52,7 @@ import qualified System.IO as IO
 import System.IO (FilePath,IO)
 import Text.Printf (printf)
 
-import System.Console.Hawk.CabalDev
+import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO

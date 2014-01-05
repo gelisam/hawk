@@ -19,7 +19,7 @@
 -- installed libraries. If hawk has been installed with cabal-dev, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
-module System.Console.Hawk.CabalDev
+module System.Console.Hawk.Sandbox
     ( extraGhcArgs
     , runHawkInterpreter
     ) where

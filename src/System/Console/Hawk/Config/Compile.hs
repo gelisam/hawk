@@ -24,7 +24,7 @@ import System.Exit
 import System.IO
 import System.Process
 
-import System.Console.Hawk.CabalDev (extraGhcArgs)
+import System.Console.Hawk.Sandbox (extraGhcArgs)
 
 
 -- compile a haskell file
