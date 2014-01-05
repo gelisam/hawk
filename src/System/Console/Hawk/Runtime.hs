@@ -65,8 +65,21 @@ sc8pack :: String
         -> SC8.ByteString
 sc8pack = SC8.pack
 
+dropTrailingNewline :: C8.ByteString -> C8.ByteString
+dropTrailingNewline "" = ""
+dropTrailingNewline s = if last_char == '\r' then s' else s
+    where last_char = C8.last s
+          n = C8.length s
+          s' = C8.take (n - 1) s
+
+-- if delim is "\n", Windows-style "\r\n" delimiters are also accepted.
 parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
-parseRows delim str = dropLastIfEmpty $ BS.split delim str
+parseRows delim str = dropLastIfEmpty
+                    $ maybeDropTrailingNewline
+                    $ BS.split delim str
+    where maybeDropTrailingNewline = if delim == "\n"
+                                       then map dropTrailingNewline
+                                       else id
 
 ---- special case for space
 parseWords :: SC8.ByteString -> SC8.ByteString -> C8.ByteString -> [[C8.ByteString]]
