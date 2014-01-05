@@ -64,26 +64,22 @@ sandboxDir sandbox = do
       else return $ Nothing
 
 -- something like "packages-7.6.3.conf"
-isCabalDevPackageFile :: String -> Bool
-isCabalDevPackageFile xs = "packages-" `isPrefixOf` xs
-                        && ".conf" `isSuffixOf` xs
-
--- something like "x86_64-osx-ghc-7.6.3-packages.conf.d"
-isCabalSandboxPackageFile :: String -> Bool
-isCabalSandboxPackageFile xs = "-packages.conf.d" `isSuffixOf` xs
+isPackageFile :: Sandbox -> FilePath -> Bool
+isPackageFile sandbox f = packageFilePrefix sandbox `isPrefixOf` f
+                       && packageFileSuffix sandbox `isSuffixOf` f
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
 cabalDevPackageFile :: String -> IO String
 cabalDevPackageFile dir = do
     files <- getDirectoryContents dir
-    let [file] = filter isCabalDevPackageFile files
+    let [file] = filter (isPackageFile cabalDev) files
     return $ printf (path "%s/%s") dir file
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
 cabalSandboxPackageFile :: String -> IO String
 cabalSandboxPackageFile dir = do
     files <- getDirectoryContents dir
-    let [file] = filter isCabalSandboxPackageFile files
+    let [file] = filter (isPackageFile cabalSandbox) files
     return $ printf (path "%s/%s") dir file
 
 extraGhcArgs :: IO [String]
