@@ -40,39 +40,66 @@ path = map replaceSeparator where
   replaceSeparator '/' = pathSeparator
   replaceSeparator x = x
 
+-- if hawk has been compiled by a sandboxing tool,
+-- its binary has been placed in a special folder.
+-- 
+-- return something like (Just "/.../cabal-dev")
+sandboxedDir :: FilePath -> IO (Maybe String)
+sandboxedDir sandboxBasename = do
+    (dir, _) <- splitFileName <$> getExecutablePath
+    let suffix = sandboxBasename ++ "/bin/"
+    if path suffix `isSuffixOf` dir
+      then return $ Just $ take (length dir - length "/bin/") dir
+      else return $ Nothing
+
 -- if hawk has been compiled by cabal-dev,
 -- its binary has been placed in a cabal-dev folder.
 -- 
 -- return something like (Just "/.../cabal-dev")
 cabalDevDir :: IO (Maybe String)
-cabalDevDir = do
-    (dir, _) <- splitFileName <$> getExecutablePath
-    if path "cabal-dev/bin/" `isSuffixOf` dir
-      then return $ Just $ take (length dir - length "/bin/") dir
-      else return $ Nothing
+cabalDevDir = sandboxedDir "cabal-dev"
+
+-- if hawk has been compiled in a cabal sandbox,
+-- its binary has been placed in a .cabal-sandbox folder.
+-- 
+-- return something like (Just "/.../.cabal-sandbox")
+cabalSandboxDir :: IO (Maybe String)
+cabalSandboxDir = sandboxedDir ".cabal-sandbox"
 
 -- something like "packages-7.6.3.conf"
-isPackageFile :: String -> Bool
-isPackageFile xs = "packages-" `isPrefixOf` xs && ".conf" `isSuffixOf` xs
+isCabalDevPackageFile :: String -> Bool
+isCabalDevPackageFile xs = "packages-" `isPrefixOf` xs
+                        && ".conf" `isSuffixOf` xs
+
+-- something like "x86_64-osx-ghc-7.6.3-packages.conf.d"
+isCabalSandboxPackageFile :: String -> Bool
+isCabalSandboxPackageFile xs = "-packages.conf.d" `isSuffixOf` xs
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
 cabalDevPackageFile :: String -> IO String
 cabalDevPackageFile dir = do
     files <- getDirectoryContents dir
-    let [file] = filter isPackageFile files
+    let [file] = filter isCabalDevPackageFile files
+    return $ printf (path "%s/%s") dir file
+
+-- something like "/.../cabal-dev/package-7.6.3.conf"
+cabalSandboxPackageFile :: String -> IO String
+cabalSandboxPackageFile dir = do
+    files <- getDirectoryContents dir
+    let [file] = filter isCabalSandboxPackageFile files
     return $ printf (path "%s/%s") dir file
 
 extraGhcArgs :: IO [String]
 extraGhcArgs = do
-    cabalDev <- cabalDevDir
-    case cabalDev of
+    cabalSandbox <- cabalSandboxDir
+    case cabalSandbox of
       Nothing -> return []
-      Just dir -> do packageFile <- cabalDevPackageFile dir
+      Just dir -> do packageFile <- cabalSandboxPackageFile dir
                      let arg = printf "-package-db %s" packageFile
                      return [arg]
 
 -- a version of runInterpreter which can load libraries
--- installed along hawk's cabal-dev folder, if applicable.
+-- installed along hawk's sandbox folder, if applicable.
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
 runHawkInterpreter mx = do
     args <- extraGhcArgs
