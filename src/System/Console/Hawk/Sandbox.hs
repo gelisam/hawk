@@ -12,14 +12,14 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
--- Extra steps to be performed if hawk was installed from cabal-dev.
+-- Extra steps to be performed if hawk was installed from a sandbox.
 -- 
 -- Extra steps are needed because the hawk binary needs runtime access
 -- to the hawk library, but the hint library only knows about the globally-
--- installed libraries. If hawk has been installed with cabal-dev, its
+-- installed libraries. If hawk has been installed with a sandbox, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
-module System.Console.Hawk.CabalDev
+module System.Console.Hawk.Sandbox
     ( extraGhcArgs
     , runHawkInterpreter
     ) where
@@ -34,45 +34,66 @@ import System.FilePath (pathSeparator, splitFileName)
 import Text.Printf (printf)
 
 
+data Sandbox = Sandbox
+  { folder :: FilePath
+  , packageFilePrefix :: String
+  , packageFileSuffix :: String
+  }
+
+cabalDev, cabalSandbox :: Sandbox
+cabalDev = Sandbox "cabal-dev" "packages-" ".conf"
+cabalSandbox = Sandbox ".cabal-sandbox" "" "-packages.conf.d"
+
+-- all the sandbox systems we support.
+sandboxes :: [Sandbox]
+sandboxes = [cabalDev, cabalSandbox]
+
+
 -- convert slashes to backslashes if needed
 path :: String -> String
 path = map replaceSeparator where
   replaceSeparator '/' = pathSeparator
   replaceSeparator x = x
 
--- if hawk has been compiled by cabal-dev,
--- its binary has been placed in a cabal-dev folder.
+-- if hawk has been compiled by a sandboxing tool,
+-- its binary has been placed in a special folder.
 -- 
 -- return something like (Just "/.../cabal-dev")
-cabalDevDir :: IO (Maybe String)
-cabalDevDir = do
+getSandboxDir :: Sandbox -> IO (Maybe String)
+getSandboxDir sandbox = do
     (dir, _) <- splitFileName <$> getExecutablePath
-    if path "cabal-dev/bin/" `isSuffixOf` dir
+    let suffix = folder sandbox ++ "/bin/"
+    if path suffix `isSuffixOf` dir
       then return $ Just $ take (length dir - length "/bin/") dir
       else return $ Nothing
 
 -- something like "packages-7.6.3.conf"
-isPackageFile :: String -> Bool
-isPackageFile xs = "packages-" `isPrefixOf` xs && ".conf" `isSuffixOf` xs
+isPackageFile :: Sandbox -> FilePath -> Bool
+isPackageFile sandbox f = packageFilePrefix sandbox `isPrefixOf` f
+                       && packageFileSuffix sandbox `isSuffixOf` f
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
-cabalDevPackageFile :: String -> IO String
-cabalDevPackageFile dir = do
+getPackageFile :: Sandbox -> String -> IO String
+getPackageFile sandbox dir = do
     files <- getDirectoryContents dir
-    let [file] = filter isPackageFile files
+    let [file] = filter (isPackageFile sandbox) files
     return $ printf (path "%s/%s") dir file
 
-extraGhcArgs :: IO [String]
-extraGhcArgs = do
-    cabalDev <- cabalDevDir
-    case cabalDev of
+sandboxSpecificGhcArgs :: Sandbox -> IO [String]
+sandboxSpecificGhcArgs sandbox = do
+    sandboxDir <- getSandboxDir sandbox
+    case sandboxDir of
       Nothing -> return []
-      Just dir -> do packageFile <- cabalDevPackageFile dir
+      Just dir -> do packageFile <- getPackageFile sandbox dir
                      let arg = printf "-package-db %s" packageFile
                      return [arg]
 
+
+extraGhcArgs :: IO [String]
+extraGhcArgs = concat <$> mapM sandboxSpecificGhcArgs sandboxes
+
 -- a version of runInterpreter which can load libraries
--- installed along hawk's cabal-dev folder, if applicable.
+-- installed along hawk's sandbox folder, if applicable.
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
 runHawkInterpreter mx = do
     args <- extraGhcArgs
