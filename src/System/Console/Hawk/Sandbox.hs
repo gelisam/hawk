@@ -24,11 +24,12 @@ module System.Console.Hawk.Sandbox
     , runHawkInterpreter
     ) where
 
-import Data.Functor
+import Control.Applicative
+import Control.Monad
 import Data.List
 import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
-import System.Directory (getDirectoryContents)
+import System.Directory (getDirectoryContents, getHomeDirectory, doesFileExist)
 import System.Environment (getExecutablePath)
 import System.FilePath (pathSeparator, splitFileName)
 import Text.Printf (printf)
@@ -49,11 +50,56 @@ sandboxes :: [Sandbox]
 sandboxes = [cabalDev, cabalSandbox]
 
 
+-- a version of isSuffixOf which returns the string stripped of its suffix.
+isSuffixOf' :: String -> String -> Maybe String
+isSuffixOf' suffix s = if suffix `isSuffixOf` s
+                         then Just (take (n - m) s)
+                         else Nothing
+  where
+    n = length s
+    m = length suffix
+
+-- a version of doesFileExist which returns the file path if it exists.
+doesFileExist' :: FilePath -> IO (Maybe FilePath)
+doesFileExist' f = do
+    r <- doesFileExist f
+    if r
+      then return (Just f)
+      else return Nothing
+
+firstWhichExists :: [FilePath] -> IO (Maybe FilePath)
+firstWhichExists fs = do
+    fs' <- mapM doesFileExist' fs
+    return $ msum fs'
+
+
 -- convert slashes to backslashes if needed
 path :: String -> String
 path = map replaceSeparator where
   replaceSeparator '/' = pathSeparator
   replaceSeparator x = x
+
+-- a version of getExecutablePath which returns the path to the installed hawk
+-- executable even the current executable is actually hawk's test suite.
+getHawkPath :: IO FilePath
+getHawkPath = do
+    executablePath <- getExecutablePath
+    case path "/dist/build/reference/reference" `isSuffixOf'` executablePath of
+      Nothing -> return executablePath
+      Just basePath -> do
+        -- We are running the test suite. Is hawk installed?
+        
+        home <- getHomeDirectory
+        let userPath = home ++ "/.cabal/bin/hawk"
+        
+        let folders = map folder sandboxes
+        let sandboxPaths = map (printf "%s/%s/bin/hawk" basePath) folders
+        
+        firstMatch <- firstWhichExists (userPath:sandboxPaths)
+        case firstMatch of
+          Nothing -> fail "please run 'cabal install' before 'cabal test'."
+          Just hawkPath -> return hawkPath
+
 
 -- if hawk has been compiled by a sandboxing tool,
 -- its binary has been placed in a special folder.
@@ -61,11 +107,12 @@ path = map replaceSeparator where
 -- return something like (Just "/.../cabal-dev")
 getSandboxDir :: Sandbox -> IO (Maybe String)
 getSandboxDir sandbox = do
-    (dir, _) <- splitFileName <$> getExecutablePath
-    let suffix = folder sandbox ++ "/bin/"
-    if path suffix `isSuffixOf` dir
-      then return $ Just $ take (length dir - length "/bin/") dir
-      else return $ Nothing
+    (dir, _) <- splitFileName <$> getHawkPath
+    let sandboxFolder = folder sandbox
+    let suffix = path (sandboxFolder ++ "/bin/")
+    let basePath = suffix `isSuffixOf'` dir
+    let sandboxPath = fmap (++ sandboxFolder) basePath
+    return sandboxPath
 
 -- something like "packages-7.6.3.conf"
 isPackageFile :: Sandbox -> FilePath -> Bool
