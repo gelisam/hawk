@@ -12,8 +12,6 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-import System.Exit
-import System.Process
 import Test.Framework
 --import Test.Framework.Providers.HUnit
 --import Test.Framework.Providers.QuickCheck2
@@ -35,5 +33,4 @@ main = do
         ReprTest.reprSpec
         ConfigTest.spec
     HawkTest.run
-    exitCode <- system "doctest -isrc tests/System/Console/Hawk/Lock/Test.hs"
-    exitWith exitCode
+    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
