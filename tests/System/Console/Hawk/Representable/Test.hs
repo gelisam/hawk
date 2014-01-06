@@ -15,12 +15,6 @@
 {-# LANGUAGE ExtendedDefaultRules,OverloadedStrings #-}
 module System.Console.Hawk.Representable.Test where
 
-import qualified Data.ByteString.Lazy.Char8 as C8
-
-import qualified Test.Framework as TF
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
-import Test.HUnit
-
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -31,18 +25,27 @@ import System.Console.Hawk.Representable
 import Test.Hspec 
 
 
+-- explicitly type all values to avoid warnings.
+
+_1,_2,_3,_4,_5,_6,_7,_8,_9,_10 :: Int
+(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) = (1,2,3,4,5,6,7,8,9,10)
+
+emptyString,word,word_word,w_w :: String
+(emptyString,word,word_word,w_w) = ("","word","word word","w w")
+
+
 reprSpec' :: Spec
 reprSpec' = describe "repr'" $ do
     it "can convert tuple values" $ do
-      example $ repr' " " (1,True) `shouldBe` "1 True"
-      example $ repr' " " (1,True,2) `shouldBe` "1 True 2"
-      example $ repr' " " (1,2,3,4) `shouldBe` "1 2 3 4"
-      example $ repr' " " (1,2,3,4,5) `shouldBe` "1 2 3 4 5"
-      example $ repr' " " (1,2,3,4,5,6) `shouldBe` "1 2 3 4 5 6"
-      example $ repr' " " (1,2,3,4,5,6,7) `shouldBe` "1 2 3 4 5 6 7"
-      example $ repr' " " (1,2,3,4,5,6,7,8) `shouldBe` "1 2 3 4 5 6 7 8"
-      example $ repr' " " (1,2,3,4,5,6,7,8,9) `shouldBe` "1 2 3 4 5 6 7 8 9"
-      example $ repr' " " (1,2,3,4,5,6,7,8,9,10) `shouldBe` "1 2 3 4 5 6 7 8 9 10"
+      example $ repr' " " (_1,True) `shouldBe` "1 True"
+      example $ repr' " " (_1,True,_2) `shouldBe` "1 True 2"
+      example $ repr' " " (_1,_2,_3,_4) `shouldBe` "1 2 3 4"
+      example $ repr' " " (_1,_2,_3,_4,_5) `shouldBe` "1 2 3 4 5"
+      example $ repr' " " (_1,_2,_3,_4,_5,_6) `shouldBe` "1 2 3 4 5 6"
+      example $ repr' " " (_1,_2,_3,_4,_5,_6,_7) `shouldBe` "1 2 3 4 5 6 7"
+      example $ repr' " " (_1,_2,_3,_4,_5,_6,_7,_8) `shouldBe` "1 2 3 4 5 6 7 8"
+      example $ repr' " " (_1,_2,_3,_4,_5,_6,_7,_8,_9) `shouldBe` "1 2 3 4 5 6 7 8 9"
+      example $ repr' " " (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) `shouldBe` "1 2 3 4 5 6 7 8 9 10"
 
 reprSpec :: Spec
 reprSpec = describe "repr" $ do
@@ -74,37 +77,37 @@ reprSpec = describe "repr" $ do
         repr "\t" () `shouldBe` [""]
 
     it "can convert string values" $ do
-        example $ repr "\t" "" `shouldBe` [""]
-        example $ repr "\t" "word" `shouldBe` ["word"]
-        example $ repr "\t" "word word" `shouldBe` ["word word"]
+        example $ repr "\t" emptyString `shouldBe` [""]
+        example $ repr "\t" word `shouldBe` ["word"]
+        example $ repr "\t" word_word `shouldBe` ["word word"]
 
     it "can convert tuple values" $ do
-        example $ repr "\t" (1,True) `shouldBe` ["1","True"]
-        example $ repr "\t" ((1,2),False) `shouldBe` ["1\t2","False"]
-        example $ repr "\t" (1,2,3) `shouldBe` ["1","2","3"]
-        example $ repr "\t" (1,2,3,4) `shouldBe` ["1","2","3","4"]
-        example $ repr "\t" (1,2,3,4,5) `shouldBe` ["1","2","3","4","5"]
-        example $ repr "\t" (1,2,3,4,5,6) `shouldBe` ["1","2","3","4","5","6"]
-        example $ repr "\t" (1,2,3,4,5,6,7) `shouldBe` ["1","2","3","4","5","6","7"]
-        example $ repr "\t" (1,2,3,4,5,6,7,8) `shouldBe` ["1","2","3","4","5","6","7","8"]
-        example $ repr "\t" (1,2,3,4,5,6,7,8,9) `shouldBe` ["1","2","3","4","5","6","7","8","9"]
-        example $ repr "\t" (1,2,3,4,5,6,7,8,9,10) `shouldBe` ["1","2","3","4","5","6","7","8","9","10"]
+        example $ repr "\t" (_1,True) `shouldBe` ["1","True"]
+        example $ repr "\t" ((_1,_2),False) `shouldBe` ["1\t2","False"]
+        example $ repr "\t" (_1,_2,_3) `shouldBe` ["1","2","3"]
+        example $ repr "\t" (_1,_2,_3,_4) `shouldBe` ["1","2","3","4"]
+        example $ repr "\t" (_1,_2,_3,_4,_5) `shouldBe` ["1","2","3","4","5"]
+        example $ repr "\t" (_1,_2,_3,_4,_5,_6) `shouldBe` ["1","2","3","4","5","6"]
+        example $ repr "\t" (_1,_2,_3,_4,_5,_6,_7) `shouldBe` ["1","2","3","4","5","6","7"]
+        example $ repr "\t" (_1,_2,_3,_4,_5,_6,_7,_8) `shouldBe` ["1","2","3","4","5","6","7","8"]
+        example $ repr "\t" (_1,_2,_3,_4,_5,_6,_7,_8,_9) `shouldBe` ["1","2","3","4","5","6","7","8","9"]
+        example $ repr "\t" (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) `shouldBe` ["1","2","3","4","5","6","7","8","9","10"]
 
     it "can convert list values" $ do
         repr "\t" ([]::[()]) `shouldBe` []
         example $ repr "\t" [True] `shouldBe` ["True"]
         example $ repr "\t" [True,False] `shouldBe` ["True","False"]
-        example $ repr "\t" [Just 1,Nothing] `shouldBe` ["1",""]
-        example $ repr "\t" [[1,2,3],[4,5,6]] `shouldBe` ["1\t2\t3","4\t5\t6"]
-        example $ repr "\t" ["w w","w w"] `shouldBe` ["w w","w w"]
-        example $ repr "\t" [["w w"],["w w"]] `shouldBe` ["w w","w w"]
+        example $ repr "\t" [Just _1,Nothing] `shouldBe` ["1",""]
+        example $ repr "\t" [[_1,_2,_3],[_4,_5,_6]] `shouldBe` ["1\t2\t3","4\t5\t6"]
+        example $ repr "\t" [w_w,w_w] `shouldBe` ["w w","w w"]
+        example $ repr "\t" [[w_w],[w_w]] `shouldBe` ["w w","w w"]
 
     it "can convert map values" $ do
         repr "\t" (M.empty::Map Bool Bool) `shouldBe` []
-        example $ repr "\t" (M.fromList [(1,2),(3,4)]) `shouldBe` ["1\t2","3\t4"]
-        example $ repr "\t" ([M.fromList [(1,2),(3,4)]]) `shouldBe` ["1 2\t3 4"]
+        example $ repr "\t" (M.fromList [(_1,_2),(_3,_4)]) `shouldBe` ["1\t2","3\t4"]
+        example $ repr "\t" ([M.fromList [(_1,_2),(_3,_4)]]) `shouldBe` ["1 2\t3 4"]
 
     it "can convert set values" $ do
         repr "\t" (S.empty::Set Bool) `shouldBe` []
-        example $ repr "\t" (S.fromList [1,2,3,4]) `shouldBe` ["1","2","3","4"]
-        example $ repr "\t" ([S.fromList [1,2]]) `shouldBe` ["1\t2"]
+        example $ repr "\t" (S.fromList [_1,_2,_3,_4]) `shouldBe` ["1","2","3","4"]
+        example $ repr "\t" ([S.fromList [_1,_2]]) `shouldBe` ["1\t2"]

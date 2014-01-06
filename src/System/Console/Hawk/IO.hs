@@ -21,15 +21,11 @@ where
 import Control.Exception
   (handle)
 import Data.ByteString.Lazy.Char8
-import Data.Maybe
-  (Maybe
-  ,maybe)
 import GHC.IO.Exception
   (IOErrorType(ResourceVanished)
   ,IOException(ioe_type))
 import System.IO
-  (IO
-  ,hFlush
+  (hFlush
   ,hPrint
   ,stderr
   ,stdout)

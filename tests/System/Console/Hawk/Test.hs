@@ -18,13 +18,11 @@ module System.Console.Hawk.Test where
 import Control.Applicative
   ((<$>))
 import Data.ByteString.Lazy.Char8
-  (ByteString,pack)
-import Data.Either
+  (ByteString)
 import Language.Haskell.Interpreter
   (Extension)
 import System.FilePath
 import Test.Hspec
-import Test.Hspec.HUnit
 import Test.HUnit
 
 import System.Console.Hawk
@@ -73,7 +71,7 @@ withContextHSpec :: ((String -> ByteString -> Spec)
                     -> (String -> ByteString -> ByteString -> Spec)
                     -> Spec)
                  -> IO ()
-withContextHSpec f = withDefaultConfiguration $ \prelude modules extensions -> do
+withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -> do
   let dhawk m expr = hawk (mode m) prelude modules extensions expr
   let it' m expr input expected =
         let descr = "evals " ++ show expr ++
@@ -85,7 +83,7 @@ withContextHSpec f = withDefaultConfiguration $ \prelude modules extensions -> d
                            Right f -> assertEqual descr expected (f input)
   let [itApply,itMap] = map it' [ApplyMode,MapMode]
   let itEval expr expected = it' EvalMode expr "" expected
-  hspec $ f itEval itApply itMap
+  hspec $ body itEval itApply itMap
 
 
 -- itEval <str> `withInput` <input> `equalsTo` <expected>
