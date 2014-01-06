@@ -43,6 +43,7 @@ import Data.Typeable.Internal
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy
+import Data.Version (versionBranch)
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
@@ -57,6 +58,9 @@ import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
 import System.Console.Hawk.Options
+
+-- magic self-referential module created by cabal
+import Paths_haskell_awk (version)
 
 
 initInterpreter :: (String, String) -- ^ config file and module name
@@ -223,7 +227,10 @@ main = do
                               else recompileConfigIfNeeded
                 
                 when (optVersion opts) $ do
-                  IO.putStrLn "1.0"
+                  let versionString = L.intercalate "."
+                                    $ P.map P.show
+                                    $ versionBranch version
+                  IO.putStrLn versionString
                   exitSuccess
                 
                 when (optHelp opts) $ do
