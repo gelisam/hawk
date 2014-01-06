@@ -32,6 +32,7 @@ data Options = Options { optMode :: Modes
                        , optOutLinesDelim :: Maybe ByteString
                        , optOutWordsDelim :: Maybe ByteString
                        , optRecompile :: Bool
+                       , optVersion :: Bool
                        , optHelp :: Bool
                        , optIgnoreErrors :: Bool
                        , optModuleFile :: Maybe FP.FilePath}
@@ -44,6 +45,7 @@ defaultOptions = Options { optMode = EvalMode
                          , optOutLinesDelim = Nothing 
                          , optOutWordsDelim =  Nothing
                          , optRecompile = False
+                         , optVersion = False
                          , optHelp = False
                          , optIgnoreErrors = False
                          , optModuleFile = Nothing }
@@ -70,6 +72,7 @@ options =
 
  -- other options
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
+ , Option ['v'] ["version"] (NoArg $ \o -> o{ optVersion = True }) versionHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
 -- , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
@@ -97,6 +100,7 @@ options =
           applyHelp = "apply <expr> to the stream"
           mapHelp = "map <expr> to the stream"
 
+          versionHelp = "print the version number and exit"
           helpHelp = "print this help message and exit"
           --keepGoingAction o = o{ optIgnoreErrors = True}
           --keepGoingHelp = "keep going when one line fails"

@@ -47,7 +47,7 @@ import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
 import System.Environment (getArgs,getProgName)
-import System.Exit (exitFailure)
+import System.Exit (exitFailure,exitSuccess)
 import qualified System.IO as IO
 import System.IO (FilePath,IO)
 import Text.Printf (printf)
@@ -221,6 +221,13 @@ main = do
                 config <- if optRecompile opts
                               then recompileConfig
                               else recompileConfigIfNeeded
-                if L.null notOpts || optHelp opts
-                  then getUsage >>= IO.putStr
-                  else runHawk opts config notOpts
+                
+                when (optVersion opts) $ do
+                  IO.putStrLn "1.0"
+                  exitSuccess
+                
+                when (optHelp opts) $ do
+                  getUsage >>= IO.putStr
+                  exitSuccess
+                
+                runHawk opts config notOpts
