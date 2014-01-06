@@ -12,14 +12,22 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+-- | The types and defaults used by the rest of Config.
 module System.Console.Hawk.Config.Base where
 
 import Data.ByteString.Char8
 
 
+-- | hint has `Interpreter.Extension`, but strings are simpler.
 type ExtensionName = String
+
+-- | import [qualified] <module-name> [as <qualified-name>]
 type QualifiedModule = (String, Maybe String)
+
+-- | The contents of the user prelude.
 type Source = ByteString
 
+
+-- | The user may, but probably won't, give a name to his prelude module.
 defaultModuleName :: String
 defaultModuleName = "System.Console.Hawk.CachedPrelude"
