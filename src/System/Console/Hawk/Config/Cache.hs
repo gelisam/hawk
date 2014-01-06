@@ -13,6 +13,8 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
+-- | As the user tunes his expression, hawk's loading time gets in the way.
+--   To shorten it, we cache the information we need from the user prelude.
 module System.Console.Hawk.Config.Cache
     ( getConfigDir
     , getConfigFile
@@ -37,10 +39,20 @@ import System.EasyFile
 import System.Console.Hawk.Config.Base
 
 
-(<//>) :: IO FilePath -- the left filepath in the IO monad
-       -> FilePath -- the right filepath
-       -> IO FilePath -- the filepath resulting
+-- | Looks less awkward on the right.
+-- 
+-- >>> return "myfolder" <//> "myfile.txt"
+-- "myfolder/myfile.txt"
+(<//>) :: IO FilePath -> FilePath -> IO FilePath
 lpath <//> rpath = (</> rpath) <$> lpath
+
+-- | Looks less awkward on the right.
+-- 
+-- >>> return "myfile" <++> ".txt"
+-- "myfile.txt"
+(<++>) :: IO String -> String -> IO String
+lstr <++> rstr = (++ rstr) <$> lstr
+
 
 getConfigDir :: IO FilePath
 getConfigDir = getHomeDirectory <//> ".hawk"
@@ -68,7 +80,7 @@ getCompiledFile :: IO String
 getCompiledFile = getSourceBasename
 
 getSourceFile :: IO String
-getSourceFile = (++ ".hs") <$> getSourceBasename
+getSourceFile = getSourceBasename <++> ".hs"
 
 
 cacheExtensions :: FilePath
