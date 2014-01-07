@@ -12,6 +12,8 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+-- | Used by Hawk's runtime to format the output of a Hawk expression.
+--   The API may change at any time.
 module System.Console.Hawk.Representable (
 
     ListAsRow (listRepr')
