@@ -183,8 +183,6 @@ Finally, to work directly on the ByteString just pass an empty `--lines-delimite
 "1\n2\n3\n"
 ```
 
-(todo: input, bytestream input)
-
 
 ## Output Formats
 

@@ -52,6 +52,17 @@ For more details, see the [documentation](doc/README.md).
 
 ## Installation
 
+To install the stable version, simply use `cabal install haskell-hawk` and
+add `~/.cabal/bin` (or your sandbox's `bin` folder) to your PATH. You should
+be ready to use Hawk:
+
+```bash
+> hawk '[1..3]'
+1
+2
+3
+```
+
 To install the development version, clone this repository and use `cabal
 install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal
 installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to

@@ -13,6 +13,8 @@
 --   limitations under the License.
 
 {-# LANGUAGE NoImplicitPrelude #-}
+-- | Used by Hawk's runtime to write to stdout.
+--   The API may change at any time.
 module System.Console.Hawk.IO 
   (getInput
   ,printOutput)

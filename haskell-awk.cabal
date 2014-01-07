@@ -1,7 +1,7 @@
 Name:           haskell-awk
-Version:        1.0
+Version:        1.0.1
 Author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
-Maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>
+Maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 Synopsis:       Transform text from the command-line using Haskell expressions.
 Description:    Hawk is a command line utility to process streams of text
                 using Haskell code. It is intended to be used in a UNIX
@@ -12,8 +12,9 @@ License:        Apache-2.0
 License-File:   LICENSE
 Build-Type:     Simple
 Cabal-version:  >=1.10
-Extra-Source-Files: src/System/Console/Hawk.hs
+Extra-Source-Files: src/System/Console/*.hs
                   , src/System/Console/Hawk/*.hs
+                  , src/System/Console/Hawk/Config/*.hs
                   , README.md
                   , tests/System/Console/Hawk/Representable/Test.hs
 
@@ -25,7 +26,7 @@ Executable hawk
     Main-is:        Main.hs
     Default-Language: Haskell98
     ghc-options:    -Wall
-    build-depends:  base >=4.6.0.1
+    build-depends:  base >=4.6.0.1 && <5
                   , bytestring >=0.10.0.2
                   , containers -any
                   , directory >=1.2.0.1
@@ -57,22 +58,22 @@ Test-suite reference
   Main-Is:              RunTests.hs
   Type:                 exitcode-stdio-1.0
   Ghc-Options:          -Wall
-  Build-Depends:        base
-                      , bytestring
-                      , containers
-                      , directory
+  Build-Depends:        base>=4.6.0.1 && <5
+                      , bytestring>=0.10.0.2
+                      , containers -any
+                      , directory >=1.2.0.1
                       , doctest >= 0.8
                       , test-framework
                       , test-framework-hunit
                       , temporary
                       , hspec
                       , HUnit
-                      , easy-file
-                      , haskell-src-exts >= 1.14
-                      , hint
-                      , filepath
-                      , network
-                      , process
-                      , stringsearch
-                      , time
+                      , easy-file >=0.1.1
+                      , haskell-src-exts >= 1.14.0
+                      , hint >=0.3.3.5
+                      , filepath >=1.3.0.1
+                      , network >=2.3.1.0
+                      , process >=1.1.0.2
+                      , stringsearch >=0.3.6.4
+                      , time -any
   Default-Language: Haskell98
