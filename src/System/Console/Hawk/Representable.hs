@@ -12,7 +12,7 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
---- | Used by Hawk's runtime to format the output of a Hawk expression.
+-- | Used by Hawk's runtime to format the output of a Hawk expression.
 --    You can use this from your user prelude if you want Hawk to print
 --    your custom datatypes in a console-friendly format.
 module System.Console.Hawk.Representable (
