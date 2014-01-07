@@ -1,7 +1,7 @@
 Name:           haskell-awk
 Version:        1.0
 Author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
-Maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>
+Maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 Synopsis:       Transform text from the command-line using Haskell expressions.
 Description:    Hawk is a command line utility to process streams of text
                 using Haskell code. It is intended to be used in a UNIX
