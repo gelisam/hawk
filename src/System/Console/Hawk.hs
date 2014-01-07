@@ -27,6 +27,7 @@ module System.Console.Hawk (
 
 import Control.Applicative ((<$>))
 import Control.Monad
+import Data.Bool (not,(&&))
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Either
@@ -205,14 +206,16 @@ getUsage = do
 
 main :: IO ()
 main = do
-    moduleFile <- getModulesFile
-    optsArgs <- processArgs moduleFile <$> getArgs
+    args <- getArgs
+    when (P.null args) printUsageAndExit
+    optsArgs <- processArgs args <$> getModulesFile
     either printErrorAndExit go optsArgs
-    where processArgs moduleFile args =
-                case compileOpts args of
-                    Left err -> Left err
-                    Right (opts,notOpts) -> 
-                        Right (opts{ optModuleFile = Just moduleFile},notOpts)
+    where processArgs args moduleFile = do
+                (opts,notOpts) <- compileOpts args
+                if not (optVersion opts) && not (optHelp opts) && P.null notOpts
+                  then Left ["Error: the expression <expr> is required"]
+                  else Right (opts{ optModuleFile = Just moduleFile},notOpts)
+          printUsageAndExit = getUsage >>= IO.putStr >> exitSuccess
           printErrorAndExit errors = errorMessage errors >> exitFailure
           errorMessage errs = do
                 usage <- getUsage
@@ -229,8 +232,6 @@ main = do
                   IO.putStrLn versionString
                   exitSuccess
                 
-                when (optHelp opts) $ do
-                  getUsage >>= IO.putStr
-                  exitSuccess
+                when (optHelp opts) printUsageAndExit
                 
                 runHawk opts config notOpts
