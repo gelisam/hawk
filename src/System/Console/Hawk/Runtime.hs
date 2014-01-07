@@ -17,6 +17,8 @@
            , OverloadedStrings
            , ScopedTypeVariables #-}
 
+-- | This is Hawk's runtime, it needs to be installed in order to evaluate Hawk
+--   expressions. The API may change at any time.
 module System.Console.Hawk.Runtime (
     c8pack
   , sc8pack
