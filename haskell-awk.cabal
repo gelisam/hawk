@@ -12,8 +12,9 @@ License:        Apache-2.0
 License-File:   LICENSE
 Build-Type:     Simple
 Cabal-version:  >=1.10
-Extra-Source-Files: src/System/Console/Hawk.hs
+Extra-Source-Files: src/System/Console/*.hs
                   , src/System/Console/Hawk/*.hs
+                  , src/System/Console/Hawk/Config/*.hs
                   , README.md
                   , tests/System/Console/Hawk/Representable/Test.hs
 
