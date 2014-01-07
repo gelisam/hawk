@@ -13,6 +13,8 @@
 --   limitations under the License.
 
 {-# LANGUAGE NoImplicitPrelude #-}
+-- | Used by Hawk's runtime to write to stdout.
+--   The API may change at any time.
 module System.Console.Hawk.IO 
   (getInput
   ,printOutput)
@@ -21,15 +23,11 @@ where
 import Control.Exception
   (handle)
 import Data.ByteString.Lazy.Char8
-import Data.Maybe
-  (Maybe
-  ,maybe)
 import GHC.IO.Exception
   (IOErrorType(ResourceVanished)
   ,IOException(ioe_type))
 import System.IO
-  (IO
-  ,hFlush
+  (hFlush
   ,hPrint
   ,stderr
   ,stdout)

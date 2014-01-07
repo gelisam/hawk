@@ -19,8 +19,7 @@ import Control.Applicative
 import Control.Exception
   ( bracket_ )
 import Data.List
-  ( foldl'
-  , isSuffixOf
+  ( isSuffixOf
   , isPrefixOf )
 import System.Directory
   ( createDirectory 
@@ -29,8 +28,7 @@ import System.Directory
   , removeFile
   , removeDirectoryRecursive)
 import System.FilePath
-  ( FilePath
-  , (</>)
+  ( (</>)
   , dropExtension
   , takeExtension)
 
@@ -41,8 +39,8 @@ nextFilePath :: FilePath -- ^ directory
              -> IO FilePath -- ^ next file path available
 nextFilePath dir pre post = do
     contents <- getDirectoryContents dir
-    let max = foldl maybeTakeNum 0 contents
-    return $ pre ++ show (max+1) ++ post
+    let maxNum = foldl maybeTakeNum 0 contents
+    return $ pre ++ show (maxNum+1) ++ post
     where maybeTakeNum :: Int -> String -> Int
           maybeTakeNum acc str =
             if pre `isPrefixOf` str && post `isSuffixOf` str
