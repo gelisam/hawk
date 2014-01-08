@@ -42,7 +42,7 @@ import System.Console.Hawk.Lock
 --   Since they are fully qualified, they should not conflict with any
 --   user-imported module.
 defaultModules :: [QualifiedModule]
-defaultModules = map fully_qualified [ 
+defaultModules = map fullyQualified [ 
                                        "Prelude"
                                      , "System.Console.Hawk.IO"
                                      , "System.Console.Hawk.Representable"
@@ -51,7 +51,7 @@ defaultModules = map fully_qualified [
                                      , "Data.ByteString.Lazy.Char8"
                                      ]
   where
-    fully_qualified x = (x, Just x)
+    fullyQualified x = (x, Just x)
 
 defaultPrelude :: String
 defaultPrelude = unlines
