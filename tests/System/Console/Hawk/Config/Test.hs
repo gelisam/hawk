@@ -22,8 +22,6 @@ import System.Console.Hawk.Config.Parse (
     parseModules)
 import Test.Hspec 
 
-import System.Console.Hawk.TestUtils
-
 
 instance Show a => Eq (ParseResult a) where
   p == q = show p == show q
