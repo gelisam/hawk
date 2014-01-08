@@ -17,6 +17,8 @@
 module System.Console.Hawk.Config.Parse
     ( ExtensionName
     , QualifiedModule
+    , parseExtensions
+    , parseModules
     , readExtensions
     , readModules
     , readSource
@@ -27,7 +29,7 @@ import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as C8
 import Data.Maybe
-import Language.Haskell.Exts ( parseFileWithExts )
+import Language.Haskell.Exts ( parseFileContentsWithExts )
 import Language.Haskell.Exts.Extension ( parseExtension, Extension (..) )
 import Language.Haskell.Exts.Parser
     ( getTopPragmas
@@ -49,10 +51,15 @@ getResult sourceFile (ParseFailed srcLoc err) = do
     exitFailure
 
 
-readExtensions :: FilePath -> IO [ExtensionName]
-readExtensions sourceFile = do
-    result <- getTopPragmas <$> readFile sourceFile 
-    listExtensions <$> getResult sourceFile result
+-- | The LANGUAGE pragma at the top of the user prelude, if any.
+-- 
+-- >>> parseExtensions "{-# LANGUAGE OverloadedStrings, GADTs #-}\nmain = print 42\n"
+-- ParseOk ["OverloadedStrings","GADTs"]
+-- 
+-- >>> parseExtensions "main = print 42\n"
+-- ParseOk []
+parseExtensions :: String -> ParseResult [ExtensionName]
+parseExtensions = fmap listExtensions . getTopPragmas
   where
     listExtensions :: [ModulePragma] -> [ExtensionName]
     listExtensions = map getName . concat . mapMaybe extensionNames
@@ -66,14 +73,30 @@ readExtensions sourceFile = do
     getName (Symbol s) = s
 
 
-readModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
-readModules sourceFile extensions = do
-    result <- parseFileWithExts extensions' sourceFile
-    Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
-    return $ concatMap toHintModules importDeclarations
+-- | The modules imported by the user prelude.
+-- 
+-- >>> parseModules "import Data.Maybe\nmain = print 42\n" []
+-- ParseOk [("Data.Maybe",Nothing)]
+-- 
+-- >>> parseModules "import qualified Data.Maybe as M" []
+-- ParseOk [("Data.Maybe",Just "M")]
+-- 
+-- >>> parseModules "import \"network\" Network.Socket" ["PackageImports"]
+-- ParseOk [("Network.Socket",Nothing)]
+parseModules :: String -> [ExtensionName] -> ParseResult [QualifiedModule]
+parseModules source extensions = fmap getQualifiedModules
+                               $ parseFileContentsWithExts extensions'
+                               $ source
   where
     extensions' :: [Extension]
     extensions' = map parseExtension extensions
+    
+    getImportDecls :: Module -> [ImportDecl]
+    getImportDecls (Module _ _ _ _ _ ds _) = ds
+    
+    getQualifiedModules :: Module -> [QualifiedModule]
+    getQualifiedModules = concatMap toHintModules
+                        . getImportDecls
     
     toHintModules :: ImportDecl -> [QualifiedModule]
     toHintModules importDecl =
@@ -85,6 +108,16 @@ readModules sourceFile extensions = do
         ImportDecl _ (ModuleName mn) True _ _ (Just (ModuleName s)) _ ->
                               [(mn,Just s)]
 
+
+readExtensions :: FilePath -> IO [ExtensionName]
+readExtensions sourceFile = do
+    result <- parseExtensions <$> readFile sourceFile
+    getResult sourceFile result
+
+readModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
+readModules sourceFile extensions = do
+    result <- flip parseModules extensions <$> readFile sourceFile
+    getResult sourceFile result
 
 -- the configuration format is designed to look like a Haskell module,
 -- so we just return the whole file.
