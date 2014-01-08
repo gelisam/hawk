@@ -13,6 +13,7 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
+-- | The user expression is interpreted, but the user prelude is compiled.
 module System.Console.Hawk.Config.Compile
     ( compile
     )

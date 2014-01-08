@@ -16,7 +16,8 @@
            , OverloadedStrings
            , ScopedTypeVariables
            , TupleSections #-}
-
+-- | Hawk as seen from the outside world: parsing command-line arguments,
+--   evaluating user expressions.
 module System.Console.Hawk (
 
     hawk
@@ -63,6 +64,8 @@ import System.Console.Hawk.Options
 import Paths_haskell_awk (version)
 
 
+-- | Tell hint to load the user prelude, the modules it imports, and the
+--   language extensions it specifies.
 initInterpreter :: (String, String) -- ^ config file and module name
                 -> [(String,Maybe String)] -- ^ the modules maybe qualified
                 -> [Extension]
@@ -87,9 +90,9 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> IO.print e
 
-runHawk :: Options
-        ->  (String,String)
-        -> [String]
+runHawk :: Options          -- ^ built from the flags
+        ->  (String,String) -- ^ (cleaned-up prelude file, module name)
+        -> [String]         -- ^ optional input filename
         -> IO ()
 runHawk os prelude nos = do
   let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
@@ -109,6 +112,9 @@ runLockedHawkInterpreter i = do
 data StreamFormat = StreamFormat | LinesFormat | WordsFormat
     deriving (P.Eq,P.Show,P.Read)
 
+-- | Omitting the argument to the `-D` and `-d` flags prevents the input from
+--   being split into lines or words. Each combination is implemented via a
+--   dedicated stream format.
 streamFormat :: B.ByteString
              -> B.ByteString
              -> StreamFormat
@@ -118,10 +124,15 @@ streamFormat ld wd = if B.null ld
                                 then LinesFormat
                                 else WordsFormat
 
--- | 'ByteString' wrapper used to override the 'ByteString' @typeOf@ into
--- a qualified version
--- @typeOf (ByteString.pack "test") == "ByteString"@
--- @typeof (QualifiedByteString $ ByteString.pack "test") == "Data.ByteString.Lazy.Char8.Bytestring"@
+-- | 'ByteString' wrapper used to force `typeOf` to fully-qualify the type
+--   `ByteString`. Otherwise hint may try to use a type which we haven't
+--   explicitly imported.
+-- 
+-- >>> Typeable.typeOf (fromString "test" :: LB.ByteString)
+-- ByteString
+-- 
+-- >>> Typeable.typeOf $ QB (fromString "test" :: LB.ByteString)
+-- Data.ByteString.Lazy.Char8.ByteString
 newtype QualifiedByteString = QB { unQB :: LB.ByteString }
 
 instance Typeable.Typeable QualifiedByteString where
@@ -131,7 +142,7 @@ instance Typeable.Typeable QualifiedByteString where
                                           ++ tyConName tc }
                               trs
 
-hawk :: Options                -- ^ Program options
+hawk :: Options                 -- ^ Program options
      -> (String,String)         -- ^ The prelude file and module name
      -> [(String,Maybe String)] -- ^ The modules maybe qualified
      -> [Extension]             -- ^ The extensions to enable

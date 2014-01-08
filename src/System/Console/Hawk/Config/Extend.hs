@@ -13,6 +13,7 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
+-- | In which the implicit defaults are explicitly added.
 module System.Console.Hawk.Config.Extend
     ( extendModules
     , extendSource
@@ -30,18 +31,57 @@ import Text.Printf
 
 import System.Console.Hawk.Config.Base
 
+-- $setup
+-- >>> let prependBar = unlines . map ('|':) . lines
+-- >>> let stripLastNewline = reverse . tail . reverse
+-- >>> let applyBS f = C8.unpack . f . C8.pack
+-- >>> let testBS f = putStrLn . stripLastNewline . prependBar . applyBS f
+-- 
+-- >>> testBS id "main = print 42\n"
+-- |main = print 42
 
+
+-- | GHC imports the Haskell Prelude by default, but hint doesn't.
+-- 
+-- >>> let m x = (x, Nothing)
+-- 
+-- >>> map fst $ extendModules [] [m "Data.Maybe"]
+-- ["Prelude","Data.Maybe"]
+-- 
+-- >>> map fst $ extendModules [] [m "Data.Maybe", m "Prelude", m "Data.Either"]
+-- ["Data.Maybe","Prelude","Data.Either"]
+-- 
+-- >>> :{
+-- map fst $ extendModules [] [ ("Data.Maybe", Just "M")
+--                            , ("Prelude", Just "P")
+--                            , ("Data.Either", Just "E")
+--                            ]
+-- :}
+-- ["Data.Maybe","Prelude","Data.Either"]
+-- 
+-- >>> :{
+-- map fst $ extendModules ["OverloadedStrings","NoImplicitPrelude"]
+--                         [m "Data.Maybe"]
+-- :}
+-- ["Data.Maybe"]
 extendModules :: [ExtensionName]
               -> [QualifiedModule]
               -> [QualifiedModule]
-extendModules extensions modules = addIfNecessary (shouldAddPrelude extensions modules)
+extendModules extensions modules = addIfNecessary (importsPrelude extensions modules)
                                                   (unqualified_prelude:)
                                                   modules
   where
     unqualified_prelude = ("Prelude", Nothing)
 
 
--- adjust the prelude to make it loadable from hint.
+-- | Adjust the prelude to make it loadable from hint.
+-- 
+-- If there is no "module ModuleName where" declaration, we need to add one in
+-- order to be able to reference the file later on.
+-- 
+-- We also need to add the Prelude import if its missing. `extendModules` above
+-- was making the Prelude available to the user expression, while we are making
+-- it available to the user prelude.
 extendSource :: FilePath
              -> [ExtensionName]
              -> [QualifiedModule]
@@ -49,29 +89,56 @@ extendSource :: FilePath
              -> Source
 extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
-    addModuleIfMissing s = addIfNecessary (shouldAddModule s)
-                                          (addModule configFile)
+    addModuleIfMissing s = addIfNecessary (hasModuleDecl s)
+                                          (addModuleDecl configFile)
                                           s
-    addPreludeIfMissing = addIfNecessary (shouldAddPrelude extensions modules)
+    addPreludeIfMissing = addIfNecessary (importsPrelude extensions modules)
                                          (addImport "Prelude" configFile)
 
 
+-- | A helper function for conditionally applying a function.
+-- 
+-- >>> addIfNecessary (even 11) (+1) 11
+-- 12
+-- 
+-- >>> addIfNecessary (even 42) (+1) 42
+-- 42
 addIfNecessary :: Bool -> (a -> a) -> a -> a
-addIfNecessary True  f x = f x
-addIfNecessary False _ x = x
+addIfNecessary False  f x = f x
+addIfNecessary True _ x = x
 
-shouldAddModule :: Source -> Bool
-shouldAddModule = (== Nothing) . parseModuleName 
+-- |
+-- >>> hasModuleDecl $ C8.pack "module Foo where\nfoo = 42\n"
+-- True
+-- 
+-- >>> hasModuleDecl $ C8.pack "foo = 42\n"
+-- False
+hasModuleDecl :: Source -> Bool
+hasModuleDecl = isJust . parseModuleName
 
-shouldAddPrelude :: [ExtensionName] -> [QualifiedModule] -> Bool
-shouldAddPrelude extensions _ | "NoImplicitPrelude" `elem` extensions = False
-shouldAddPrelude _ modules    | "Prelude" `elem` map fst modules      = False
-shouldAddPrelude _ _          | otherwise                             = True
+importsPrelude :: [ExtensionName] -> [QualifiedModule] -> Bool
+importsPrelude extensions _ | "NoImplicitPrelude" `elem` extensions = True
+importsPrelude _ modules    | "Prelude" `elem` map fst modules      = True
+importsPrelude _ _          | otherwise                             = False
 
 
--- add a module to a string representing a Haskell source file
-addModule :: FilePath -> Source -> Source
-addModule configFile source =
+-- | Add a module declaration to a string representing a Haskell source file.
+-- 
+-- >>> testBS (addModuleDecl "myfile.hs") "main = print 42"
+-- |module System.Console.Hawk.CachedPrelude where
+-- |{-# LINE 1 "myfile.hs" #-}
+-- |main = print 42
+-- 
+-- >>> testBS (addModuleDecl "myfile.hs") "{-# LANGUAGE NoImplicitPrelude #-}\nimport Prelude (print)\nmain = print 42"
+-- |{-# LINE 1 "myfile.hs" #-}
+-- |{-# LANGUAGE NoImplicitPrelude #-}
+-- |module System.Console.Hawk.CachedPrelude where
+-- |{-# LINE 1 "myfile.hs" #-}
+-- |
+-- |import Prelude (print)
+-- |main = print 42
+addModuleDecl :: FilePath -> Source -> Source
+addModuleDecl configFile source =
     let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
                         then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
@@ -81,11 +148,25 @@ addModule configFile source =
         line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
         moduleLine = C8.pack $ unwords ["module", defaultModuleName, "where"]
     in case maybePragma of
-        (Nothing,c) -> C8.unlines [moduleLine,c]
+        (Nothing,c) -> C8.unlines [moduleLine,line 1,c]
         (Just pragma,c) -> let n = 1 + C8.length (C8.filter (=='\n') pragma)
                             in C8.unlines [line 1,pragma,moduleLine,line n,c]
 
--- add an import statement to a string representing a Haskell source file
+-- | Add an import statement to a string representing a Haskell source file.
+-- 
+-- >>> testBS (addImport "Data.Maybe" "myfile.hs") "module Main where\nmain = print 42"
+-- |module Main where
+-- |import Data.Maybe
+-- |{-# LINE 2 "myfile.hs" #-}
+-- |main = print 42
+-- 
+-- >>> testBS (addImport "Data.Maybe" "myfile.hs") "{-# LANGUAGE NoImplicitPrelude #-}\nmodule Main where\nimport Prelude (print)\nmain = print 42"
+-- |{-# LANGUAGE NoImplicitPrelude #-}
+-- |module Main where
+-- |import Data.Maybe
+-- |{-# LINE 3 "myfile.hs" #-}
+-- |import Prelude (print)
+-- |main = print 42
 addImport :: String -> FilePath -> Source -> Source
 addImport moduleName configFile source =
     let (premodule,postmodule)   = BSS.breakAfter "module " source
@@ -101,7 +182,13 @@ addImport moduleName configFile source =
     in preimports <> extraLines <> postimports
 
 
--- get the module name from a file if it exists
+-- TODO: not sure what those two are doing in this file.
+
+
+-- | Get the module name from the top of a source file.
+-- 
+-- >>> parseModuleName $ C8.pack "module Foo where\nfoo = 42\n"
+-- Just "Foo"
 parseModuleName :: Source -> Maybe ByteString
 parseModuleName bs = case BSS.indices (C8.pack "module") bs of
                        [] -> Nothing
@@ -110,6 +197,9 @@ parseModuleName bs = case BSS.indices (C8.pack "module") bs of
                               . C8.dropWhile isSpace
                               . C8.drop (i + 6) $ bs
 
--- same, but crash if there is no module
+-- | Gets the module name from the top of a source file. Crashes if missing.
+-- 
+-- >>> getModuleName $ C8.pack "{-# LANGUAGE NoImplicitPrelude #-}\nmodule Main where\nimport Prelude (print)\nmain = print 42"
+-- "Main"
 getModuleName :: Source -> String
 getModuleName = C8.unpack . fromJust . parseModuleName
