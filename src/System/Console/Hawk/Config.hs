@@ -29,7 +29,6 @@ import Control.Monad (when, unless)
 
 import Data.Time
 import System.EasyFile
-import System.FilePath
 
 import System.Console.Hawk.Config.Base
 import System.Console.Hawk.Config.Cache
