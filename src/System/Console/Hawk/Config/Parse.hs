@@ -17,9 +17,9 @@
 module System.Console.Hawk.Config.Parse
     ( ExtensionName
     , QualifiedModule
-    , parseExtensions
-    , parseModules
-    , parseSource
+    , readExtensions
+    , readModules
+    , readSource
     )
   where
 
@@ -49,8 +49,8 @@ getResult sourceFile (ParseFailed srcLoc err) = do
     exitFailure
 
 
-parseExtensions :: FilePath -> IO [ExtensionName]
-parseExtensions sourceFile = do
+readExtensions :: FilePath -> IO [ExtensionName]
+readExtensions sourceFile = do
     result <- getTopPragmas <$> readFile sourceFile 
     listExtensions <$> getResult sourceFile result
   where
@@ -66,8 +66,8 @@ parseExtensions sourceFile = do
     getName (Symbol s) = s
 
 
-parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
-parseModules sourceFile extensions = do
+readModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
+readModules sourceFile extensions = do
     result <- parseFileWithExts extensions' sourceFile
     Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
     return $ concatMap toHintModules importDeclarations
@@ -88,5 +88,5 @@ parseModules sourceFile extensions = do
 
 -- the configuration format is designed to look like a Haskell module,
 -- so we just return the whole file.
-parseSource :: FilePath -> IO Source
-parseSource = C8.readFile
+readSource :: FilePath -> IO Source
+readSource = C8.readFile

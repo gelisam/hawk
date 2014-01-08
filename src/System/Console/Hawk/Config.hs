@@ -19,7 +19,6 @@ module System.Console.Hawk.Config (
     , recompileConfigIfNeeded
     , getExtensionsFile
     , getModulesFile
-    , parseModules
     , recompileConfig
     , recompileConfig'
 ) where
@@ -133,9 +132,9 @@ recompileConfig' configFile
     clean
     createDirectoryIfMissing True cacheDir
     
-    extensions <- parseExtensions configFile
-    orig_modules <- parseModules configFile extensions
-    orig_source <- parseSource configFile
+    extensions <- readExtensions configFile
+    orig_modules <- readModules configFile extensions
+    orig_source <- readSource configFile
     
     let modules = extendModules extensions orig_modules
     let source = extendSource configFile extensions orig_modules orig_source
