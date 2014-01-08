@@ -12,6 +12,7 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+-- | In which the flags accepted by the Hawk executable are sorted out.
 module System.Console.Hawk.Options where
 
 import Data.ByteString (ByteString)
@@ -50,6 +51,16 @@ defaultOptions = Options { optMode = EvalMode
                          , optIgnoreErrors = False
                          , optModuleFile = Nothing }
 
+-- | Handle a few typical but exceptional delimiters.
+-- 
+-- >>> (C8.unpack . delimiter . C8.pack) ","
+-- ","
+-- 
+-- >>> (C8.unpack . delimiter . C8.pack) "\\n"
+-- "\n"
+-- 
+-- >>> (C8.unpack . delimiter . C8.pack) "\\t"
+-- "\t"
 delimiter :: ByteString -> ByteString
 delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
                      . C8.splitWith (== '\\')
@@ -106,6 +117,9 @@ options =
           --keepGoingHelp = "keep going when one line fails"
           setMode m o = o{ optMode = m }
 
+-- getOpt parses the option in the order they appear, but if we want to keep
+-- the last copy of a given flag, the resulting functions need to be composed
+-- in reverse order.
 compileOpts :: [String] -> Either [String] (Options,[String])
 compileOpts argv =
    case getOpt Permute options argv of
