@@ -118,11 +118,10 @@ data StreamFormat = StreamFormat | LinesFormat | WordsFormat
 streamFormat :: B.ByteString
              -> B.ByteString
              -> StreamFormat
-streamFormat ld wd = if B.null ld
-                        then StreamFormat
-                        else if B.null wd
-                                then LinesFormat
-                                else WordsFormat
+streamFormat ld wd
+    | B.null ld = StreamFormat
+    | B.null wd = LinesFormat
+    | P.otherwise = WordsFormat
 
 -- | 'ByteString' wrapper used to force `typeOf` to fully-qualify the type
 --   `ByteString`. Otherwise hint may try to use a type which we haven't
