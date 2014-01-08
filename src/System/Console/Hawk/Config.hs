@@ -29,6 +29,7 @@ import Control.Monad (when, unless)
 
 import Data.Time
 import System.EasyFile
+import System.FilePath
 
 import System.Console.Hawk.Config.Base
 import System.Console.Hawk.Config.Cache
@@ -87,10 +88,9 @@ recompileConfigIfNeeded = withLock $ do
             then recompileConfig
             else do
                 let [fileName,moduleName,rawLastModTime] = configInfos
-                let withoutExt = dropExtension fileName
-                let hiFile = withoutExt ++ ".hi"
+                let hiFile = replaceExtension fileName ".hi"
                 hiFileDoesntExist <- not <$> doesFileExist hiFile
-                let objFile = withoutExt ++ ".o"
+                let objFile = replaceExtension fileName ".o"
                 objFileDoesntExist <- not <$> doesFileExist objFile
                 let lastModTime = (read rawLastModTime :: UTCTime)
                 currModTime <- getModificationTime configFile
