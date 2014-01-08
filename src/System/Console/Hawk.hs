@@ -27,10 +27,11 @@ module System.Console.Hawk (
 
 import Control.Applicative ((<$>))
 import Control.Monad
-import Data.Bool (not,(&&))
+import Data.Bool (not,(&&),(||))
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Either
+import Data.Eq ((/=),(==))
 import Data.Function
 import Data.Ord
 import Data.Maybe
@@ -40,6 +41,7 @@ import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Data.Version (versionBranch)
 import Language.Haskell.Interpreter
@@ -163,8 +165,12 @@ hawk opts prelude modules extensions userExpr = do
           streamExpr expr = compose [showRows, expr]
           linesExpr expr = compose [showRows, expr, parseRows]
           wordsExpr expr = compose [showRows, expr, parseWords]
-          linesDelim = optLinesDelim opts
-          wordsDelim = optWordsDelim opts
+          linesDelim = case optLinesDelim opts of
+                         Nothing -> C8.singleton '\n'
+                         Just d -> d
+          wordsDelim = case optWordsDelim opts of
+                         Nothing -> C8.singleton ' '
+                         Just d -> d
           outLinesDelim = case optOutLinesDelim opts of
                             Nothing -> linesDelim
                             Just delim -> delim
@@ -220,7 +226,14 @@ main = do
           errorMessage errs = do
                 usage <- getUsage
                 IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
+          evalModeAndDelimitersSet opts = optMode opts == EvalMode
+                                          && ((optWordsDelim opts /= Nothing)
+                                           || (optLinesDelim opts /= Nothing))
           go (opts,notOpts) = do
+                when (evalModeAndDelimitersSet opts)
+                   (IO.hPutStrLn IO.stderr $ "Warning: eval mode doesn't expect"
+                                          ++ " input delimiters, ignoring them")
+
                 config <- if optRecompile opts
                               then recompileConfig
                               else recompileConfigIfNeeded
