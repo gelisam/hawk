@@ -12,6 +12,9 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+-- | Two concurrent Hawk processes (when the output of a Hawk command is piped
+--   into another, for example) are in a race condition to compile and cache
+--   the user prelude. The global application lock prevents this.
 module System.Console.Hawk.Lock
     ( withLock
     , withTestLock
