@@ -13,6 +13,7 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
+-- | In which the user prelude is deconstructed into the parts we care about.
 module System.Console.Hawk.Config.Parse
     ( ExtensionName
     , QualifiedModule
@@ -39,6 +40,8 @@ import Text.Printf
 import System.Console.Hawk.Config.Base
 
 
+-- | Our parse methods terminate the program upon failure,
+--   but those from Haskell.Exts don't.
 getResult :: FilePath -> ParseResult a -> IO a
 getResult _ (ParseOk x) = return x
 getResult sourceFile (ParseFailed srcLoc err) = do
