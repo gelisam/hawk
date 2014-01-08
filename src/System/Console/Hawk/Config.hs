@@ -71,7 +71,8 @@ defaultPrelude = unlines
 -- | A version of recompileConfig which honors caching.
 recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
 recompileConfigIfNeeded = withLock $ do
-    createDirectoryIfMissing True <$> getConfigDir
+    dir <- getConfigDir
+    createDirectoryIfMissing True dir
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
