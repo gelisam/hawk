@@ -67,7 +67,7 @@ import System.Console.Hawk.Config.Base
 extendModules :: [ExtensionName]
               -> [QualifiedModule]
               -> [QualifiedModule]
-extendModules extensions modules = addIfNecessary (shouldAddPrelude extensions modules)
+extendModules extensions modules = addIfNecessary (importsPrelude extensions modules)
                                                   (unqualified_prelude:)
                                                   modules
   where
@@ -89,41 +89,47 @@ extendSource :: FilePath
              -> Source
 extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
-    addModuleIfMissing s = addIfNecessary (shouldAddModule s)
-                                          (addModule configFile)
+    addModuleIfMissing s = addIfNecessary (hasModuleDecl s)
+                                          (addModuleDecl configFile)
                                           s
-    addPreludeIfMissing = addIfNecessary (shouldAddPrelude extensions modules)
+    addPreludeIfMissing = addIfNecessary (importsPrelude extensions modules)
                                          (addImport "Prelude" configFile)
 
 
 -- | A helper function for conditionally applying a function.
 -- 
--- >>> addIfNecessary (odd 11) (+1) 11
+-- >>> addIfNecessary (even 11) (+1) 11
 -- 12
 -- 
--- >>> addIfNecessary (odd 42) (+1) 42
+-- >>> addIfNecessary (even 42) (+1) 42
 -- 42
 addIfNecessary :: Bool -> (a -> a) -> a -> a
-addIfNecessary True  f x = f x
-addIfNecessary False _ x = x
+addIfNecessary False  f x = f x
+addIfNecessary True _ x = x
 
-shouldAddModule :: Source -> Bool
-shouldAddModule = (== Nothing) . parseModuleName 
+-- |
+-- >>> hasModuleDecl $ C8.pack "module Foo where\nfoo = 42\n"
+-- True
+-- 
+-- >>> hasModuleDecl $ C8.pack "foo = 42\n"
+-- False
+hasModuleDecl :: Source -> Bool
+hasModuleDecl = isJust . parseModuleName
 
-shouldAddPrelude :: [ExtensionName] -> [QualifiedModule] -> Bool
-shouldAddPrelude extensions _ | "NoImplicitPrelude" `elem` extensions = False
-shouldAddPrelude _ modules    | "Prelude" `elem` map fst modules      = False
-shouldAddPrelude _ _          | otherwise                             = True
+importsPrelude :: [ExtensionName] -> [QualifiedModule] -> Bool
+importsPrelude extensions _ | "NoImplicitPrelude" `elem` extensions = True
+importsPrelude _ modules    | "Prelude" `elem` map fst modules      = True
+importsPrelude _ _          | otherwise                             = False
 
 
 -- | Add a module declaration to a string representing a Haskell source file.
 -- 
--- >>> testBS (addModule "myfile.hs") "main = print 42"
+-- >>> testBS (addModuleDecl "myfile.hs") "main = print 42"
 -- |module System.Console.Hawk.CachedPrelude where
 -- |{-# LINE 1 "myfile.hs" #-}
 -- |main = print 42
 -- 
--- >>> testBS (addModule "myfile.hs") "{-# LANGUAGE NoImplicitPrelude #-}\nimport Prelude (print)\nmain = print 42"
+-- >>> testBS (addModuleDecl "myfile.hs") "{-# LANGUAGE NoImplicitPrelude #-}\nimport Prelude (print)\nmain = print 42"
 -- |{-# LINE 1 "myfile.hs" #-}
 -- |{-# LANGUAGE NoImplicitPrelude #-}
 -- |module System.Console.Hawk.CachedPrelude where
@@ -131,8 +137,8 @@ shouldAddPrelude _ _          | otherwise                             = True
 -- |
 -- |import Prelude (print)
 -- |main = print 42
-addModule :: FilePath -> Source -> Source
-addModule configFile source =
+addModuleDecl :: FilePath -> Source -> Source
+addModuleDecl configFile source =
     let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
                         then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
@@ -180,6 +186,9 @@ addImport moduleName configFile source =
 
 
 -- | Get the module name from the top of a source file.
+-- 
+-- >>> parseModuleName $ C8.pack "module Foo where\nfoo = 42\n"
+-- Just "Foo"
 parseModuleName :: Source -> Maybe ByteString
 parseModuleName bs = case BSS.indices (C8.pack "module") bs of
                        [] -> Nothing
