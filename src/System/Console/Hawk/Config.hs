@@ -71,9 +71,7 @@ defaultPrelude = unlines
 recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
 recompileConfigIfNeeded = withLock $ do
     dir <- getConfigDir
-    dirExists <- doesDirectoryExist dir
-    unless dirExists $
-        createDirectoryIfMissing True dir
+    createDirectoryIfMissing True dir
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
