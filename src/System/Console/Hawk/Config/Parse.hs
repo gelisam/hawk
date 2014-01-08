@@ -75,18 +75,17 @@ parseExtensions = fmap listExtensions . getTopPragmas
 
 -- | The modules imported by the user prelude.
 -- 
--- >>> parseModules "import Data.Maybe\nmain = print 42\n" []
+-- >>> parseModules [] "import Data.Maybe\nmain = print 42\n"
 -- ParseOk [("Data.Maybe",Nothing)]
 -- 
--- >>> parseModules "import qualified Data.Maybe as M" []
+-- >>> parseModules [] "import qualified Data.Maybe as M"
 -- ParseOk [("Data.Maybe",Just "M")]
 -- 
--- >>> parseModules "import \"network\" Network.Socket" ["PackageImports"]
+-- >>> parseModules ["PackageImports"] "import \"network\" Network.Socket"
 -- ParseOk [("Network.Socket",Nothing)]
-parseModules :: String -> [ExtensionName] -> ParseResult [QualifiedModule]
-parseModules source extensions = fmap getQualifiedModules
-                               $ parseFileContentsWithExts extensions'
-                               $ source
+parseModules :: [ExtensionName] -> String -> ParseResult [QualifiedModule]
+parseModules extensions = fmap getQualifiedModules
+                        . parseFileContentsWithExts extensions'
   where
     extensions' :: [Extension]
     extensions' = map parseExtension extensions
@@ -114,9 +113,9 @@ readExtensions sourceFile = do
     result <- parseExtensions <$> readFile sourceFile
     getResult sourceFile result
 
-readModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
-readModules sourceFile extensions = do
-    result <- flip parseModules extensions <$> readFile sourceFile
+readModules :: [ExtensionName] -> FilePath -> IO [QualifiedModule]
+readModules extensions sourceFile = do
+    result <- parseModules extensions <$> readFile sourceFile
     getResult sourceFile result
 
 -- the configuration format is designed to look like a Haskell module,

@@ -133,7 +133,7 @@ recompileConfig' configFile
     createDirectoryIfMissing True cacheDir
     
     extensions <- readExtensions configFile
-    orig_modules <- readModules configFile extensions
+    orig_modules <- readModules extensions configFile
     orig_source <- readSource configFile
     
     let modules = extendModules extensions orig_modules

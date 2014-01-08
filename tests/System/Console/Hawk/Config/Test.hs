@@ -34,14 +34,14 @@ spec = parseModulesSpec
 parseModulesSpec :: Spec
 parseModulesSpec = describe "parseModules" $ do
     it "returns empty when no modules are declared" $ do
-        parseModules "" []
+        parseModules [] ""
           `shouldBe` ParseOk []
     it "returns the module with Nothing for unqualified imports" $ do
-        parseModules "import Data.List" []
+        parseModules [] "import Data.List"
           `shouldBe` ParseOk [("Data.List",Nothing)]
     it "returns the module with its qualification for qualified imports" $ do
-        parseModules "import qualified Data.List as L" []
+        parseModules [] "import qualified Data.List as L"
           `shouldBe` ParseOk [("Data.List",Just "L")]
     it "returns the module both unqualified and with qualification for mixed" $ do
-        parseModules "import Data.List as L" []
+        parseModules [] "import Data.List as L"
           `shouldBe` ParseOk [("Data.List",Nothing),("Data.List",Just "L")]
