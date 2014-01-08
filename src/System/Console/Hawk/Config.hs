@@ -25,6 +25,7 @@ module System.Console.Hawk.Config (
 ) where
 
 import Control.Applicative ((<$>))
+import Control.Arrow ((&&&))
 import Control.Monad (when, unless)
 
 import Data.Time
@@ -51,7 +52,7 @@ defaultModules = map fullyQualified [
                                      , "Data.ByteString.Lazy.Char8"
                                      ]
   where
-    fullyQualified x = (x, Just x)
+    fullyQualified = (id &&& Just)
 
 defaultPrelude :: String
 defaultPrelude = unlines
