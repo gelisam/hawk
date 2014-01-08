@@ -31,10 +31,13 @@ import System.IO
   ,stdout)
 import Prelude hiding (getContents,putStrLn,readFile)
 
+-- | The input on which Hawk applies the user expression is usually stdin,
+--   but may also be a file if one is specified.
 getInput :: Maybe FilePath
          -> IO ByteString
 getInput = maybe getContents readFile
 
+-- Don't fret if stdout is closed early, that is the way of shell pipelines.
 printOutput :: ByteString
             -> IO ()
 printOutput s = handle ioHandler (putStrLn s >> hFlush stdout)
