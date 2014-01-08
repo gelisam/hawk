@@ -13,6 +13,7 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
+-- | Hawk's configuration is essentially defined by the user prelude.
 module System.Console.Hawk.Config (
       defaultModules
     , defaultPrelude
@@ -37,6 +38,9 @@ import System.Console.Hawk.Config.Parse
 import System.Console.Hawk.Lock
 
 
+-- | Imported at runtime even if missing from the user prelude.
+--   Since they are fully qualified, they should not conflict with any
+--   user-imported module.
 defaultModules :: [QualifiedModule]
 defaultModules = map fully_qualified [ 
                                        "Prelude"
@@ -63,6 +67,7 @@ defaultPrelude = unlines
 -- maybe (file name, module name)
 -- TODO: error handling
 
+-- | A version of recompileConfig which honors caching.
 recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
 recompileConfigIfNeeded = withLock $ do
     dir <- getConfigDir
@@ -96,6 +101,9 @@ recompileConfigIfNeeded = withLock $ do
       else recompileConfig
 
 
+-- | The path to the (cleaned-up) prelude file, and its module name.
+--   We need both in order for hint to import its contents.
+-- 
 -- TODO: error handling
 recompileConfig :: IO (String,String)
 recompileConfig = do
