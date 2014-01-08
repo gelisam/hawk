@@ -106,8 +106,7 @@ runHawk os prelude nos = do
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
-runLockedHawkInterpreter i = do
-    withLock $ runHawkInterpreter i
+runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
 
 data StreamFormat = StreamFormat | LinesFormat | WordsFormat
     deriving (P.Eq,P.Show,P.Read)
