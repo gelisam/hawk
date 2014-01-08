@@ -109,11 +109,10 @@ data StreamFormat = StreamFormat | LinesFormat | WordsFormat
 streamFormat :: B.ByteString
              -> B.ByteString
              -> StreamFormat
-streamFormat ld wd = if B.null ld
-                        then StreamFormat
-                        else if B.null wd
-                                then LinesFormat
-                                else WordsFormat
+streamFormat ld wd 
+    | B.null ld = StreamFormat
+    | B.null wd = LinesFormat
+    | otherwise = WordsFormat
 
 -- | 'ByteString' wrapper used to override the 'ByteString' @typeOf@ into
 -- a qualified version
