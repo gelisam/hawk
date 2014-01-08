@@ -21,11 +21,11 @@ import Test.Hspec (hspec)
 
 main :: IO ()
 main = do
+    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Config/Cache.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Config/Extend.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Config/Parse.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Options.hs"]
-    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
