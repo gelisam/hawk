@@ -52,7 +52,7 @@ For more details, see the [documentation](doc/README.md).
 
 ## Installation
 
-To install the stable version, simply use `cabal install haskell-hawk` and
+To install the stable version, simply use `cabal install haskell-awk` and
 add `~/.cabal/bin` (or your sandbox's `bin` folder) to your PATH. You should
 be ready to use Hawk:
 
