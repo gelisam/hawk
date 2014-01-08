@@ -123,8 +123,12 @@ isPackageFile sandbox f = packageFilePrefix sandbox `isPrefixOf` f
 getPackageFile :: Sandbox -> String -> IO String
 getPackageFile sandbox dir = do
     files <- getDirectoryContents dir
-    let [file] = filter (isPackageFile sandbox) files
-    return $ printf (path "%s/%s") dir file
+    case filter (isPackageFile sandbox) files of
+      [file] -> return $ printf (path "%s/%s") dir file
+      [] -> fail' "no package-db"
+      [_,_] -> fail' $ "multiple package-db's"
+  where
+    fail' s = error $ printf "%s found in sandbox %s" s (folder sandbox)
 
 sandboxSpecificGhcArgs :: Sandbox -> IO [String]
 sandboxSpecificGhcArgs sandbox = do
