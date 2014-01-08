@@ -14,12 +14,19 @@
 
 module System.Console.Hawk.Config.Test where
 
+import Language.Haskell.Exts.Parser (
+    ParseResult (..)
+    )
+
 import System.Console.Hawk.Config.Parse (
-    readModules)
+    parseModules)
 import Test.Hspec 
 
 import System.Console.Hawk.TestUtils
 
+
+instance Show a => Eq (ParseResult a) where
+  p == q = show p == show q
 
 spec :: Spec
 spec = parseModulesSpec
@@ -27,22 +34,14 @@ spec = parseModulesSpec
 parseModulesSpec :: Spec
 parseModulesSpec = describe "parseModules" $ do
     it "returns empty when no modules are declared" $ do
-        res <- withTempFile'' $ \file -> readModules file []
-        res `shouldBe` []
+        parseModules "" []
+          `shouldBe` ParseOk []
     it "returns the module with Nothing for unqualified imports" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import Data.List"
-            readModules file []
-        res `shouldBe` [("Data.List",Nothing)]
+        parseModules "import Data.List" []
+          `shouldBe` ParseOk [("Data.List",Nothing)]
     it "returns the module with its qualification for qualified imports" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import qualified Data.List as L"
-            readModules file []
-        res `shouldBe` [("Data.List",Just "L")]
+        parseModules "import qualified Data.List as L" []
+          `shouldBe` ParseOk [("Data.List",Just "L")]
     it "returns the module both unqualified and with qualification for mixed" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import Data.List as L"
-            readModules file []
-        res `shouldBe` [("Data.List",Nothing),("Data.List",Just "L")]
-
-    where withTempFile'' = withTempFile' "parseModulesSpec.hs"
+        parseModules "import Data.List as L" []
+          `shouldBe` ParseOk [("Data.List",Nothing),("Data.List",Just "L")]
