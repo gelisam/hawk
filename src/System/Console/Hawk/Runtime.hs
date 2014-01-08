@@ -71,9 +71,10 @@ dropTrailingNewline "" = ""
 dropTrailingNewline s 
     | last_char == '\r' = s'
     | otherwise = s
-  where last_char = C8.last s
-      n = C8.length s
-      s' = C8.take (n - 1) s
+  where
+    last_char = C8.last s
+    n = C8.length s
+    s' = C8.take (n - 1) s
 
 -- if delim is "\n", Windows-style "\r\n" delimiters are also accepted.
 parseRows :: SC8.ByteString -> C8.ByteString -> [C8.ByteString]
