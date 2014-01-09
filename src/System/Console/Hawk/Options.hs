@@ -87,7 +87,6 @@ options =
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
  , Option ['v'] ["version"] (NoArg $ \o -> o{ optVersion = True }) versionHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
--- , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
     where outDelimAction d o = o{ optOutLinesDelim = fmap (delimiter . C8.pack) d }
           outDelimHelp = "output lines delimiter, default " ++
@@ -111,7 +110,6 @@ options =
 
           versionHelp = "print the version number and exit"
           helpHelp = "print this help message and exit"
-          --keepGoingHelp = "keep going when one line fails"
           setMode m o = o{ optMode = m }
 
 -- getOpt parses the option in the order they appear, but if we want to keep
