@@ -28,11 +28,10 @@ module System.Console.Hawk (
 
 import Control.Applicative ((<$>))
 import Control.Monad
-import Data.Bool (not,(&&),(||))
+import Data.Bool (not,(&&))
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Either
-import Data.Eq ((/=),(==))
 import Data.Function
 import Data.Ord
 import Data.Maybe
@@ -235,14 +234,7 @@ main = do
           errorMessage errs = do
                 usage <- getUsage
                 IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
-          evalModeAndDelimitersSet opts = optMode opts == EvalMode
-                                          && ((optWordsDelim opts /= Nothing)
-                                           || (optLinesDelim opts /= Nothing))
           go (opts,notOpts) = do
-                when (evalModeAndDelimitersSet opts)
-                   (IO.hPutStrLn IO.stderr $ "Warning: eval mode doesn't expect"
-                                          ++ " input delimiters, ignoring them")
-
                 config <- if optRecompile opts
                               then recompileConfig
                               else recompileConfigIfNeeded
