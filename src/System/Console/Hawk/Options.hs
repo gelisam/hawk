@@ -24,10 +24,10 @@ import qualified System.FilePath as FP
 import System.Console.GetOpt
 
 
-data Modes = EvalMode | ApplyMode | MapMode
+data Mode = EvalMode | ApplyMode | MapMode
     deriving (Eq,Enum,Read,Show)
 
-data Options = Options { optMode :: Modes 
+data Options = Options { optMode :: Mode
                        , optLinesDelim :: Maybe ByteString
                        , optWordsDelim :: Maybe ByteString
                        , optOutLinesDelim :: Maybe ByteString
