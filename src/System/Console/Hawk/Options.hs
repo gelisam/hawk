@@ -27,6 +27,10 @@ import System.Console.GetOpt
 data Mode = EvalMode | ApplyMode | MapMode
     deriving (Eq,Enum,Read,Show)
 
+data HawkSpec = Help
+              | Version
+              | Expr Mode String
+
 data Options = Options { optMode :: Mode
                        , optLinesDelim :: Maybe ByteString
                        , optWordsDelim :: Maybe ByteString
@@ -35,7 +39,6 @@ data Options = Options { optMode :: Mode
                        , optRecompile :: Bool
                        , optVersion :: Bool
                        , optHelp :: Bool
-                       , optIgnoreErrors :: Bool
                        , optModuleFile :: Maybe FP.FilePath}
     deriving Show
 
@@ -48,7 +51,6 @@ defaultOptions = Options { optMode = EvalMode
                          , optRecompile = False
                          , optVersion = False
                          , optHelp = False
-                         , optIgnoreErrors = False
                          , optModuleFile = Nothing }
 
 -- | Handle a few typical but exceptional delimiters.
@@ -109,7 +111,6 @@ options =
 
           versionHelp = "print the version number and exit"
           helpHelp = "print this help message and exit"
-          --keepGoingAction o = o{ optIgnoreErrors = True}
           --keepGoingHelp = "keep going when one line fails"
           setMode m o = o{ optMode = m }
 
