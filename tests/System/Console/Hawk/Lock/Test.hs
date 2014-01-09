@@ -38,7 +38,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- In two instances of hawk are trying to use same resource (here stdout) at
 -- the same time, problems can occur.
 -- 
--- >>> forkIO print3 >> print3
+-- >>> forkIO print3 >> print3'
 -- 1
 -- 1
 -- 2
@@ -48,7 +48,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 
 -- By using `withLock`, we serialize the execution of the two critical sections.
 -- 
--- >>> forkIO (withLock print3) >> (withLock print3)
+-- >>> forkIO (withLock print3) >> (withLock print3')
 -- 1
 -- 2
 -- 3
@@ -64,7 +64,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 2
 -- 3
 -- 
--- >>> forkIO (withTestLock print3) >> (withTestLock print3)
+-- >>> forkIO (withTestLock print3) >> (withTestLock print3')
 -- ** LOCKED **
 -- 1
 -- 2
@@ -93,5 +93,6 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 1
 -- 2
 -- 3
-print3 :: IO ()
+print3, print3' :: IO ()
 print3 = printDelayed [1..3]
+print3' = threadDelay 5000 >> print3
