@@ -126,7 +126,7 @@ getPackageFile sandbox dir = do
     case filter (isPackageFile sandbox) files of
       [file] -> return $ printf (path "%s/%s") dir file
       [] -> fail' "no package-db"
-      [_,_] -> fail' $ "multiple package-db's"
+      _ -> fail' $ "multiple package-db's"
   where
     fail' s = error $ printf "%s found in sandbox %s" s (folder sandbox)
 
