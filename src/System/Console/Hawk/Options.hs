@@ -27,10 +27,6 @@ import System.Console.GetOpt
 data Mode = EvalMode | ApplyMode | MapMode
     deriving (Eq,Enum,Read,Show)
 
-data HawkSpec = Help
-              | Version
-              | Expr Mode String
-
 data Options = Options { optMode :: Mode
                        , optLinesDelim :: Maybe ByteString
                        , optWordsDelim :: Maybe ByteString
