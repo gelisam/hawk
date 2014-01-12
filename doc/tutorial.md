@@ -1,14 +1,17 @@
 # Hawk Tutorial
 
-This tutorial aims to provide examples of daily usage of Hawk as well as
-incremental explanation of how it works. It is a work in progress and subject
-to changes over time.
+This tutorial aims to provide examples of usage of Hawk.
+It is a work in progress and subject to changes over time. It is divided in
+three sections: Introduction, Basic Examples and Advanced Examples.
 
 The introduction briefly explains
 what are input and outputs of Hawk and what are the apply and the map modes.
 
-The basic examples section shows very simple examples of Hawk like
-configuring lines and words separators, field selection, sorting and filtering.
+The Basic Example section contains examples that don't require to change
+`~/.hawk/prelude.hs`.
+
+The Advanced Example section contains more advanced examples that require to
+change `~/.hawk/prelude.hs`
 
 
 ## Introduction
@@ -52,6 +55,35 @@ of `show`, that is a string representation of a given value, is shown as itself.
 The difference with applying `id` is that `id` returns a
 list and Hawk transforms lists into lines. Every time the output of Hawk isn't
 clear, it is recommended to apply the `show` function to get a visual hint.
+
+It is possible to change the lines delimiter and the words delimiter by using,
+respectively, `-D` and `-d`:
+
+```bash
+> echo '1,2,3\n4,5,6\n7,8,9' | hawk -d, -a 'show'
+[["1","2","3"],["4","5","6"],["7","8","9"]]
+> echo -n '1 2 3|4 5 6|7 8 9' | hawk -D'|' -a 'show'
+[["1","2","3"],["4","5","6"],["7","8","9"]]
+> echo '1,2,3|4,5,6|7,8,9' | hawk -D'|' -d, -a 'show'
+[["1","2","3"],["4","5","6"],["7","8","9"]]
+```
+
+A special case is when one of the two delimiters is set to empty string. If
+only the word delimiter is set to empty string then the input is still split
+in lines but lines are not split in words:
+
+```bash
+> echo '1 2 3\n4 5 6\n7 8 9' | hawk -d -a 'show'
+["1 2 3","4 5 6","7 8 9"]
+```
+
+If also the lines delimiter is set to empty string then the input to the user
+expression is not formatted at all:
+
+```bash
+> echo '1 2 3\n4 5 6\n7 8 9' | hawk -D -d -a 'show'
+"1 2 3\n4 5 6\n7 8 9\n"
+```
 
 The input of Hawk is, by default, a list of lines. Therefore we can apply
 list functions to the input. Let's see some examples.
@@ -136,7 +168,7 @@ To reverse the words of each line we can map `reverse`:
 ```
 
 
-## Basic Examples
+##Basic Examples
 
 ### Select one field and input delimiter
 
@@ -212,9 +244,9 @@ sys	x	3	3	sys	/dev	/bin/sh
 To filter by certain usernames, like "root" and "bin", we can apply the filter function:
 
 ```bash
-> cat /etc/passwd | hawk -d: -a 'L.filter ((`L.elem` ["root","bin"]) . L.head)'  
-root:x:0:0:root:/root:/bin/bash
-bin:x:2:2:bin:/bin:/bin/sh
+> cat /etc/passwd | hawk -d: -o'\t' -a 'L.filter ((`L.elem` ["root","bin"]) . L.head)' 
+root	x	0	0	root	/root	/bin/bash
+bin	x	2	2	bin	/bin	/bin/sh
 ```
 
 We can combine filtering, selection and sorting in a single expression using
@@ -224,6 +256,18 @@ function composition:
 > cat /etc/passwd | hawk -d: -o'\t' -a 'L.sort . L.map (\l -> (l !! 0, l !! 2)) . L.filter ((`L.elem` ["root","bin"]) . L.head)'
 bin	2
 root	0
+```
+
+### Group lines
+
+We would like to count how many users use each shell. The shell is the last
+field in `/etc/passwd`:
+
+```bash
+> cat /etc/passwd | hawk -d: -o'\t' -a 'L.map (\l -> (head l,L.length l)) . L.group . L.sort . L.map L.last'
+/bin/bash	2
+/bin/false	19
+/bin/sh	19
 ```
 
 ### Label output fields
@@ -250,9 +294,10 @@ The `B` of `B.append` is the module alias given to `Data.ByteString.Lazy.Char8`.
 It can be found in `~/.hawk/prelude.hs`.
 
 
-## Intermediate Examples
+## Advanced Examples
 
-### Biggest int field
+
+### Highest userid
 
 We would like to extract the username of the user with the highest userid. For
 instance, on my `/etc/passwd` the user `nobody` has the highest uid, that is
@@ -274,7 +319,7 @@ A first attempt can be something like:
 nobody
 ```
 
-Let's decompose this:
+This can be decompose in:
 
 - `L.map (\l -> (l !! 0, (read . B.unpack $ l !! 2)::Int)` is used to extract
 the first and the third field and convert the third field to integer. To do
@@ -283,7 +328,7 @@ the conversion we use `read . B.unpack` and we set the type to `Int` with `::Int
 each user
 - `fst` extracts the first field of the highest user
 
-The code is both long and ugly. We can make it cleaner by adding some utilities
+This code is both long and ugly. We can make it cleaner by adding some utilities
 in `~/.hawk/prelude.hs`. First of all we need a way to convert `ByteString` to
 `Int` like:
 
@@ -319,3 +364,49 @@ The important part of this expression is the comparison that can be read as
 This example show how easy and useful is configure the runtime with custom
 functions and imports. When something cannot be easily expressed with the
 default prelude, it is always possible to customize it.
+
+
+### For each shell extract the users list
+
+We want to extract the list of users that use a certain shell and we want to
+print, for each shell, a line that starts with the shell name followed by a colon
+and the list of users separated by spaces. For instance, for `bash` the line
+on my computer would be `/bin/bash: mario root`.
+
+The algorithm that we are going to use is:
+
+- for each line extract the last (shell) and the first (username) fields
+- sort and group by shell
+- format the output
+
+We populate `~/.hawk/prelude.hs` with:
+
+```haskell
+{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
+import Control.Arrow ((&&&),second)
+import Prelude
+import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.List as L
+import qualified Data.Map as M
+import Data.Function (on)
+
+
+groupedWith :: (Ord k) => (a -> k) -> (a -> b) -> [a] -> [(k,[b])]
+groupedWith toKey toVal = L.map toTuple
+                        . L.groupBy ((==) `on` fst)
+                        . L.sortBy (compare `on` fst)
+                        . L.map (toKey &&& toVal)
+ where toTuple (ls@(l:_)) = (fst l,L.map snd ls)
+```
+
+and then we use `groupedWith` in our expression:
+
+```bash
+> cat /etc/passwd | hawk -d: -o': ' -a 'L.map (second B.unwords) . groupedWith fst snd . L.map (L.last &&& L.head)'
+/bin/bash: mario root 
+/bin/sh: sys bin daemon
+```
+
+In the used expression, `L.map (L.last &&& L.head)` is used to extract the last and
+the first fields, `groupedWith fst snd` is used to group by last field and
+`L.map (second B.unwords)` is used to format all the users as expected.
