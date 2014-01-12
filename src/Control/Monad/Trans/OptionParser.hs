@@ -4,17 +4,19 @@
 module Control.Monad.Trans.OptionParser where
 
 import Control.Applicative
+import Control.Monad
 import "mtl" Control.Monad.Identity
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.List
+import Data.Maybe
 import qualified System.Console.GetOpt as GetOpt
+import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 
 -- $setup
 -- 
--- >>> import Text.Printf
 -- >>> :{
 -- let testH tp = do { putStrLn "Usage: more [option]... <song.mp3>"
 --                   ; putStr $ optionsHelpWith head
@@ -388,3 +390,38 @@ consumeLast :: (Eq o, Monad m)
 consumeLast o defaultValue consume = do
     xs <- consumeAll o consume
     return $ last $ defaultValue : xs
+
+
+-- | For use with mutually-exclusive flags.
+consumeExclusive :: (Option o, Functor m, Monad m)
+                 => [(o, a)] -> a -> OptionParserT o m a
+consumeExclusive = consumeExclusiveWith longName
+
+-- | A version of `consumeExclusive` which doesn't use the Option typeclass.
+-- 
+-- >>> let tp = const flag
+-- >>> let consume = consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] (-1) :: OptionParser String Int
+-- 
+-- >>> testP ["-s"] tp consume
+-- 2
+-- 
+-- >>> testP [] tp consume
+-- -1
+-- 
+-- >>> testP ["-cs"] tp consume
+-- error: cowbell and saxophone are incompatible
+-- *** Exception: ExitFailure 1
+consumeExclusiveWith :: (Eq o, Functor m, Monad m)
+                     => (o -> String)
+                     -> [(o, a)] -> a -> OptionParserT o m a
+consumeExclusiveWith longName' assoc defaultValue = do
+    oss <- forM (map fst assoc) $ \o ->
+      map (const o) <$> consumeAll o consumeFlag
+    case concat oss of
+      []  -> return defaultValue
+      [o] -> return $ fromMaybe defaultValue $ lookup o assoc
+      os  -> fail msg
+        where
+          n = length os
+          (ss, [s]) = splitAt (n - 1) (map longName' os)
+          msg = printf "%s and %s are incompatible" (intercalate ", " ss) s
