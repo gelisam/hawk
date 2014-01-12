@@ -425,3 +425,50 @@ consumeExclusiveWith longName' assoc defaultValue = do
           n = length os
           (ss, [s]) = splitAt (n - 1) (map longName' os)
           msg = printf "%s and %s are incompatible" (intercalate ", " ss) s
+
+
+-- | The next non-option argument.
+-- 
+-- >>> let tp = const flag
+-- >>> let consume = consumeExtra consumeString :: OptionParser String (Maybe String)
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
+-- Just "song.mp3"
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
+-- Just "jazz.mp3"
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume >> consume)
+-- Nothing
+consumeExtra :: (Functor m, Monad m)
+             => OptionConsumer m a -> OptionParserT o m (Maybe a)
+consumeExtra consume = OptionParserT $ do
+    extra_options <- lift get
+    case extra_options of
+      [] -> return Nothing
+      (x:xs) -> do
+        lift $ put xs
+        fmap Just $ lift . lift $ consume $ Just x
+
+-- | All remaining non-option arguments.
+-- 
+-- >>> let tp = const flag
+-- >>> let consume = consumeExtras consumeString :: OptionParser String [String]
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
+-- ["song.mp3","jazz.mp3"]
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consumeExtra consumeString >> consume)
+-- ["jazz.mp3"]
+-- 
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
+-- []
+consumeExtras :: (Functor m, Monad m)
+              => OptionConsumer m a -> OptionParserT o m [a]
+consumeExtras consume = fmap reverse $ go []
+  where
+    go xs = do
+        r <- consumeExtra consume
+        case r of
+          Nothing -> return xs
+          Just x  -> go (x:xs)
