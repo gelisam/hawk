@@ -27,6 +27,7 @@ main = do
     doctest ["-isrc", "src/System/Console/Hawk/Config/Parse.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Options.hs"]
     doctest ["-isrc", "src/Control/Monad/Trans/Uncertain.hs"]
+    doctest ["-isrc", "src/Control/Monad/Trans/OptionParser.hs"]
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
