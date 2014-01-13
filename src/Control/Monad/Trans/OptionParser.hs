@@ -319,11 +319,16 @@ readable = Setting
 -- 
 -- >>> testP ["--cowbell=()"] tp consumeCowbell >>= print
 -- ()
+-- 
+-- >>> testP ["--cowbell=foo"] tp consumeCowbell >>= print
+-- error: "foo" is not a valid value for this option.
+-- *** Exception: ExitFailure 1
 consumeReadable :: (Read a, Monad m) => OptionConsumer m a
 consumeReadable o = do
     s <- consumeString o
-    [(x, "")] <- return $ reads s
-    return x
+    case reads s of
+      [(x, "")] -> return x
+      _ -> fail $ printf "%s is not a valid value for this option." $ show s
 
 
 -- | Users are encouraged to create custom option types, like this.
