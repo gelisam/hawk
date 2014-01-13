@@ -33,8 +33,8 @@ data InputSource
 
 data OutputSink
     = UseStdout
-    -- | OutputFile FilePath  -- we might want to implement --in-place
-                              -- in the future
+    -- OutputFile FilePath  -- we might want to implement --in-place
+                            -- in the future
   deriving (Show, Eq)
 
 data InputFormat
