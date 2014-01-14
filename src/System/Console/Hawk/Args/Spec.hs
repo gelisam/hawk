@@ -7,9 +7,9 @@ import Data.ByteString (ByteString)
 data HawkSpec
     = Help
     | Version
-    | Eval            ExprSpec OutputSpec
-    | Apply InputSpec ExprSpec OutputSpec
-    | Map   InputSpec ExprSpec OutputSpec
+    | Eval  ExprSpec           OutputSpec
+    | Apply ExprSpec InputSpec OutputSpec
+    | Map   ExprSpec InputSpec OutputSpec
   deriving (Show, Eq)
 
 
