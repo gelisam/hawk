@@ -47,7 +47,69 @@ mapUncertainT f = UncertainT . (mapErrorT . mapWriterT) f . unUncertainT
 runUncertainT :: UncertainT m a -> m (Either Error a, [Warning])
 runUncertainT = runWriterT . runErrorT . unUncertainT
 
--- | Note that the warnings are displayed after the IO's output.
+
+-- | A version of `runWarnings` which allows you to interleave IO actions
+--   with uncertain actions.
+-- 
+-- Note that the warnings are displayed after the IO's output.
+-- 
+-- >>> :{
+-- runWarningsIO $ do
+--   warn "before"
+--   lift $ putStrLn "IO"
+--   warn "after"
+--   return 42
+-- :}
+-- IO
+-- warning: before
+-- warning: after
+-- Right 42
+-- 
+-- >>> :{
+-- runWarningsIO $ do
+--   warn "before"
+--   lift $ putStrLn "IO"
+--   fail "fatal"
+--   return 42
+-- :}
+-- IO
+-- warning: before
+-- Left "fatal"
+runWarningsIO :: UncertainT IO a -> IO (Either String a)
+runWarningsIO u = do
+    (r, warnings) <- runUncertainT u
+    mapM_ (hPutStrLn stderr . printf "warning: %s") warnings
+    return r
+
+-- | A version of `runUncertain` which only prints the warnings, not the
+--   errors. Unlike `runUncertain`, it doesn't terminate on error.
+-- 
+-- >>> :{
+-- runWarnings $ do
+--   warn "before"
+--   warn "after"
+--   return 42
+-- :}
+-- warning: before
+-- warning: after
+-- Right 42
+-- 
+-- >>> :{
+-- runWarnings $ do
+--   warn "before"
+--   fail "fatal"
+--   return 42
+-- :}
+-- warning: before
+-- Left "fatal"
+runWarnings :: Uncertain a -> IO (Either String a)
+runWarnings = runWarningsIO . mapUncertainT (return . runIdentity)
+
+
+-- | A version of `runUncertain` which allows you to interleave IO actions
+--   with uncertain actions.
+-- 
+-- Note that the warnings are displayed after the IO's output.
 -- 
 -- >>> :{
 -- runUncertainIO $ do
@@ -60,17 +122,30 @@ runUncertainT = runWriterT . runErrorT . unUncertainT
 -- warning: before
 -- warning: after
 -- 42
+-- 
+-- >>> :{
+-- runUncertainIO $ do
+--   warn "before"
+--   lift $ putStrLn "IO"
+--   fail "fatal"
+--   return 42
+-- :}
+-- IO
+-- warning: before
+-- error: fatal
+-- *** Exception: ExitFailure 1
 runUncertainIO :: UncertainT IO a -> IO a
 runUncertainIO u = do
-    (r, warnings) <- runUncertainT u
-    mapM_ (hPutStrLn stderr . printf "warning: %s") warnings
+    r <- runWarningsIO u
     case r of
       Left e -> do
         hPutStrLn stderr $ printf "error: %s" e
         exitFailure
       Right x -> return x
 
--- | Note that the warnings are displayed even if there is also an error.
+-- | Print warnings and errors, terminating on error.
+-- 
+-- Note that the warnings are displayed even if there is also an error.
 -- 
 -- >>> :{
 -- runUncertainIO $ do
