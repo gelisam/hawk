@@ -53,6 +53,8 @@ import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
 
+import Control.Monad.Trans.Uncertain
+import System.Console.Hawk.Args
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
@@ -220,18 +222,23 @@ main :: IO ()
 main = do
     args <- getArgs
     when (P.null args) printUsageAndExit
-    optsArgs <- processArgs args <$> getModulesFile
+    moduleFile <- getModulesFile
+    optsArgs <- runWarnings $ processArgs args moduleFile
     either printErrorAndExit go optsArgs
     where processArgs args moduleFile = do
-                (opts,notOpts) <- compileOpts args
+                spec <- parseArgs args
+                let opts = optionsFromSpec spec
+                let notOpts = notOptionsFromSpec spec
                 if not (optVersion opts) && not (optHelp opts) && P.null notOpts
-                  then Left ["Error: the expression <expr> is required"]
-                  else Right (opts{ optModuleFile = Just moduleFile},notOpts)
+                  then fail "the expression <expr> is required"
+                  else return (opts{ optModuleFile = Just moduleFile},notOpts)
           printUsageAndExit = getUsage >>= IO.putStr >> exitSuccess
-          printErrorAndExit errors = errorMessage errors >> exitFailure
-          errorMessage errs = do
+          printErrorAndExit error = errorMessage error >> exitFailure
+          errorMessage err = do
+                IO.hPutStrLn IO.stderr err
+                IO.hPutStrLn IO.stderr ""
                 usage <- getUsage
-                IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
+                IO.hPutStr IO.stderr usage
           evalModeAndDelimitersSet opts = optMode opts == EvalMode
                                           && ((optWordsDelim opts /= Nothing)
                                            || (optLinesDelim opts /= Nothing))
