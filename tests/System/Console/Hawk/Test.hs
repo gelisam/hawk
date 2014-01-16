@@ -40,7 +40,7 @@ import System.Console.Hawk.TestUtils
 --     -> String                  -- ^ The user expression to evaluate
 --     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
 
-mode :: Modes
+mode :: Mode
      -> Options
 mode m = defaultOptions{ optMode = m }
 

@@ -24,10 +24,10 @@ import qualified System.FilePath as FP
 import System.Console.GetOpt
 
 
-data Modes = EvalMode | ApplyMode | MapMode
+data Mode = EvalMode | ApplyMode | MapMode
     deriving (Eq,Enum,Read,Show)
 
-data Options = Options { optMode :: Modes 
+data Options = Options { optMode :: Mode
                        , optLinesDelim :: Maybe ByteString
                        , optWordsDelim :: Maybe ByteString
                        , optOutLinesDelim :: Maybe ByteString
@@ -35,7 +35,6 @@ data Options = Options { optMode :: Modes
                        , optRecompile :: Bool
                        , optVersion :: Bool
                        , optHelp :: Bool
-                       , optIgnoreErrors :: Bool
                        , optModuleFile :: Maybe FP.FilePath}
     deriving Show
 
@@ -48,7 +47,6 @@ defaultOptions = Options { optMode = EvalMode
                          , optRecompile = False
                          , optVersion = False
                          , optHelp = False
-                         , optIgnoreErrors = False
                          , optModuleFile = Nothing }
 
 -- | Handle a few typical but exceptional delimiters.
@@ -85,7 +83,6 @@ options =
  , Option ['r'] ["recompile"] (NoArg setRecompile) recompileHelp
  , Option ['v'] ["version"] (NoArg $ \o -> o{ optVersion = True }) versionHelp
  , Option ['h'] ["help"] (NoArg $ \o -> o{ optHelp = True }) helpHelp
--- , Option ['k'] ["keep-going"] (NoArg keepGoingAction) keepGoingHelp 
  ]
     where outDelimAction d o = o{ optOutLinesDelim = fmap (delimiter . C8.pack) d }
           outDelimHelp = "output lines delimiter, default " ++
@@ -109,8 +106,6 @@ options =
 
           versionHelp = "print the version number and exit"
           helpHelp = "print this help message and exit"
-          --keepGoingAction o = o{ optIgnoreErrors = True}
-          --keepGoingHelp = "keep going when one line fails"
           setMode m o = o{ optMode = m }
 
 -- getOpt parses the option in the order they appear, but if we want to keep

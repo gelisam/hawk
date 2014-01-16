@@ -43,7 +43,6 @@ import Data.Typeable.Internal
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
-import Data.Version (versionBranch)
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import System.Console.GetOpt (usageInfo)
@@ -53,14 +52,14 @@ import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
 
+import Control.Monad.Trans.Uncertain
+import System.Console.Hawk.Args
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
 import System.Console.Hawk.Options
-
--- magic self-referential module created by cabal
-import Paths_haskell_awk (version)
+import System.Console.Hawk.Version
 
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
@@ -222,27 +221,29 @@ main :: IO ()
 main = do
     args <- getArgs
     when (P.null args) printUsageAndExit
-    optsArgs <- processArgs args <$> getModulesFile
+    moduleFile <- getModulesFile
+    optsArgs <- runWarnings $ processArgs args moduleFile
     either printErrorAndExit go optsArgs
     where processArgs args moduleFile = do
-                (opts,notOpts) <- compileOpts args
+                spec <- parseArgs args
+                let opts = optionsFromSpec spec
+                let notOpts = notOptionsFromSpec spec
                 if not (optVersion opts) && not (optHelp opts) && P.null notOpts
-                  then Left ["Error: the expression <expr> is required"]
-                  else Right (opts{ optModuleFile = Just moduleFile},notOpts)
+                  then fail "the expression <expr> is required"
+                  else return (opts{ optModuleFile = Just moduleFile},notOpts)
           printUsageAndExit = getUsage >>= IO.putStr >> exitSuccess
-          printErrorAndExit errors = errorMessage errors >> exitFailure
-          errorMessage errs = do
+          printErrorAndExit error = errorMessage error >> exitFailure
+          errorMessage err = do
+                IO.hPutStrLn IO.stderr err
+                IO.hPutStrLn IO.stderr ""
                 usage <- getUsage
-                IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
+                IO.hPutStr IO.stderr usage
           go (opts,notOpts) = do
                 config <- if optRecompile opts
                               then recompileConfig
                               else recompileConfigIfNeeded
                 
                 when (optVersion opts) $ do
-                  let versionString = L.intercalate "."
-                                    $ P.map P.show
-                                    $ versionBranch version
                   IO.putStrLn versionString
                   exitSuccess
                 
