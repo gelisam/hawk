@@ -5,21 +5,20 @@ module System.Console.Hawk.Help
   ) where
 
 
-import System.Console.GetOpt
 import System.Environment
 import System.Exit
 import System.IO
 import Text.Printf
 
-import System.Console.Hawk.Options
+import Control.Monad.Trans.OptionParser
+import System.Console.Hawk.Args.Option
 
 
 hPrintUsage :: Handle -> IO ()
 hPrintUsage h = do
     hawk <- getProgName
-    let header = printf "Usage: %s [options] <expr> [<file>]" hawk
-    let usage = usageInfo header options
-    hPutStr h usage
+    hPutStr h $ printf "Usage: %s [option]... <expr> [<file>]\n" hawk
+    hPutStr h $ optionsHelp options
 
 
 help :: IO ()
