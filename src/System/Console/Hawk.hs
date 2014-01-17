@@ -45,9 +45,8 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
-import System.Console.GetOpt (usageInfo)
-import System.Environment (getArgs,getProgName)
-import System.Exit (exitFailure,exitSuccess)
+import System.Environment (getArgs)
+import System.Exit (exitSuccess)
 import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
@@ -56,6 +55,7 @@ import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
+import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
 import System.Console.Hawk.Options
@@ -210,28 +210,6 @@ hawk opts prelude modules extensions userExpr = do
           
           prel = qualify "Prelude"
           runtime = qualify "System.Console.Hawk.Runtime"
-
-
-getUsage :: IO String
-getUsage = do
-    pn <- getProgName
-    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <expr> [<file>]") 
-                       options
-
-hPrintUsage :: IO.Handle -> IO ()
-hPrintUsage h = do
-    usage <- getUsage
-    IO.hPutStr h usage
-
-help :: IO ()
-help = hPrintUsage IO.stdout
-
-failHelp :: String -> IO ()
-failHelp msg = do
-    IO.hPutStrLn IO.stderr msg
-    IO.hPutStrLn IO.stderr ""
-    hPrintUsage IO.stderr
-    exitFailure
 
 
 main :: IO ()
