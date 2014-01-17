@@ -211,11 +211,28 @@ hawk opts prelude modules extensions userExpr = do
           prel = qualify "Prelude"
           runtime = qualify "System.Console.Hawk.Runtime"
 
+
 getUsage :: IO String
 getUsage = do
     pn <- getProgName
     return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <expr> [<file>]") 
                        options
+
+hPrintUsage :: IO.Handle -> IO ()
+hPrintUsage h = do
+    usage <- getUsage
+    IO.hPutStr h usage
+
+help :: IO ()
+help = hPrintUsage IO.stdout
+
+failHelp :: String -> IO ()
+failHelp msg = do
+    IO.hPutStrLn IO.stderr msg
+    IO.hPutStrLn IO.stderr ""
+    hPrintUsage IO.stderr
+    exitFailure
+
 
 main :: IO ()
 main = do
@@ -231,13 +248,8 @@ main = do
                 if not (optVersion opts) && not (optHelp opts) && P.null notOpts
                   then fail "the expression <expr> is required"
                   else return (opts{ optModuleFile = Just moduleFile},notOpts)
-          printUsageAndExit = getUsage >>= IO.putStr >> exitSuccess
-          printErrorAndExit error = errorMessage error >> exitFailure
-          errorMessage err = do
-                IO.hPutStrLn IO.stderr err
-                IO.hPutStrLn IO.stderr ""
-                usage <- getUsage
-                IO.hPutStr IO.stderr usage
+          printUsageAndExit = help >> exitSuccess
+          printErrorAndExit = failHelp
           go (opts,notOpts) = do
                 config <- if optRecompile opts
                               then recompileConfig
