@@ -85,7 +85,12 @@ defaultOutputSpec = OutputSpec UseStdout defaultOutputFormat
 
 
 defaultInputFormat :: InputFormat
-defaultInputFormat = Lines "\n" (Words " ")
+defaultInputFormat = Lines defaultLineSeparator (Words defaultWordSeparator)
 
 defaultOutputFormat :: OutputFormat
-defaultOutputFormat = OutputFormat "\n" " "
+defaultOutputFormat = OutputFormat defaultLineSeparator defaultWordSeparator
+
+
+defaultLineSeparator, defaultWordSeparator :: Separator
+defaultLineSeparator = "\n"
+defaultWordSeparator = " "

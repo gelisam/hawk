@@ -40,7 +40,6 @@ import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
@@ -171,10 +170,10 @@ hawk opts prelude modules extensions userExpr = do
           linesExpr expr = compose [showRows, expr, parseRows]
           wordsExpr expr = compose [showRows, expr, parseWords]
           linesDelim = case optLinesDelim opts of
-                         Nothing -> C8.singleton '\n'
+                         Nothing -> defaultLineSeparator
                          Just d -> d
           wordsDelim = case optWordsDelim opts of
-                         Nothing -> C8.singleton ' '
+                         Nothing -> defaultWordSeparator
                          Just d -> d
           outLinesDelim = case optOutLinesDelim opts of
                             Nothing -> linesDelim

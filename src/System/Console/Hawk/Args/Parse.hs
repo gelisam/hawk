@@ -34,9 +34,11 @@ type CommonDelimiters = (Separator, Separator)
 commonDelimiters :: (Functor m, Monad m)
                  => OptionParserT HawkOption m CommonDelimiters
 commonDelimiters = do
-    l <- consumeLast Option.LineDelimiter "\n" Option.consumeDelimiter
-    w <- consumeLast Option.WordDelimiter " " Option.consumeDelimiter
+    l <- lastDelim Option.LineDelimiter defaultLineSeparator
+    w <- lastDelim Option.WordDelimiter defaultWordSeparator
     return (l, w)
+  where
+    lastDelim ctor def = consumeLast ctor def Option.consumeDelimiter
 
 
 -- | The input delimiters have already been parsed, but we still need to
