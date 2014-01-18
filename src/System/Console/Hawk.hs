@@ -44,7 +44,6 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
-import System.Exit (exitSuccess)
 import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
@@ -244,23 +243,8 @@ applyExpr e i o = do
     moduleFile <- getModulesFile
     let opts' = opts { optModuleFile = Just moduleFile }
     
-    processOptions opts' notOpts
-
-
--- | A variant of `processArgs` which accepts old-style options instead of
---   command-line arguments.
-processOptions :: Options -> [String] -> IO ()
-processOptions opts notOpts = do
-    config <- if optRecompile opts
+    config <- if optRecompile opts'
                 then recompileConfig
                 else recompileConfigIfNeeded
     
-    when (optVersion opts) $ do
-      IO.putStrLn versionString
-      exitSuccess
-    
-    when (optHelp opts) $ do
-      help
-      exitSuccess
-    
-    runHawk opts config notOpts
+    runHawk opts' config notOpts
