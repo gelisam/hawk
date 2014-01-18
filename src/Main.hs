@@ -14,7 +14,6 @@
 
 module Main where
 
-import Control.Applicative
 import System.Environment
 
 import qualified System.Console.Hawk as Hawk
