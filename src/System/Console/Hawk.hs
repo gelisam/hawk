@@ -21,14 +21,13 @@
 module System.Console.Hawk (
 
     hawk
-  , main
+  , processArgs
 
 ) where
 
 
 import Control.Applicative ((<$>))
 import Control.Monad
-import Data.Bool (not,(&&))
 import qualified Data.List as L
 import Data.List ((++),(!!))
 import Data.Either
@@ -45,7 +44,6 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
-import System.Environment (getArgs)
 import System.Exit (exitSuccess)
 import qualified System.IO as IO
 import System.IO (IO)
@@ -212,30 +210,35 @@ hawk opts prelude modules extensions userExpr = do
           runtime = qualify "System.Console.Hawk.Runtime"
 
 
-main :: IO ()
-main = do
-    args <- getArgs
-    moduleFile <- getModulesFile
-    optsArgs <- runWarnings $ processArgs args moduleFile
-    either printErrorAndExit go optsArgs
-    where processArgs args moduleFile = do
-                spec <- parseArgs args
-                let opts = optionsFromSpec spec
-                let notOpts = notOptionsFromSpec spec
-                if not (optVersion opts) && not (optHelp opts) && P.null notOpts
-                  then fail "the expression <expr> is required"
-                  else return (opts{ optModuleFile = Just moduleFile},notOpts)
-          printUsageAndExit = help >> exitSuccess
-          printErrorAndExit = failHelp
-          go (opts,notOpts) = do
-                config <- if optRecompile opts
-                              then recompileConfig
-                              else recompileConfigIfNeeded
-                
-                when (optVersion opts) $ do
-                  IO.putStrLn versionString
-                  exitSuccess
-                
-                when (optHelp opts) printUsageAndExit
-                
-                runHawk opts config notOpts
+-- | Same as if the given arguments were passed to Hawk on the command-line.
+processArgs :: [String] -> IO ()
+processArgs args = do
+    r <- runWarnings $ parseArgs args
+    case r of
+      Left err -> failHelp err
+      Right spec -> do
+          let opts = optionsFromSpec spec
+          let notOpts = notOptionsFromSpec spec
+          
+          moduleFile <- getModulesFile
+          let opts' = opts { optModuleFile = Just moduleFile }
+          
+          processOptions opts' notOpts
+
+-- | A variant of `processArgs` which accepts old-style options instead of
+--   command-line arguments.
+processOptions :: Options -> [String] -> IO ()
+processOptions opts notOpts = do
+    config <- if optRecompile opts
+                then recompileConfig
+                else recompileConfigIfNeeded
+    
+    when (optVersion opts) $ do
+      IO.putStrLn versionString
+      exitSuccess
+    
+    when (optHelp opts) $ do
+      help
+      exitSuccess
+    
+    runHawk opts config notOpts
