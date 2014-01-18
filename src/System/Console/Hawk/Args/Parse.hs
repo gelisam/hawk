@@ -165,6 +165,9 @@ exprSpec = ExprSpec <$> prelude <*> expr
 --                    }
 -- :}
 -- 
+-- >>> test []
+-- Help
+-- 
 -- >>> test ["--help"]
 -- Help
 -- 
@@ -188,12 +191,14 @@ exprSpec = ExprSpec <$> prelude <*> expr
 -- RawStream
 -- ("\n"," ")
 parseArgs :: [String] -> Uncertain HawkSpec
-parseArgs = runOptionParserT options $ do
-    lift $ return ()  -- silence a warning
-    cmd <- consumeExclusive assoc eval
-    c <- commonDelimiters
-    cmd c
+parseArgs [] = return Help
+parseArgs args = runOptionParserT options parser args
   where
+    parser = do
+        lift $ return ()  -- silence a warning
+        cmd <- consumeExclusive assoc eval
+        c <- commonDelimiters
+        cmd c
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
             , (Option.Apply,   apply)

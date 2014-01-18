@@ -215,7 +215,6 @@ hawk opts prelude modules extensions userExpr = do
 main :: IO ()
 main = do
     args <- getArgs
-    when (P.null args) printUsageAndExit
     moduleFile <- getModulesFile
     optsArgs <- runWarnings $ processArgs args moduleFile
     either printErrorAndExit go optsArgs
