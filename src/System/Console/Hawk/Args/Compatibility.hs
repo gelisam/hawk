@@ -49,7 +49,6 @@ updateExprOptions (ExprSpec p _) = updatePreludeOptions p
 updatePreludeOptions :: PreludeSpec -> Options -> Options
 updatePreludeOptions UseUserPrelude     o = o { optRecompile = True }
 updatePreludeOptions UseCachedPrelude   _ = error "cannot be represented with Options"
-updatePreludeOptions (UsePreludeFile f) o = o { optModuleFile = Just f }
 updatePreludeOptions DetectPrelude      o = o
 
 
