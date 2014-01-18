@@ -189,6 +189,7 @@ exprSpec = ExprSpec <$> prelude <*> expr
 -- ("\n"," ")
 parseArgs :: [String] -> Uncertain HawkSpec
 parseArgs = runOptionParserT options $ do
+    lift $ return ()  -- silence a warning
     cmd <- consumeExclusive assoc eval
     c <- commonDelimiters
     cmd c
