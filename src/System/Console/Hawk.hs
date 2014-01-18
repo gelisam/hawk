@@ -51,6 +51,7 @@ import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
+import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
 import System.Console.Hawk.Help
@@ -221,7 +222,22 @@ processArgs args = do
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.
 processSpec :: HawkSpec -> IO ()
-processSpec spec = do
+processSpec Help          = help
+processSpec Version       = IO.putStrLn versionString
+processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
+processSpec (Apply e i o) = applyExpr e                    i       o
+processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+
+wrapExpr :: String -> ExprSpec -> ExprSpec
+wrapExpr f e = e'
+  where
+    u = userExpression e
+    u' = printf "%s (%s)" f u
+    e' = e { userExpression = u' }
+
+applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
+applyExpr e i o = do
+    let spec = Apply e i o
     let opts = optionsFromSpec spec
     let notOpts = notOptionsFromSpec spec
     
@@ -229,6 +245,7 @@ processSpec spec = do
     let opts' = opts { optModuleFile = Just moduleFile }
     
     processOptions opts' notOpts
+
 
 -- | A variant of `processArgs` which accepts old-style options instead of
 --   command-line arguments.

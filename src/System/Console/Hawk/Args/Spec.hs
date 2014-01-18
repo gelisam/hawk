@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- | The precisely-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Spec where
 
@@ -27,7 +28,8 @@ data OutputSpec = OutputSpec
 
 
 data InputSource
-    = UseStdin
+    = NoInput
+    | UseStdin
     | InputFile FilePath
   deriving (Show, Eq)
 
@@ -72,3 +74,18 @@ data PreludeSpec
                                 -- in the future, to simplify testing
     | DetectPrelude  -- cached if possible, else user
   deriving (Show, Eq)
+
+
+defaultInputSpec, noInput :: InputSpec
+defaultInputSpec = InputSpec UseStdin defaultInputFormat
+noInput          = InputSpec NoInput  defaultInputFormat
+
+defaultOutputSpec :: OutputSpec
+defaultOutputSpec = OutputSpec UseStdout defaultOutputFormat
+
+
+defaultInputFormat :: InputFormat
+defaultInputFormat = Lines "\n" (Words " ")
+
+defaultOutputFormat :: OutputFormat
+defaultOutputFormat = OutputFormat "\n" " "
