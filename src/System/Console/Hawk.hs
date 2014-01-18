@@ -216,14 +216,19 @@ processArgs args = do
     r <- runWarnings $ parseArgs args
     case r of
       Left err -> failHelp err
-      Right spec -> do
-          let opts = optionsFromSpec spec
-          let notOpts = notOptionsFromSpec spec
-          
-          moduleFile <- getModulesFile
-          let opts' = opts { optModuleFile = Just moduleFile }
-          
-          processOptions opts' notOpts
+      Right spec -> processSpec spec
+
+-- | A variant of `processArgs` which accepts a structured specification
+--   instead of a sequence of strings.
+processSpec :: HawkSpec -> IO ()
+processSpec spec = do
+    let opts = optionsFromSpec spec
+    let notOpts = notOptionsFromSpec spec
+    
+    moduleFile <- getModulesFile
+    let opts' = opts { optModuleFile = Just moduleFile }
+    
+    processOptions opts' notOpts
 
 -- | A variant of `processArgs` which accepts old-style options instead of
 --   command-line arguments.
