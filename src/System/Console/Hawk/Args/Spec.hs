@@ -68,7 +68,6 @@ data ExprSpec = ExprSpec
 
 data PreludeSpec
     = UseUserPrelude
-    | UseCachedPrelude
     -- | UsePreludeFile FilePath  -- we might want to allow the user to
                                   -- use a prelude other than in ~/.hawk
     -- | UsePreludeText String  -- we might want to accept prelude literals
