@@ -50,6 +50,8 @@ import Text.Printf (printf)
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
+import System.Console.Hawk.Eval.Context
+import System.Console.Hawk.Eval.Compatibility
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
 import System.Console.Hawk.Help
@@ -242,8 +244,6 @@ applyExpr e i o = do
     moduleFile <- getModulesFile
     let opts' = opts { optModuleFile = Just moduleFile }
     
-    config <- if optRecompile opts'
-                then recompileConfig
-                else recompileConfigIfNeeded
+    evalContext <- newEvalContext (userPrelude e)
     
-    runHawk opts' config notOpts
+    runHawk opts' (configFromContext evalContext) notOpts
