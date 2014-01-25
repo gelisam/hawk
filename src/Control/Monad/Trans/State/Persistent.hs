@@ -4,6 +4,7 @@ module Control.Monad.Trans.State.Persistent where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.Functor.Identity
 import System.Directory
@@ -59,4 +60,19 @@ withPersistentStateT f default_s sx = do
     (x, s') <- runStateT sx s
     when (s' /= s) $ do
       liftIO $ writeFile f $ show s'
+    return x
+
+
+-- | Combine consecutive StateT transformers into a single StateT, so the state
+--   can be persisted to a single file.
+-- 
+-- >>> let sx = modify (+10)       :: StateT Int (State Int) ()
+-- >>> let tx = lift $ modify (*2) :: StateT Int (State Int) ()
+-- >>> execState (withCombinedState $ sx >> tx) (1, 2)
+-- (11,4)
+withCombinedState :: Monad m => StateT s (StateT t m) a -> StateT (s, t) m a
+withCombinedState ssx = do
+    (s, t) <- get
+    ((x, s'), t') <- lift $ runStateT (runStateT ssx s) t
+    put (s', t')
     return x
