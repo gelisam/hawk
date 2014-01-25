@@ -25,23 +25,23 @@ data EvalContext = EvalContext
   , modules :: [QualifiedModule]
   } deriving (Eq, Read, Show)
 
-newEvalContext :: PreludeSpec -> IO EvalContext
-newEvalContext UseUserPrelude = readEvalContext
-newEvalContext DetectPrelude = do
-    -- skip `readEvalContext` if the cached copy is still good.
+getEvalContext :: PreludeSpec -> IO EvalContext
+getEvalContext UseUserPrelude = newEvalContext
+getEvalContext DetectPrelude = do
+    -- skip `newEvalContext` if the cached copy is still good.
     preludeFile <- getConfigFile
     cacheFile <- getEvalContextFile
     key <- getKey preludeFile
     let cache = singletonCache assocCache
-    withPersistentStateT cacheFile [] $ cached cache key $ lift readEvalContext
+    withPersistentStateT cacheFile [] $ cached cache key $ lift newEvalContext
   where
     getKey f = do
         modifiedTime <- getModificationTime f
         fileSize <- withFile f ReadMode hFileSize
         return (f, modifiedTime, fileSize)
 
-readEvalContext :: IO EvalContext
-readEvalContext = do
+newEvalContext :: IO EvalContext
+newEvalContext = do
     -- currently, only ~/.hawk/prelude.hs is supported.
     originalPreludePath' <- getConfigFile
     

@@ -244,6 +244,6 @@ applyExpr e i o = do
     moduleFile <- getModulesFile
     let opts' = opts { optModuleFile = Just moduleFile }
     
-    evalContext <- Context.newEvalContext (userPrelude e)
+    evalContext <- Context.getEvalContext (userPrelude e)
     
     runHawk opts' (configFromContext evalContext) notOpts
