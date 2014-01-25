@@ -237,8 +237,8 @@ applyExpr e i o = do
     let nos = notOpts
     
     let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
-    extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
-    modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
+    let extensions = P.map P.read $ Context.extensions evalContext
+    let modules = Context.modules evalContext
 
     maybe_f <- hawk os prelude modules extensions (L.head nos)
     case maybe_f of
