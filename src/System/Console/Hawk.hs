@@ -240,8 +240,9 @@ applyExpr e i o = do
     let file = fileFromInputSource (inputSource i)
     let extensions = P.map P.read $ Context.extensions evalContext
     let modules = Context.modules evalContext
+    let expr = userExpression e
 
-    maybe_f <- hawk os prelude modules extensions (L.head nos)
+    maybe_f <- hawk os prelude modules extensions expr
     case maybe_f of
       Left ie -> printErrors ie
       Right f -> getInput file >>= printOutput . f
