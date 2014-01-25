@@ -79,14 +79,19 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
         setImportsQ $ (preludeModule,Nothing):defaultModules
                                            ++ userModules
 
+errorString :: InterpreterError -> String
+errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
+  where
+    header = "Won't compile:"
+    indent (GhcError e) = ('\t':e)
+errorString e = P.show e
+
 printErrors :: InterpreterError -> IO ()
-printErrors e = case e of
-                  WontCompile es' -> do
-                    IO.hPutStrLn IO.stderr "\nWon't compile:"
-                    forM_ es' $ \e' ->
-                      case e' of
-                        GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
-                  _ -> IO.print e
+printErrors e = IO.hPutStrLn IO.stderr $ errorString e
+
+wrapErrors :: Either InterpreterError a -> UncertainT IO a
+wrapErrors (Left e) = fail $ errorString e
+wrapErrors (Right x) = return x
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
