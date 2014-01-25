@@ -3,6 +3,7 @@
 module System.Console.Hawk.Args.Compatibility
   ( optionsFromSpec
   , notOptionsFromSpec
+  , fileFromInputSource
   ) where
 
 import Control.Applicative
@@ -74,3 +75,8 @@ inputSpecFromSpec :: HawkSpec -> Maybe InputSpec
 inputSpecFromSpec (Apply _ i _) = Just i
 inputSpecFromSpec (Map   _ i _) = Just i
 inputSpecFromSpec _ = Nothing
+
+
+fileFromInputSource :: InputSource -> Maybe FilePath
+fileFromInputSource (InputFile f) = Just f
+fileFromInputSource _ = Nothing

@@ -49,6 +49,7 @@ import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
+import System.Console.Hawk.Args.Compatibility
 import System.Console.Hawk.Args.Spec
 import qualified System.Console.Hawk.Eval.Context as Context
 import System.Console.Hawk.Eval.Compatibility
@@ -236,7 +237,7 @@ applyExpr e i o = do
     let prelude = configFromContext evalContext
     let nos = notOpts
     
-    let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
+    let file = fileFromInputSource (inputSource i)
     let extensions = P.map P.read $ Context.extensions evalContext
     let modules = Context.modules evalContext
 
