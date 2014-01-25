@@ -87,20 +87,6 @@ printErrors e = case e of
                         GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
                   _ -> IO.print e
 
-runHawk :: Options          -- ^ built from the flags
-        ->  (String,String) -- ^ (cleaned-up prelude file, module name)
-        -> [String]         -- ^ optional input filename
-        -> IO ()
-runHawk os prelude nos = do
-  let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
-  extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
-  modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
-
-  maybe_f <- hawk os prelude modules extensions (L.head nos)
-  case maybe_f of
-    Left ie -> printErrors ie
-    Right f -> getInput file >>= printOutput . f
-
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
 runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
@@ -246,4 +232,15 @@ applyExpr e i o = do
     
     evalContext <- Context.getEvalContext (userPrelude e)
     
-    runHawk opts' (configFromContext evalContext) notOpts
+    let os = opts'
+    let prelude = configFromContext evalContext
+    let nos = notOpts
+    
+    let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
+    extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
+    modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
+
+    maybe_f <- hawk os prelude modules extensions (L.head nos)
+    case maybe_f of
+      Left ie -> printErrors ie
+      Right f -> getInput file >>= printOutput . f
