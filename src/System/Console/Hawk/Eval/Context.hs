@@ -28,6 +28,7 @@ data EvalContext = EvalContext
   , modules :: [QualifiedModule]
   } deriving (Eq, Read, Show)
 
+-- | Obtains an EvalContext, either from the cache or from the user prelude.
 getEvalContext :: PreludeSpec -> IO EvalContext
 getEvalContext UseUserPrelude = newEvalContext
 getEvalContext DetectPrelude = do
@@ -43,6 +44,7 @@ getEvalContext DetectPrelude = do
         fileSize <- withFile f ReadMode hFileSize
         return (f, modifiedTime, fileSize)
 
+-- | Construct an EvalContext by parsing the user prelude.
 newEvalContext :: IO EvalContext
 newEvalContext = do
     -- currently, only ~/.hawk/prelude.hs is supported.
