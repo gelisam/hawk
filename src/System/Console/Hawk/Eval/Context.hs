@@ -1,7 +1,10 @@
 {-# LANGUAGE PackageImports #-}
 -- | Everything we need to know in order to evaluate a user expression,
 --   except for the user expression itself.
-module System.Console.Hawk.Eval.Context where
+module System.Console.Hawk.Eval.Context
+  ( EvalContext(..)
+  , getEvalContext
+  ) where
 
 import "mtl" Control.Monad.Trans
 import System.Directory
