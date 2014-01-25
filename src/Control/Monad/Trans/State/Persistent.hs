@@ -1,11 +1,11 @@
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE PackageImports, ScopedTypeVariables #-}
 -- | In which the state of a State monad is persisted to disk.
 module Control.Monad.Trans.State.Persistent where
 
 import Control.Monad
 import Control.Monad.IO.Class
-import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
+import Data.Functor.Identity
 import System.Directory
 
 
@@ -24,17 +24,13 @@ import System.Directory
 -- 2
 -- 
 -- >>> removeFile f
-withPersistentState :: (Read s, Show s, Eq s)
+withPersistentState :: forall s a. (Read s, Show s, Eq s)
                     => FilePath -> s -> State s a -> IO a
 withPersistentState f default_s sx = do
-    exists <- doesFileExist f
-    s <- if exists
-           then liftM read $ readFile f
-           else return default_s
-    let (x, s') = runState sx s
-    when (s' /= s) $ do
-      writeFile f $ show s'
-    return x
+    withPersistentStateT f default_s sTx
+  where
+    sTx :: StateT s IO a
+    sTx = mapStateT (return . runIdentity) sx
 
 -- | A monad-transformer version of `withPersistentState`.
 -- 
