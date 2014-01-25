@@ -226,7 +226,6 @@ applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let spec = Apply e i o
     let opts = optionsFromSpec spec
-    let notOpts = notOptionsFromSpec spec
     
     moduleFile <- getModulesFile
     let opts' = opts { optModuleFile = Just moduleFile }
@@ -235,7 +234,6 @@ applyExpr e i o = do
     
     let os = opts'
     let prelude = configFromContext evalContext
-    let nos = notOpts
     
     let file = fileFromInputSource (inputSource i)
     let extensions = P.map P.read $ Context.extensions evalContext
