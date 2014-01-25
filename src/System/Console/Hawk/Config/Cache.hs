@@ -20,6 +20,7 @@ module System.Console.Hawk.Config.Cache
     , getConfigFile
     , getCacheDir
     , getConfigInfosFile
+    , getEvalContextFile
     , getExtensionsFile
     , getModulesFile
     , getCompiledFile
@@ -65,6 +66,9 @@ getCacheDir = getConfigDir <//> "cache"
 
 getConfigInfosFile :: IO FilePath
 getConfigInfosFile = getCacheDir <//> "configInfos"
+
+getEvalContextFile :: IO FilePath
+getEvalContextFile = getCacheDir <//> "evalContext"
 
 getModulesFile :: IO FilePath
 getModulesFile = getCacheDir <//> "modules"

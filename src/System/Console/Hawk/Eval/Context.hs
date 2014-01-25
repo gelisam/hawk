@@ -1,5 +1,14 @@
+{-# LANGUAGE PackageImports #-}
+-- | Everything we need to know in order to evaluate a user expression,
+--   except for the user expression itself.
 module System.Console.Hawk.Eval.Context where
 
+import "mtl" Control.Monad.Trans
+import System.Directory
+import System.IO
+
+import Control.Monad.Trans.State.Persistent
+import Data.Cache
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Config
 import System.Console.Hawk.Config.Base
@@ -14,14 +23,29 @@ data EvalContext = EvalContext
   , moduleName :: String
   , extensions :: [ExtensionName]
   , modules :: [QualifiedModule]
-  } deriving (Show, Eq)
+  } deriving (Eq, Read, Show)
 
 newEvalContext :: PreludeSpec -> IO EvalContext
-newEvalContext spec = do
+newEvalContext UseUserPrelude = readEvalContext
+newEvalContext DetectPrelude = do
+    -- skip `readEvalContext` if the cached copy is still good.
+    preludeFile <- getConfigFile
+    cacheFile <- getEvalContextFile
+    key <- getKey preludeFile
+    let cache = singletonCache assocCache
+    withPersistentStateT cacheFile [] $ cached cache key $ lift readEvalContext
+  where
+    getKey f = do
+        modifiedTime <- getModificationTime f
+        fileSize <- withFile f ReadMode hFileSize
+        return (f, modifiedTime, fileSize)
+
+readEvalContext :: IO EvalContext
+readEvalContext = do
     -- currently, only ~/.hawk/prelude.hs is supported.
     originalPreludePath' <- getConfigFile
     
-    (canonicalPrelude', moduleName') <- makeCanonical spec
+    (canonicalPrelude', moduleName') <- recompileConfig
     extensions' <- readExtensions originalPreludePath'
     modules' <- readModules extensions' originalPreludePath'
     
@@ -40,6 +64,3 @@ newEvalContext spec = do
            , extensions = extensions'
            , modules = modules'
            }
-  where
-    makeCanonical UseUserPrelude = recompileConfig
-    makeCanonical DetectPrelude  = recompileConfigIfNeeded
