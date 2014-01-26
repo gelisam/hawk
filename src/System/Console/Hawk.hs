@@ -85,9 +85,6 @@ errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
     indent (GhcError e) = ('\t':e)
 errorString e = P.show e
 
-printErrors :: InterpreterError -> IO ()
-printErrors e = IO.hPutStrLn IO.stderr $ errorString e
-
 wrapErrors :: Either InterpreterError a -> UncertainT IO a
 wrapErrors (Left e) = fail $ errorString e
 wrapErrors (Right x) = return x
