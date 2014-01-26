@@ -44,6 +44,10 @@ instance MonadIO m => MonadIO (UncertainT m) where
 warn :: Monad m => String -> UncertainT m ()
 warn s = UncertainT $ lift $ tell [s]
 
+fromRightM :: Monad m => Either String a -> UncertainT m a
+fromRightM (Left e)  = fail e
+fromRightM (Right x) = return x
+
 
 mapUncertainT :: (forall a. m a -> m' a) -> UncertainT m b -> UncertainT m' b
 mapUncertainT f = UncertainT . (mapErrorT . mapWriterT) f . unUncertainT
