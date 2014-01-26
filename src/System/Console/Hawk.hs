@@ -134,9 +134,9 @@ hawk :: Options                 -- ^ Program options
      -> [(String,Maybe String)] -- ^ The modules maybe qualified
      -> [Extension]             -- ^ The extensions to enable
      -> String                  -- ^ The user expression to evaluate
-     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
+     -> UncertainT IO (LB.ByteString -> LB.ByteString)
 hawk opts prelude modules extensions userExpr = do
-    eitherErrorF <- runLockedHawkInterpreter $ do
+    eitherErrorF <- lift $ runLockedHawkInterpreter $ do
 
         initInterpreter prelude modules extensions
         
@@ -150,7 +150,7 @@ hawk opts prelude modules extensions userExpr = do
             (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  userExpr
             (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
     
-    return ((\f -> unQB . f . QB) <$> eitherErrorF)
+    (\f -> unQB . f . QB) <$> wrapErrors eitherErrorF
     where 
           interpret' expr = do
             -- print the user expression
@@ -245,7 +245,7 @@ applyExpr e i o = do
     let modules = Context.modules evalContext
     let expr = userExpression e
 
-    maybe_f <- hawk os prelude modules extensions expr
-    case maybe_f of
-      Left ie -> printErrors ie
-      Right f -> getInput file >>= printOutput . f
+    f <- runUncertainIO $ hawk os prelude modules extensions expr
+    input <- getInput file
+    let output = f input
+    printOutput output
