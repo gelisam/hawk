@@ -25,6 +25,7 @@ import System.FilePath
 import Test.Hspec
 import Test.HUnit
 
+import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
   (hawk)
 import System.Console.Hawk.Config
@@ -77,7 +78,7 @@ withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -
         let descr = "evals " ++ show expr ++
                     " on input " ++ show input ++
                     " equals to " ++ show expected
-        in it descr $ do eitherErrorF <- dhawk m expr
+        in it descr $ do eitherErrorF <- runWarningsIO $ dhawk m expr
                          case eitherErrorF of
                            Left e -> assertFailure (show e)
                            Right f -> assertEqual descr expected (f input)

@@ -34,9 +34,11 @@ type CommonDelimiters = (Separator, Separator)
 commonDelimiters :: (Functor m, Monad m)
                  => OptionParserT HawkOption m CommonDelimiters
 commonDelimiters = do
-    l <- consumeLast Option.LineDelimiter "\n" Option.consumeDelimiter
-    w <- consumeLast Option.WordDelimiter " " Option.consumeDelimiter
+    l <- lastDelim Option.LineDelimiter defaultLineSeparator
+    w <- lastDelim Option.WordDelimiter defaultWordSeparator
     return (l, w)
+  where
+    lastDelim ctor def = consumeLast ctor def Option.consumeDelimiter
 
 
 -- | The input delimiters have already been parsed, but we still need to
@@ -165,6 +167,9 @@ exprSpec = ExprSpec <$> prelude <*> expr
 --                    }
 -- :}
 -- 
+-- >>> test []
+-- Help
+-- 
 -- >>> test ["--help"]
 -- Help
 -- 
@@ -188,11 +193,14 @@ exprSpec = ExprSpec <$> prelude <*> expr
 -- RawStream
 -- ("\n"," ")
 parseArgs :: [String] -> Uncertain HawkSpec
-parseArgs = runOptionParserT options $ do
-    cmd <- consumeExclusive assoc eval
-    c <- commonDelimiters
-    cmd c
+parseArgs [] = return Help
+parseArgs args = runOptionParserT options parser args
   where
+    parser = do
+        lift $ return ()  -- silence a warning
+        cmd <- consumeExclusive assoc eval
+        c <- commonDelimiters
+        cmd c
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
             , (Option.Apply,   apply)

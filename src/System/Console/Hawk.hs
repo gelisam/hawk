@@ -21,19 +21,17 @@
 module System.Console.Hawk (
 
     hawk
-  , main
+  , processArgs
 
 ) where
 
 
 import Control.Applicative ((<$>))
 import Control.Monad
-import Data.Bool (not,(&&))
 import qualified Data.List as L
-import Data.List ((++),(!!))
+import Data.List ((++))
 import Data.Either
 import Data.Function
-import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.Typeable.Internal as Typeable
@@ -41,21 +39,22 @@ import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
-import System.Console.GetOpt (usageInfo)
-import System.Environment (getArgs,getProgName)
-import System.Exit (exitFailure,exitSuccess)
 import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
+import System.Console.Hawk.Args.Compatibility
+import System.Console.Hawk.Args.Spec
+import qualified System.Console.Hawk.Eval.Context as Context
+import System.Console.Hawk.Eval.Compatibility
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.Config
+import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
 import System.Console.Hawk.Options
@@ -79,28 +78,16 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
         setImportsQ $ (preludeModule,Nothing):defaultModules
                                            ++ userModules
 
-printErrors :: InterpreterError -> IO ()
-printErrors e = case e of
-                  WontCompile es' -> do
-                    IO.hPutStrLn IO.stderr "\nWon't compile:"
-                    forM_ es' $ \e' ->
-                      case e' of
-                        GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
-                  _ -> IO.print e
+errorString :: InterpreterError -> String
+errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
+  where
+    header = "Won't compile:"
+    indent (GhcError e) = ('\t':e)
+errorString e = P.show e
 
-runHawk :: Options          -- ^ built from the flags
-        ->  (String,String) -- ^ (cleaned-up prelude file, module name)
-        -> [String]         -- ^ optional input filename
-        -> IO ()
-runHawk os prelude nos = do
-  let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
-  extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
-  modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
-
-  maybe_f <- hawk os prelude modules extensions (L.head nos)
-  case maybe_f of
-    Left ie -> printErrors ie
-    Right f -> getInput file >>= printOutput . f
+wrapErrors :: Either InterpreterError a -> UncertainT IO a
+wrapErrors (Left e) = fail $ errorString e
+wrapErrors (Right x) = return x
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
@@ -143,9 +130,9 @@ hawk :: Options                 -- ^ Program options
      -> [(String,Maybe String)] -- ^ The modules maybe qualified
      -> [Extension]             -- ^ The extensions to enable
      -> String                  -- ^ The user expression to evaluate
-     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
+     -> UncertainT IO (LB.ByteString -> LB.ByteString)
 hawk opts prelude modules extensions userExpr = do
-    eitherErrorF <- runLockedHawkInterpreter $ do
+    eitherErrorF <- lift $ runLockedHawkInterpreter $ do
 
         initInterpreter prelude modules extensions
         
@@ -159,7 +146,7 @@ hawk opts prelude modules extensions userExpr = do
             (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  userExpr
             (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
     
-    return ((\f -> unQB . f . QB) <$> eitherErrorF)
+    (\f -> unQB . f . QB) <$> wrapErrors eitherErrorF
     where 
           interpret' expr = do
             -- print the user expression
@@ -173,10 +160,10 @@ hawk opts prelude modules extensions userExpr = do
           linesExpr expr = compose [showRows, expr, parseRows]
           wordsExpr expr = compose [showRows, expr, parseWords]
           linesDelim = case optLinesDelim opts of
-                         Nothing -> C8.singleton '\n'
+                         Nothing -> defaultLineSeparator
                          Just d -> d
           wordsDelim = case optWordsDelim opts of
-                         Nothing -> C8.singleton ' '
+                         Nothing -> defaultWordSeparator
                          Just d -> d
           outLinesDelim = case optOutLinesDelim opts of
                             Nothing -> linesDelim
@@ -211,42 +198,50 @@ hawk opts prelude modules extensions userExpr = do
           prel = qualify "Prelude"
           runtime = qualify "System.Console.Hawk.Runtime"
 
-getUsage :: IO String
-getUsage = do
-    pn <- getProgName
-    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <expr> [<file>]") 
-                       options
 
-main :: IO ()
-main = do
-    args <- getArgs
-    when (P.null args) printUsageAndExit
+-- | Same as if the given arguments were passed to Hawk on the command-line.
+processArgs :: [String] -> IO ()
+processArgs args = do
+    r <- runWarnings $ parseArgs args
+    case r of
+      Left err -> failHelp err
+      Right spec -> processSpec spec
+
+-- | A variant of `processArgs` which accepts a structured specification
+--   instead of a sequence of strings.
+processSpec :: HawkSpec -> IO ()
+processSpec Help          = help
+processSpec Version       = IO.putStrLn versionString
+processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
+processSpec (Apply e i o) = applyExpr e                    i       o
+processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+
+wrapExpr :: String -> ExprSpec -> ExprSpec
+wrapExpr f e = e'
+  where
+    u = userExpression e
+    u' = printf "%s (%s)" f u
+    e' = e { userExpression = u' }
+
+applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
+applyExpr e i o = do
+    let spec = Apply e i o
+    let opts = optionsFromSpec spec
+    
     moduleFile <- getModulesFile
-    optsArgs <- runWarnings $ processArgs args moduleFile
-    either printErrorAndExit go optsArgs
-    where processArgs args moduleFile = do
-                spec <- parseArgs args
-                let opts = optionsFromSpec spec
-                let notOpts = notOptionsFromSpec spec
-                if not (optVersion opts) && not (optHelp opts) && P.null notOpts
-                  then fail "the expression <expr> is required"
-                  else return (opts{ optModuleFile = Just moduleFile},notOpts)
-          printUsageAndExit = getUsage >>= IO.putStr >> exitSuccess
-          printErrorAndExit error = errorMessage error >> exitFailure
-          errorMessage err = do
-                IO.hPutStrLn IO.stderr err
-                IO.hPutStrLn IO.stderr ""
-                usage <- getUsage
-                IO.hPutStr IO.stderr usage
-          go (opts,notOpts) = do
-                config <- if optRecompile opts
-                              then recompileConfig
-                              else recompileConfigIfNeeded
-                
-                when (optVersion opts) $ do
-                  IO.putStrLn versionString
-                  exitSuccess
-                
-                when (optHelp opts) printUsageAndExit
-                
-                runHawk opts config notOpts
+    let opts' = opts { optModuleFile = Just moduleFile }
+    
+    evalContext <- Context.getEvalContext (userPrelude e)
+    
+    let os = opts'
+    let prelude = configFromContext evalContext
+    
+    let file = fileFromInputSource (inputSource i)
+    let extensions = P.map P.read $ Context.extensions evalContext
+    let modules = Context.modules evalContext
+    let expr = userExpression e
+
+    f <- runUncertainIO $ hawk os prelude modules extensions expr
+    input <- getInput file
+    let output = f input
+    printOutput output

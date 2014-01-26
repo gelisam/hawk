@@ -3,6 +3,7 @@
 module System.Console.Hawk.Args.Compatibility
   ( optionsFromSpec
   , notOptionsFromSpec
+  , fileFromInputSource
   ) where
 
 import Control.Applicative
@@ -48,8 +49,6 @@ updateExprOptions (ExprSpec p _) = updatePreludeOptions p
 
 updatePreludeOptions :: PreludeSpec -> Options -> Options
 updatePreludeOptions UseUserPrelude     o = o { optRecompile = True }
-updatePreludeOptions UseCachedPrelude   _ = error "cannot be represented with Options"
-updatePreludeOptions (UsePreludeFile f) o = o { optModuleFile = Just f }
 updatePreludeOptions DetectPrelude      o = o
 
 
@@ -76,3 +75,8 @@ inputSpecFromSpec :: HawkSpec -> Maybe InputSpec
 inputSpecFromSpec (Apply _ i _) = Just i
 inputSpecFromSpec (Map   _ i _) = Just i
 inputSpecFromSpec _ = Nothing
+
+
+fileFromInputSource :: InputSource -> Maybe FilePath
+fileFromInputSource (InputFile f) = Just f
+fileFromInputSource _ = Nothing
