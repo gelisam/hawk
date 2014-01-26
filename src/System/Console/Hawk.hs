@@ -29,10 +29,9 @@ module System.Console.Hawk (
 import Control.Applicative ((<$>))
 import Control.Monad
 import qualified Data.List as L
-import Data.List ((++),(!!))
+import Data.List ((++))
 import Data.Either
 import Data.Function
-import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.Typeable.Internal as Typeable
