@@ -37,6 +37,10 @@ instance Monad m => Monad (UncertainT m) where
 instance MonadTrans UncertainT where
   lift = UncertainT . lift . lift
 
+instance MonadIO m => MonadIO (UncertainT m) where
+  liftIO = lift . liftIO
+
+
 warn :: Monad m => String -> UncertainT m ()
 warn s = UncertainT $ lift $ tell [s]
 
