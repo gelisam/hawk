@@ -358,30 +358,33 @@ filePath = Setting "path"
 -- | The value assigned to the option if the check function doesn't fail with
 -- an error.
 --
+-- >>> import Control.Monad
 -- >>> import System.EasyFile (doesDirectoryExist)
 -- >>> let testIO args tp p = runUncertainIO $ runOptionParserWith head id (const [""]) tp ["input-dir"] p args
 -- >>> let inputDir = const filePath
 -- >>> :{
---   let checkDir f d = do
+--   let checkDir f e d = do
 --      exists <- lift (f d)
 --      if exists then return ()  :: UncertainT IO ()
---                else fail ("Directory " ++ d ++ " doesn't exist")
+--                else fail (e d)
 -- :}
 --
--- >>> let dirExists = checkDir doesDirectoryExist
--- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not)
+-- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
+-- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
 -- >>> let consumeLastInputDir = consumeLast "input-dir" "error" :: OptionConsumer IO String -> OptionParserT String IO String
--- >>> let consumeExistingDir = consumeLastInputDir (consumeFilePath dirExists)
+-- >>> let consumeExistingDir    = consumeLastInputDir (consumeFilePath dirExists)
 -- >>> let consumeNotExistingDir = consumeLastInputDir (consumeFilePath dirDoesntExist)
 -- >>> testIO ["--input-dir=."] inputDir consumeExistingDir
 -- "."
 -- >>> testIO ["--input-dir=."] inputDir consumeNotExistingDir
--- error: Directory . doesn't exist
+-- error: . exists
 -- *** Exception: ExitFailure 1
 consumeFilePath :: MonadIO m
                 => (FilePath -> UncertainT m ()) -> OptionConsumer m String
-consumeFilePath _ Nothing = error "please use consumeNullable to consume nullable options"
-consumeFilePath check (Just fp) = check fp >> return fp
+consumeFilePath check input = do
+  fp <- consumeString input
+  check fp
+  return fp
 
 
 -- | All the occurences of a given option.
