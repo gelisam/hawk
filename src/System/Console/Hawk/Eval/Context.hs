@@ -6,6 +6,7 @@ module System.Console.Hawk.Eval.Context
   , getEvalContext
   ) where
 
+import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
 import System.IO
@@ -28,17 +29,33 @@ data EvalContext = EvalContext
   , modules :: [QualifiedModule]
   } deriving (Eq, Read, Show)
 
+-- | Create a default context if it doesn't exists
+createDefaultIfDoesntExist :: FilePath -> IO Bool
+createDefaultIfDoesntExist dir = do
+  dirExists <- doesDirectoryExist dir
+  unless dirExists $ createDirectoryIfMissing True dir
+  let preludeFile = getConfigFile dir
+  preludeExists <- doesFileExist preludeFile
+  unless preludeExists $ writeFile preludeFile defaultPrelude
+  return $ not dirExists || not preludeExists
+
 -- | Obtains an EvalContext, either from the cache or from the user prelude.
 getEvalContext :: FilePath -> Bool -> IO EvalContext
-getEvalContext confDir True = newEvalContext confDir
+getEvalContext confDir True = do
+  _ <- createDefaultIfDoesntExist confDir
+  newEvalContext confDir
 getEvalContext confDir False = do
-    -- skip `newEvalContext` if the cached copy is still good.
-    let preludeFile = getConfigFile confDir
-    let cacheFile   = getEvalContextFile confDir
-    key <- getKey preludeFile
-    let cache = singletonCache assocCache
-    withPersistentStateT cacheFile [] $ cached cache key
-                                      $ lift $ newEvalContext confDir
+    shouldRecompile <- createDefaultIfDoesntExist confDir
+    if shouldRecompile
+      then newEvalContext confDir
+      else do
+        -- skip `newEvalContext` if the cached copy is still good.
+        let preludeFile = getConfigFile confDir
+        let cacheFile   = getEvalContextFile confDir
+        key <- getKey preludeFile
+        let cache = singletonCache assocCache
+        withPersistentStateT cacheFile [] $ cached cache key
+                                          $ lift $ newEvalContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
@@ -48,7 +65,6 @@ getEvalContext confDir False = do
 -- | Construct an EvalContext by parsing the user prelude.
 newEvalContext :: FilePath -> IO EvalContext
 newEvalContext confDir = do
-    -- currently, only ~/.hawk/prelude.hs is supported.
     let originalPreludePath' = getConfigFile confDir
     
     (canonicalPrelude', moduleName') <- recompileConfig confDir

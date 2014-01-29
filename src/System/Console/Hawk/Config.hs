@@ -71,8 +71,7 @@ defaultPrelude = unlines
 -- | A version of recompileConfig which honors caching.
 recompileConfigIfNeeded :: FilePath -> IO (String,String) -- ^ Maybe (FileName,ModuleName)
 recompileConfigIfNeeded confDir = withLock $ do
-    let dir = getConfigDir confDir
-    createDirectoryIfMissing True dir
+    createDirectoryIfMissing True confDir
     let configFile = getConfigFile confDir
     configFileExists <- doesFileExist configFile
     unless configFileExists $
@@ -104,14 +103,13 @@ recompileConfigIfNeeded confDir = withLock $ do
 -- 
 -- TODO: error handling
 recompileConfig :: FilePath -> IO (String,String)
-recompileConfig confDir = recompileConfig'
-                        (getConfigFile      confDir) 
-                        (getCacheDir        confDir)
-                        (getSourceFile      confDir)
-                        (getExtensionsFile  confDir)
-                        (getModulesFile     confDir)
-                        (getCompiledFile    confDir)
-                        (getConfigInfosFile confDir)
+recompileConfig confDir = recompileConfig' (getConfigFile      confDir) 
+                                           (getCacheDir        confDir)
+                                           (getSourceFile      confDir)
+                                           (getExtensionsFile  confDir)
+                                           (getModulesFile     confDir)
+                                           (getCompiledFile    confDir)
+                                           (getConfigInfosFile confDir)
 
 recompileConfig' :: FilePath -- ^ config file
                  -> FilePath -- ^ cache dir
