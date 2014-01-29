@@ -351,7 +351,7 @@ consumeInt :: Monad m => OptionConsumer m Int
 consumeInt = consumeReadable
 
 
---
+-- | The value assigned to the option, interpreted as a path (String)
 filePath :: OptionType
 filePath = Setting "path"
 

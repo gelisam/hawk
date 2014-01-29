@@ -5,7 +5,7 @@ module System.Console.Hawk.Args
   , InputSource(..), OutputSink(..)
   , InputFormat(..), LineFormat(..)
   , OutputFormat(..), Separator
-  , ExprSpec(..), PreludeSpec(..)
+  , ExprSpec(..) 
   , parseArgs
   , optionsFromSpec
   , notOptionsFromSpec

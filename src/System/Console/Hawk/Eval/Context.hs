@@ -29,15 +29,16 @@ data EvalContext = EvalContext
   } deriving (Eq, Read, Show)
 
 -- | Obtains an EvalContext, either from the cache or from the user prelude.
-getEvalContext :: PreludeSpec -> IO EvalContext
-getEvalContext UseUserPrelude = newEvalContext
-getEvalContext DetectPrelude = do
+getEvalContext :: FilePath -> Bool -> IO EvalContext
+getEvalContext confDir True = newEvalContext confDir
+getEvalContext confDir False = do
     -- skip `newEvalContext` if the cached copy is still good.
-    preludeFile <- getConfigFile
-    cacheFile <- getEvalContextFile
+    let preludeFile = getConfigFile confDir
+    let cacheFile   = getEvalContextFile confDir
     key <- getKey preludeFile
     let cache = singletonCache assocCache
-    withPersistentStateT cacheFile [] $ cached cache key $ lift newEvalContext
+    withPersistentStateT cacheFile [] $ cached cache key
+                                      $ lift $ newEvalContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
@@ -45,12 +46,12 @@ getEvalContext DetectPrelude = do
         return (f, modifiedTime, fileSize)
 
 -- | Construct an EvalContext by parsing the user prelude.
-newEvalContext :: IO EvalContext
-newEvalContext = do
+newEvalContext :: FilePath -> IO EvalContext
+newEvalContext confDir = do
     -- currently, only ~/.hawk/prelude.hs is supported.
-    originalPreludePath' <- getConfigFile
+    let originalPreludePath' = getConfigFile confDir
     
-    (canonicalPrelude', moduleName') <- recompileConfig
+    (canonicalPrelude', moduleName') <- recompileConfig confDir
     extensions' <- readExtensions originalPreludePath'
     modules' <- readModules extensions' originalPreludePath'
     

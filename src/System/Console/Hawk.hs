@@ -202,7 +202,7 @@ hawk opts prelude modules extensions userExpr = do
 -- | Same as if the given arguments were passed to Hawk on the command-line.
 processArgs :: [String] -> IO ()
 processArgs args = do
-    r <- runWarnings $ parseArgs args
+    r <- runWarningsIO $ parseArgs args
     case r of
       Left err -> failHelp err
       Right spec -> processSpec spec
@@ -227,11 +227,11 @@ applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let spec = Apply e i o
     let opts = optionsFromSpec spec
+    let configDir = userConfigDirectory e
     
-    moduleFile <- getModulesFile
-    let opts' = opts { optModuleFile = Just moduleFile }
+    let opts' = opts { optModuleFile = Just (getModulesFile configDir) }
     
-    evalContext <- Context.getEvalContext (userPrelude e)
+    evalContext <- Context.getEvalContext configDir (recompilePrelude e)
     
     let os = opts'
     let prelude = configFromContext evalContext

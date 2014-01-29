@@ -61,20 +61,11 @@ type Separator = ByteString
 
 
 data ExprSpec = ExprSpec
-    { userPrelude :: PreludeSpec
+    { userConfigDirectory :: FilePath
+    , recompilePrelude :: Bool
     , userExpression :: String
     }
   deriving (Show, Eq)
-
-data PreludeSpec
-    = UseUserPrelude
-    -- | UsePreludeFile FilePath  -- we might want to allow the user to
-                                  -- use a prelude other than in ~/.hawk
-    -- | UsePreludeText String  -- we might want to accept prelude literals
-                                -- in the future, to simplify testing
-    | DetectPrelude  -- cached if possible, else user
-  deriving (Show, Eq)
-
 
 defaultInputSpec, noInput :: InputSpec
 defaultInputSpec = InputSpec UseStdin defaultInputFormat

@@ -69,21 +69,21 @@ defaultPrelude = unlines
 -- TODO: error handling
 
 -- | A version of recompileConfig which honors caching.
-recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
-recompileConfigIfNeeded = withLock $ do
-    dir <- getConfigDir
+recompileConfigIfNeeded :: FilePath -> IO (String,String) -- ^ Maybe (FileName,ModuleName)
+recompileConfigIfNeeded confDir = withLock $ do
+    let dir = getConfigDir confDir
     createDirectoryIfMissing True dir
-    configFile <- getConfigFile
+    let configFile = getConfigFile confDir
     configFileExists <- doesFileExist configFile
     unless configFileExists $
         writeFile configFile defaultPrelude
-    configInfosFile <- getConfigInfosFile
+    let configInfosFile   = getConfigInfosFile confDir
     configInfosExists <- doesFileExist configInfosFile
     if configInfosExists
       then do
           configInfos <- lines <$> readFile configInfosFile
           if length configInfos /= 3 -- error
-            then recompileConfig
+            then recompileConfig confDir
             else do
                 let [fileName,moduleName,rawLastModTime] = configInfos
                 let hiFile = replaceExtension fileName ".hi"
@@ -94,31 +94,24 @@ recompileConfigIfNeeded = withLock $ do
                 currModTime <- getModificationTime configFile
                 if hiFileDoesntExist || objFileDoesntExist 
                                      || currModTime > lastModTime
-                 then recompileConfig
+                 then recompileConfig confDir
                  else return (fileName,moduleName)
-      else recompileConfig
+      else recompileConfig confDir
 
 
 -- | The path to the (cleaned-up) prelude file, and its module name.
 --   We need both in order for hint to import its contents.
 -- 
 -- TODO: error handling
-recompileConfig :: IO (String,String)
-recompileConfig = do
-  configFile <- getConfigFile
-  cacheDir <- getCacheDir
-  sourceFile <- getSourceFile
-  extensionFile <- getExtensionsFile
-  modulesFile <- getModulesFile
-  compiledFile <- getCompiledFile
-  configInfosFile <- getConfigInfosFile
-  recompileConfig' configFile
-                   cacheDir
-                   sourceFile
-                   extensionFile
-                   modulesFile
-                   compiledFile
-                   configInfosFile
+recompileConfig :: FilePath -> IO (String,String)
+recompileConfig confDir = recompileConfig'
+                        (getConfigFile      confDir) 
+                        (getCacheDir        confDir)
+                        (getSourceFile      confDir)
+                        (getExtensionsFile  confDir)
+                        (getModulesFile     confDir)
+                        (getCompiledFile    confDir)
+                        (getConfigInfosFile confDir)
 
 recompileConfig' :: FilePath -- ^ config file
                  -> FilePath -- ^ cache dir
