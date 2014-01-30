@@ -168,3 +168,88 @@ runUncertainIO u = do
 -- *** Exception: ExitFailure 1
 runUncertain :: Uncertain a -> IO a
 runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
+
+
+-- | Upgrade an `IO a -> IO a` wrapping function into a variant which uses
+--   `UncertainT IO` instead of `IO`.
+-- 
+-- >>> :{
+-- let wrap body = do { putStrLn "before"
+--                    ; r <- body
+--                    ; putStrLn "after"
+--                    ; return r
+--                    }
+-- :}
+-- 
+-- >>> :{
+-- wrap $ do { putStrLn "hello"
+--           ; return 42
+--           }
+-- :}
+-- before
+-- hello
+-- after
+-- 42
+-- 
+-- >>> :{
+-- runUncertainIO $ wrapUncertain wrap
+--                $ do { lift $ putStrLn "hello"
+--                     ; warn "be careful!"
+--                     ; return 42
+--                     }
+-- :}
+-- before
+-- hello
+-- after
+-- warning: be careful!
+-- 42
+wrapUncertain :: (Monad m, Monad m')
+              => (forall a. m a -> m' a)
+              -> (UncertainT m b -> UncertainT m' b)
+wrapUncertain wrap body = wrapUncertainArg wrap' body'
+  where
+    wrap' body' = wrap $ body' ()
+    body' () = body
+
+-- | A version of `wrapUncertain` for wrapping functions of type
+--   `(Handle -> IO a) -> IO a`.
+-- 
+-- >>> :{
+-- let wrap body = do { putStrLn "before"
+--                    ; r <- body 42
+--                    ; putStrLn "after"
+--                    ; return r
+--                    }
+-- :}
+-- 
+-- >>> :{
+-- wrap $ \x -> do { putStrLn "hello"
+--                 ; return (x + 1)
+--                 }
+-- :}
+-- before
+-- hello
+-- after
+-- 43
+-- 
+-- >>> :{
+-- runUncertainIO $ wrapUncertainArg wrap
+--                $ \x -> do { lift $ putStrLn "hello"
+--                           ; warn "be careful!"
+--                           ; return (x + 1)
+--                           }
+-- :}
+-- before
+-- hello
+-- after
+-- warning: be careful!
+-- 43
+wrapUncertainArg :: (Monad m, Monad m')
+                 => (forall a. (v -> m a) -> m' a)
+                 -> ((v -> UncertainT m b) -> UncertainT m' b)
+wrapUncertainArg wrap body = do
+    (r, ws) <- lift $ wrap $ runUncertainT . body
+    
+    -- repackage the warnings and errors
+    mapM_ warn ws
+    fromRightM r
