@@ -4,16 +4,20 @@
 module System.Console.Hawk.Eval.Context
   ( EvalContext(..)
   , getEvalContext
+  , createDefaultContextDir
+  , findContextFromCurrDirOrDefault
+  , checkContextDir
   ) where
 
 import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
+import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
 import System.IO
 
+import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
-import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Config
 import System.Console.Hawk.Config.Base
 import System.Console.Hawk.Config.Cache
@@ -29,33 +33,25 @@ data EvalContext = EvalContext
   , modules :: [QualifiedModule]
   } deriving (Eq, Read, Show)
 
--- | Create a default context if it doesn't exists
-createDefaultIfDoesntExist :: FilePath -> IO Bool
-createDefaultIfDoesntExist dir = do
-  dirExists <- doesDirectoryExist dir
-  unless dirExists $ createDirectoryIfMissing True dir
+-- | Create a default context
+createDefaultContextDir :: FilePath -> IO ()
+createDefaultContextDir dir = do
+  createDirectoryIfMissing True dir
   let preludeFile = getConfigFile dir
   preludeExists <- doesFileExist preludeFile
   unless preludeExists $ writeFile preludeFile defaultPrelude
-  return $ not dirExists || not preludeExists
 
 -- | Obtains an EvalContext, either from the cache or from the user prelude.
 getEvalContext :: FilePath -> Bool -> IO EvalContext
-getEvalContext confDir True = do
-  _ <- createDefaultIfDoesntExist confDir
-  newEvalContext confDir
+getEvalContext confDir True = newEvalContext confDir
 getEvalContext confDir False = do
-    shouldRecompile <- createDefaultIfDoesntExist confDir
-    if shouldRecompile
-      then newEvalContext confDir
-      else do
-        -- skip `newEvalContext` if the cached copy is still good.
-        let preludeFile = getConfigFile confDir
-        let cacheFile   = getEvalContextFile confDir
-        key <- getKey preludeFile
-        let cache = singletonCache assocCache
-        withPersistentStateT cacheFile [] $ cached cache key
-                                          $ lift $ newEvalContext confDir
+  -- skip `newEvalContext` if the cached copy is still good.
+  let preludeFile = getConfigFile confDir
+  let cacheFile   = getEvalContextFile confDir
+  key <- getKey preludeFile
+  let cache = singletonCache assocCache
+  withPersistentStateT cacheFile [] $ cached cache key
+                                    $ lift $ newEvalContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
@@ -86,3 +82,77 @@ newEvalContext confDir = do
            , extensions = extensions'
            , modules = modules'
            }
+
+-- | Find a project context
+findContext :: FilePath -> IO (Maybe FilePath)
+findContext startDir = do
+    let validConfigDirs = map (</> ".hawk") $ takeWhile (not . null)
+                                            $ iterate (init . dropFileName) startDir
+    foldM (maybe validDirOrNothing (const . return . Just)) Nothing validConfigDirs
+  where
+    validDirOrNothing dir = do
+      dirExists <- doesDirectoryExist dir
+      if dirExists
+       then do
+         permissions <- getPermissions dir
+         if writable permissions && searchable permissions
+           then do
+             prelude <- findFile [dir] "prelude.hs"
+             case prelude of
+               Nothing -> return Nothing
+               Just f -> do
+                 preludePermissions <- getPermissions f
+                 if System.EasyFile.readable preludePermissions
+                   then return $ Just dir
+                   else return Nothing
+           else return Nothing
+       else return Nothing
+
+-- | Find a project context starting from the current working directory
+findContextFromCurrDir :: IO (Maybe FilePath)
+findContextFromCurrDir = getCurrentDirectory >>= findContext
+
+-- | Find a project context or return the default
+findContextFromCurrDirOrDefault :: IO FilePath
+findContextFromCurrDirOrDefault = do
+    maybeProjectConfigDir <- findContextFromCurrDir
+    case maybeProjectConfigDir of
+      Nothing -> getDefaultConfigDir
+      Just projectConfigDir -> return projectConfigDir
+
+-- | Check if a directory is a valid context and return true if the directory
+-- doesn't exist and the parent has the right permissions
+checkContextDir :: (MonadIO m) => FilePath -> UncertainT m Bool
+checkContextDir dir = do
+    fileExists <- io $ doesFileExist dir
+    when fileExists $ fail $ concat [
+       "config directory '",dir,"' cannot be"
+      ,"created because a file with the same"
+      ,"name exists"]
+    dirExists <- io $ doesDirectoryExist dir
+    if dirExists
+      then do
+        permissions <- io $ getPermissions dir
+        when (not $ writable permissions) $ fail $ concat [
+           "cannot use '",dir,"' as config directory because it is not "
+          ,"writable"]
+        when (not $ searchable permissions) $ fail $ concat [
+           "cannot use '",dir,"' as config directory because it is not "
+          ,"searchable"]
+        return False
+      else do
+        -- if the directory doesn't exist then its parent must be writable
+        -- and searchable
+        let parent = case takeDirectory dir of {"" -> ".";p -> p}
+        permissions <- io $ getPermissions parent
+        when (not $ writable permissions) $ fail $ concat[
+           "cannot create config directory '",dir,"' because the parent "
+          ," directory is not writable (",show permissions,")"]
+        when (not $ searchable permissions) $ fail $ concat[
+           "cannot create config directory '",dir,"' because the parent "
+          ," directory is not searchable (",show permissions,")"]
+        warn $ concat ["directory '",dir,"' doesn't exist, creating a "
+                      ,"default one"]
+        return True
+  where
+    io = lift . liftIO

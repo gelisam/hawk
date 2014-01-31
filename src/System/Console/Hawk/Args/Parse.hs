@@ -11,8 +11,7 @@ import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Args.Option as Option
 import           System.Console.Hawk.Args.Option (HawkOption, options)
 import           System.Console.Hawk.Args.Spec
-import           System.Console.Hawk.Config.Cache
-import           System.EasyFile
+import           System.Console.Hawk.Eval.Context
 
 -- $setup
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
@@ -145,43 +144,19 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- "L.head"
 -- "fakedir"
 -- True
--- warning: directory 'fakedir' doesn't exist, creating a default one
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
 exprSpec = ExprSpec <$> configDir <*> recompile <*> expr
   where
     configDir = do
-      defaultConfigDir <- lift (liftIO getDefaultConfigDir)
-      consumeLast Option.ConfigDirectory defaultConfigDir consumeConfigDir
-    consumeConfigDir = consumeFilePath $ \dir -> do
-          fileExists <- lift $ liftIO $ doesFileExist dir
-          when fileExists $ fail $ concat [
-             "config directory '",dir,"' cannot be"
-            ,"created because a file with the same"
-            ,"name exists"]
-          dirExists <- lift $ liftIO $ doesDirectoryExist dir
-          if dirExists
-            then do
-              permissions <- lift $ liftIO $ getPermissions dir
-              when (not $ writable permissions) $ fail $ concat [
-                 "cannot use '",dir,"' as config directory because it is not "
-                ,"writable"]
-              when (not $ searchable permissions) $ fail $ concat [
-                 "cannot use '",dir,"' as config directory because it is not "
-                ,"searchable"]
-            else do
-              -- if the directory doesn't exist then its parent must be writable
-              -- and searchable
-              let parent = case takeDirectory dir of {"" -> ".";p -> p}
-              permissions <- lift $ liftIO $ getPermissions parent
-              when (not $ writable permissions) $ fail $ concat[
-                 "cannot create config directory '",dir,"' because the parent "
-                ," directory is not writable (",show permissions,")"]
-              when (not $ searchable permissions) $ fail $ concat[
-                 "cannot create config directory '",dir,"' because the parent "
-                ," directory is not searchable (",show permissions,")"]
-              warn $ concat ["directory '",dir,"' doesn't exist, creating a "
-                            ,"default one"]
+      dir <- consumeLast Option.ConfigDirectory "" consumeString
+      if null dir
+        then io findContextFromCurrDirOrDefault
+        else do
+             mustCreate <- liftUncertain (checkContextDir dir)
+             when mustCreate (io $ createDefaultContextDir dir)
+             return dir
+    io = lift . liftIO
     recompile = consumeLast Option.Recompile False consumeFlag
     expr = do
         r <- consumeExtra consumeString

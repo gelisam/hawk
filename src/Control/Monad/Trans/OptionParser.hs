@@ -85,6 +85,8 @@ mapOptionParserT f = OptionParserT
                    . (mapStateT . mapStateT . mapUncertainT) f
                    . unOptionParserT
 
+liftUncertain :: (Monad m) => UncertainT m a -> OptionParserT o m a
+liftUncertain = OptionParserT . lift . lift
 
 -- | Convert an option into the structure `getOpt` expects.
 optDescr :: forall o. Option o => o -> GetOpt.OptDescr (o, Maybe String)
@@ -356,7 +358,7 @@ filePath :: OptionType
 filePath = Setting "path"
 
 -- | The value assigned to the option if the check function doesn't fail with
--- an error.
+-- an error. The check functions must return a file path.
 --
 -- >>> import Control.Monad
 -- >>> import System.EasyFile (doesDirectoryExist)
@@ -364,9 +366,9 @@ filePath = Setting "path"
 -- >>> let inputDir = const filePath
 -- >>> :{
 --   let checkDir f e d = do
---      exists <- lift (f d)
---      if exists then return ()  :: UncertainT IO ()
---                else fail (e d)
+--      c <- lift (f d)
+--      if c then return d  :: UncertainT IO FilePath
+--           else fail (e d)
 -- :}
 --
 -- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
@@ -380,11 +382,8 @@ filePath = Setting "path"
 -- error: . exists
 -- *** Exception: ExitFailure 1
 consumeFilePath :: MonadIO m
-                => (FilePath -> UncertainT m ()) -> OptionConsumer m String
-consumeFilePath check input = do
-  fp <- consumeString input
-  check fp
-  return fp
+                => (FilePath -> UncertainT m FilePath) -> OptionConsumer m String
+consumeFilePath check input = consumeString input >>= check >>= return
 
 
 -- | All the occurences of a given option.
