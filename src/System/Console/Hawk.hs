@@ -192,6 +192,8 @@ hawk opts prelude modules extensions userExpr = do
                               (sc8pack $ P.show linesDelim)
                               (sc8pack $ P.show wordsDelim)
           
+          -- we cannot use any unqualified symbols in the user expression,
+          -- because we don't know which modules the user prelude will import.
           qualify :: String -> String -> String
           qualify moduleName = printf "%s.%s" moduleName
           
@@ -220,8 +222,15 @@ wrapExpr :: String -> ExprSpec -> ExprSpec
 wrapExpr f e = e'
   where
     u = userExpression e
-    u' = printf "%s (%s)" f u
+    u' = printf "%s (%s)" (prel f) u
     e' = e { userExpression = u' }
+    
+    -- we cannot use any unqualified symbols in the user expression,
+    -- because we don't know which modules the user prelude will import.
+    qualify :: String -> String -> String
+    qualify moduleName = printf "%s.%s" moduleName
+    
+    prel = qualify "Prelude"
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
