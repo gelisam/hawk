@@ -16,7 +16,7 @@
 -- | As the user tunes his expression, hawk's loading time gets in the way.
 --   To shorten it, we cache the information we need from the user prelude.
 module System.Console.Hawk.Config.Cache
-    ( getConfigDir
+    ( getDefaultConfigDir
     , getConfigFile
     , getCacheDir
     , getConfigInfosFile
@@ -47,44 +47,37 @@ import System.Console.Hawk.Config.Base
 (<//>) :: IO FilePath -> FilePath -> IO FilePath
 lpath <//> rpath = (</> rpath) <$> lpath
 
--- | Looks less awkward on the right.
--- 
--- >>> return "myfile" <++> ".txt"
--- "myfile.txt"
-(<++>) :: IO String -> String -> IO String
-lstr <++> rstr = (++ rstr) <$> lstr
+-- | Default configuration directory
+getDefaultConfigDir :: IO FilePath
+getDefaultConfigDir = getHomeDirectory <//> ".hawk"
+
+getConfigFile :: FilePath -> FilePath
+getConfigFile = (</> "prelude.hs")
+
+getCacheDir :: FilePath -> FilePath
+getCacheDir = (</> "cache")
+
+getConfigInfosFile :: FilePath -> FilePath
+getConfigInfosFile = (</> "configInfos") . getCacheDir
+
+getEvalContextFile :: FilePath -> FilePath
+getEvalContextFile = (</> "evalContext") . getCacheDir
+
+getModulesFile :: FilePath -> FilePath
+getModulesFile = (</> "modules") . getCacheDir
+
+getExtensionsFile :: FilePath -> FilePath
+getExtensionsFile = (</> "extensions") . getCacheDir
 
 
-getConfigDir :: IO FilePath
-getConfigDir = getHomeDirectory <//> ".hawk"
+getSourceBasename :: FilePath -> String
+getSourceBasename = (</> "cached_prelude") . getCacheDir
 
-getConfigFile :: IO FilePath
-getConfigFile = getConfigDir <//> "prelude.hs"
-
-getCacheDir :: IO FilePath
-getCacheDir = getConfigDir <//> "cache"
-
-getConfigInfosFile :: IO FilePath
-getConfigInfosFile = getCacheDir <//> "configInfos"
-
-getEvalContextFile :: IO FilePath
-getEvalContextFile = getCacheDir <//> "evalContext"
-
-getModulesFile :: IO FilePath
-getModulesFile = getCacheDir <//> "modules"
-
-getExtensionsFile :: IO FilePath
-getExtensionsFile = getCacheDir <//> "extensions"
-
-
-getSourceBasename :: IO String
-getSourceBasename = getCacheDir <//> "cached_prelude"
-
-getCompiledFile :: IO String
+getCompiledFile :: FilePath -> String
 getCompiledFile = getSourceBasename
 
-getSourceFile :: IO String
-getSourceFile = getSourceBasename <++> ".hs"
+getSourceFile :: FilePath -> String
+getSourceFile = (++ ".hs") . getSourceBasename
 
 
 cacheExtensions :: FilePath

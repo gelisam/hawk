@@ -85,6 +85,8 @@ mapOptionParserT f = OptionParserT
                    . (mapStateT . mapStateT . mapUncertainT) f
                    . unOptionParserT
 
+liftUncertain :: (Monad m) => UncertainT m a -> OptionParserT o m a
+liftUncertain = OptionParserT . lift . lift
 
 -- | Convert an option into the structure `getOpt` expects.
 optDescr :: forall o. Option o => o -> GetOpt.OptDescr (o, Maybe String)
@@ -349,6 +351,39 @@ int = readable "int"
 -- 42
 consumeInt :: Monad m => OptionConsumer m Int
 consumeInt = consumeReadable
+
+
+-- | The value assigned to the option, interpreted as a path (String)
+filePath :: OptionType
+filePath = Setting "path"
+
+-- | The value assigned to the option if the check function doesn't fail with
+-- an error. The check functions must return a file path.
+--
+-- >>> import Control.Monad
+-- >>> import System.EasyFile (doesDirectoryExist)
+-- >>> let testIO args tp p = runUncertainIO $ runOptionParserWith head id (const [""]) tp ["input-dir"] p args
+-- >>> let inputDir = const filePath
+-- >>> :{
+--   let checkDir f e d = do
+--      c <- lift (f d)
+--      if c then return d  :: UncertainT IO FilePath
+--           else fail (e d)
+-- :}
+--
+-- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
+-- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
+-- >>> let consumeLastInputDir = consumeLast "input-dir" "error" :: OptionConsumer IO String -> OptionParserT String IO String
+-- >>> let consumeExistingDir    = consumeLastInputDir (consumeFilePath dirExists)
+-- >>> let consumeNotExistingDir = consumeLastInputDir (consumeFilePath dirDoesntExist)
+-- >>> testIO ["--input-dir=."] inputDir consumeExistingDir
+-- "."
+-- >>> testIO ["--input-dir=."] inputDir consumeNotExistingDir
+-- error: . exists
+-- *** Exception: ExitFailure 1
+consumeFilePath :: MonadIO m
+                => (FilePath -> UncertainT m FilePath) -> OptionConsumer m String
+consumeFilePath check input = consumeString input >>= check >>= return
 
 
 -- | All the occurences of a given option.

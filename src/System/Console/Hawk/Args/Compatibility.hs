@@ -45,11 +45,10 @@ updateOutputOptions (OutputSpec _ format) = go format
                                         }
 
 updateExprOptions :: ExprSpec -> Options -> Options
-updateExprOptions (ExprSpec p _) = updatePreludeOptions p
+updateExprOptions (ExprSpec _ b _) = updatePreludeOptions b
 
-updatePreludeOptions :: PreludeSpec -> Options -> Options
-updatePreludeOptions UseUserPrelude     o = o { optRecompile = True }
-updatePreludeOptions DetectPrelude      o = o
+updatePreludeOptions :: Bool -> Options -> Options
+updatePreludeOptions b o = o { optRecompile = b }
 
 
 -- | The "not option"s are the extra string arguments after all the flags.

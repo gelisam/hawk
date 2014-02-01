@@ -3,13 +3,15 @@
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
+import Control.Monad
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser
 import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Args.Option as Option
 import           System.Console.Hawk.Args.Option (HawkOption, options)
-import System.Console.Hawk.Args.Spec
+import           System.Console.Hawk.Args.Spec
+import           System.Console.Hawk.Eval.Context
 
 -- $setup
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
@@ -123,7 +125,8 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
 --                       ; lift $ print $ userExpression e
---                       ; lift $ print $ userPrelude e
+--                       ; lift $ print $ userConfigDirectory e
+--                       ; lift $ print $ recompilePrelude e
 --                       }
 -- :}
 -- 
@@ -131,20 +134,30 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- error: missing user expression
 -- *** Exception: ExitFailure 1
 -- 
--- >>> test ["-D;", "-d", "-a", "L.reverse"]
+-- >>> test ["-D;", "-d", "-a", "L.reverse","-c","fakedir"]
 -- "L.reverse"
--- DetectPrelude
+-- "fakedir"
+-- False
+-- warning: directory 'fakedir' doesn't exist, creating a default one
 -- 
--- >>> test ["-r", "-m", "L.head", "file.in"]
+-- >>> test ["-r", "-m", "L.head", "file.in","-c","fakedir"]
 -- "L.head"
--- UseUserPrelude
-exprSpec :: (Functor m, Monad m)
+-- "fakedir"
+-- True
+exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> prelude <*> expr
+exprSpec = ExprSpec <$> configDir <*> recompile <*> expr
   where
-    prelude = do
-        r <- consumeLast Option.Recompile False consumeFlag
-        return $ if r then UseUserPrelude else DetectPrelude
+    configDir = do
+      dir <- consumeLast Option.ConfigDirectory "" consumeString
+      if null dir
+        then io findContextFromCurrDirOrDefault
+        else do
+             mustCreate <- liftUncertain (checkContextDir dir)
+             when mustCreate (io $ createDefaultContextDir dir)
+             return dir
+    io = lift . liftIO
+    recompile = consumeLast Option.Recompile False consumeFlag
     expr = do
         r <- consumeExtra consumeString
         case r of
@@ -157,7 +170,7 @@ exprSpec = ExprSpec <$> prelude <*> expr
 -- TODO: complain if some arguments are unused (except perhaps "-d" and "-D").
 -- 
 -- >>> :{
--- let test args = do { spec <- runUncertain $ parseArgs args
+-- let test args = do { spec <- runUncertainIO $ parseArgs args
 --                    ; case spec of
 --                        Help        -> putStrLn "Help"
 --                        Version     -> putStrLn "Version"
@@ -192,7 +205,7 @@ exprSpec = ExprSpec <$> prelude <*> expr
 -- ("L.head",InputFile "file.in")
 -- RawStream
 -- ("\n"," ")
-parseArgs :: [String] -> Uncertain HawkSpec
+parseArgs :: (Functor m,MonadIO m) => [String] -> UncertainT m HawkSpec
 parseArgs [] = return Help
 parseArgs args = runOptionParserT options parser args
   where
@@ -207,8 +220,8 @@ parseArgs args = runOptionParserT options parser args
             , (Option.Map,     map')
             ]
     
-    help, version, eval, apply, map' :: CommonDelimiters
-                                     -> OptionParser HawkOption HawkSpec
+    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonDelimiters
+                                     -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version
     eval    c = Eval  <$> exprSpec <*>                 outputSpec c
