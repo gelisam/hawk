@@ -11,7 +11,7 @@ import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Args.Option as Option
 import           System.Console.Hawk.Args.Option (HawkOption, options)
 import           System.Console.Hawk.Args.Spec
-import           System.Console.Hawk.Eval.Context
+import           System.Console.Hawk.Context.Dir
 
 -- $setup
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
