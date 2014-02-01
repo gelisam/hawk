@@ -79,6 +79,9 @@ instance Monad m => Monad (OptionParserT o m) where
 instance MonadTrans (OptionParserT o) where
   lift = OptionParserT . lift . lift . lift
 
+instance MonadIO m => MonadIO (OptionParserT o m) where
+  liftIO = lift . liftIO
+
 mapOptionParserT :: (forall a. m a -> m' a)
                  -> OptionParserT o m b -> OptionParserT o m' b
 mapOptionParserT f = OptionParserT
