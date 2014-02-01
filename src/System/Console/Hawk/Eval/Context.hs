@@ -33,6 +33,7 @@ getEvalContext :: PreludeSpec -> IO EvalContext
 getEvalContext UseUserPrelude = newEvalContext
 getEvalContext DetectPrelude = do
     -- skip `newEvalContext` if the cached copy is still good.
+    createPreludeIfNeeded
     preludeFile <- getConfigFile
     cacheFile <- getEvalContextFile
     key <- getKey preludeFile

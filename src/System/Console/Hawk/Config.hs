@@ -15,9 +15,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | Hawk's configuration is essentially defined by the user prelude.
 module System.Console.Hawk.Config (
-      defaultModules
+      createPreludeIfNeeded
+    , defaultModules
     , defaultPrelude
-    , recompileConfigIfNeeded
     , getExtensionsFile
     , getModulesFile
     , recompileConfig
@@ -68,35 +68,14 @@ defaultPrelude = unlines
 -- maybe (file name, module name)
 -- TODO: error handling
 
--- | A version of recompileConfig which honors caching.
-recompileConfigIfNeeded :: IO (String,String) -- ^ Maybe (FileName,ModuleName)
-recompileConfigIfNeeded = withLock $ do
+createPreludeIfNeeded :: IO ()
+createPreludeIfNeeded = do
     dir <- getConfigDir
     createDirectoryIfMissing True dir
     configFile <- getConfigFile
     configFileExists <- doesFileExist configFile
     unless configFileExists $
         writeFile configFile defaultPrelude
-    configInfosFile <- getConfigInfosFile
-    configInfosExists <- doesFileExist configInfosFile
-    if configInfosExists
-      then do
-          configInfos <- lines <$> readFile configInfosFile
-          if length configInfos /= 3 -- error
-            then recompileConfig
-            else do
-                let [fileName,moduleName,rawLastModTime] = configInfos
-                let hiFile = replaceExtension fileName ".hi"
-                hiFileDoesntExist <- not <$> doesFileExist hiFile
-                let objFile = replaceExtension fileName ".o"
-                objFileDoesntExist <- not <$> doesFileExist objFile
-                let lastModTime = (read rawLastModTime :: UTCTime)
-                currModTime <- getModificationTime configFile
-                if hiFileDoesntExist || objFileDoesntExist 
-                                     || currModTime > lastModTime
-                 then recompileConfig
-                 else return (fileName,moduleName)
-      else recompileConfig
 
 
 -- | The path to the (cleaned-up) prelude file, and its module name.
