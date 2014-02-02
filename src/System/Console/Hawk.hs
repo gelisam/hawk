@@ -53,7 +53,7 @@ import System.Console.Hawk.Args.Spec
 import qualified System.Console.Hawk.Context as Context
 import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Sandbox
-import System.Console.Hawk.Config
+import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO

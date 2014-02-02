@@ -15,10 +15,10 @@ import System.IO
 import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
-import System.Console.Hawk.Config
-import System.Console.Hawk.Config.Base
-import System.Console.Hawk.Config.Cache
-import System.Console.Hawk.Config.Parse
+import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.UserPrelude.Base
+import System.Console.Hawk.UserPrelude.Cache
+import System.Console.Hawk.UserPrelude.Parse
 
 
 data EvalContext = EvalContext

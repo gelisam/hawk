@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | In which the user prelude is deconstructed into the parts we care about.
-module System.Console.Hawk.Config.Parse
+module System.Console.Hawk.UserPrelude.Parse
     ( ExtensionName
     , QualifiedModule
     , parseExtensions
@@ -39,7 +39,7 @@ import Language.Haskell.Exts.Syntax
 import System.Exit
 import Text.Printf
 
-import System.Console.Hawk.Config.Base
+import System.Console.Hawk.UserPrelude.Base
 
 
 -- | Our parse methods terminate the program upon failure,

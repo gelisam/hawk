@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | Hawk's configuration is essentially defined by the user prelude.
-module System.Console.Hawk.Config (
+module System.Console.Hawk.UserPrelude (
       defaultModules
     , defaultPrelude
     , getExtensionsFile
@@ -30,11 +30,11 @@ import Control.Monad (when, unless)
 import Data.Time
 import System.EasyFile
 
-import System.Console.Hawk.Config.Base
-import System.Console.Hawk.Config.Cache
-import System.Console.Hawk.Config.Compile
-import System.Console.Hawk.Config.Extend
-import System.Console.Hawk.Config.Parse
+import System.Console.Hawk.UserPrelude.Base
+import System.Console.Hawk.UserPrelude.Cache
+import System.Console.Hawk.UserPrelude.Compile
+import System.Console.Hawk.UserPrelude.Extend
+import System.Console.Hawk.UserPrelude.Parse
 import System.Console.Hawk.Lock
 
 

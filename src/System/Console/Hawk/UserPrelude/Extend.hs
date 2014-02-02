@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | In which the implicit defaults are explicitly added.
-module System.Console.Hawk.Config.Extend
+module System.Console.Hawk.UserPrelude.Extend
     ( extendModules
     , extendSource
     , getModuleName
@@ -29,7 +29,7 @@ import Data.Maybe
 import Data.Monoid ((<>))
 import Text.Printf
 
-import System.Console.Hawk.Config.Base
+import System.Console.Hawk.UserPrelude.Base
 
 -- $setup
 -- >>> let prependBar = unlines . map ('|':) . lines

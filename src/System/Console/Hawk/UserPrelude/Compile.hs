@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | The user expression is interpreted, but the user prelude is compiled.
-module System.Console.Hawk.Config.Compile
+module System.Console.Hawk.UserPrelude.Compile
     ( compile
     )
   where

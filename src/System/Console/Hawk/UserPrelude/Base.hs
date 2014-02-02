@@ -12,8 +12,8 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
--- | The types and defaults used by the rest of Config.
-module System.Console.Hawk.Config.Base where
+-- | The types and defaults used by the rest of UserPrelude.
+module System.Console.Hawk.UserPrelude.Base where
 
 import Data.ByteString.Char8
 

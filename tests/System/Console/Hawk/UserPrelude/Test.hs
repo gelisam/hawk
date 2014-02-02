@@ -12,13 +12,13 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-module System.Console.Hawk.Config.Test where
+module System.Console.Hawk.UserPrelude.Test where
 
 import Language.Haskell.Exts.Parser (
     ParseResult (..)
     )
 
-import System.Console.Hawk.Config.Parse (
+import System.Console.Hawk.UserPrelude.Parse (
     parseModules)
 import Test.Hspec 
 

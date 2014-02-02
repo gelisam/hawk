@@ -28,7 +28,7 @@ import Test.HUnit
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
   (hawk)
-import System.Console.Hawk.Config
+import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Options
 import System.Console.Hawk.TestUtils
   (withTempDir')
