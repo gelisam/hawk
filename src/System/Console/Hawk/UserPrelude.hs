@@ -64,9 +64,6 @@ defaultPrelude = unlines
 -- --
 -- From now the code is heavy, it needs a refactoring (renaming)
 
--- maybe (file name, module name)
--- TODO: error handling
-
 -- | The path to the (cleaned-up) prelude file, and its module name.
 --   We need both in order for hint to import its contents.
 -- 
