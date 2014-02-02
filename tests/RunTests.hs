@@ -23,6 +23,7 @@ main :: IO ()
 main = do
     doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
     doctest ["-isrc", "src/Data/Cache.hs"]
+    doctest ["-isrc", "-idist/build/autogen", "src/System/Console/Hawk.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Args/Option.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Args/Parse.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Cache.hs"]
