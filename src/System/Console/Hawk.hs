@@ -240,14 +240,14 @@ applyExpr e i o = do
     
     let opts' = opts { optModuleFile = Just (getModulesFile configDir) }
     
-    evalContext <- Context.getEvalContext configDir (recompilePrelude e)
+    context <- Context.getContext configDir (recompilePrelude e)
     
     let os = opts'
-    let prelude = configFromContext evalContext
+    let prelude = configFromContext context
     
     let file = fileFromInputSource (inputSource i)
-    let extensions = P.map P.read $ Context.extensions evalContext
-    let modules = Context.modules evalContext
+    let extensions = P.map P.read $ Context.extensions context
+    let modules = Context.modules context
     let expr = userExpression e
 
     f <- runUncertainIO $ hawk os prelude modules extensions expr

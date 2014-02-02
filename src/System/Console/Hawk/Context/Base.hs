@@ -2,8 +2,8 @@
 -- | Everything we need to know in order to evaluate a user expression,
 --   except for the user expression itself.
 module System.Console.Hawk.Context.Base
-  ( EvalContext(..)
-  , getEvalContext
+  ( Context(..)
+  , getContext
   ) where
 
 import Control.Monad
@@ -21,7 +21,7 @@ import System.Console.Hawk.UserPrelude.Cache
 import System.Console.Hawk.UserPrelude.Parse
 
 
-data EvalContext = EvalContext
+data Context = Context
   { originalPreludePath :: FilePath
   , canonicalPrelude :: FilePath
   , compiledPrelude :: FilePath
@@ -30,26 +30,26 @@ data EvalContext = EvalContext
   , modules :: [QualifiedModule]
   } deriving (Eq, Read, Show)
 
--- | Obtains an EvalContext, either from the cache or from the user prelude.
-getEvalContext :: FilePath -> Bool -> IO EvalContext
-getEvalContext confDir True = newEvalContext confDir
-getEvalContext confDir False = do
-  -- skip `newEvalContext` if the cached copy is still good.
+-- | Obtains a Context, either from the cache or from the user prelude.
+getContext :: FilePath -> Bool -> IO Context
+getContext confDir True = newContext confDir
+getContext confDir False = do
+  -- skip `newContext` if the cached copy is still good.
   let preludeFile = getUserPreludeFile confDir
-  let cacheFile   = getEvalContextFile confDir
+  let cacheFile   = getContextFile confDir
   key <- getKey preludeFile
   let cache = singletonCache assocCache
   withPersistentStateT cacheFile [] $ cached cache key
-                                    $ lift $ newEvalContext confDir
+                                    $ lift $ newContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
         fileSize <- withFile f ReadMode hFileSize
         return (f, modifiedTime, fileSize)
 
--- | Construct an EvalContext by parsing the user prelude.
-newEvalContext :: FilePath -> IO EvalContext
-newEvalContext confDir = do
+-- | Construct a Context by parsing the user prelude.
+newContext :: FilePath -> IO Context
+newContext confDir = do
     let originalPreludePath' = getUserPreludeFile confDir
     
     (canonicalPrelude', moduleName') <- recompileUserPrelude confDir
@@ -63,7 +63,7 @@ newEvalContext confDir = do
     -- and whether it makes any difference.
     let compiledPrelude' = canonicalPrelude'
     
-    return $ EvalContext
+    return $ Context
            { originalPreludePath = originalPreludePath'
            , canonicalPrelude = canonicalPrelude'
            , compiledPrelude = compiledPrelude'

@@ -1,4 +1,4 @@
--- | Convert new-style EvalContext to old-style Config.
+-- | Convert new-style Context to old-style Config.
 module System.Console.Hawk.Context.Compatibility where
 
 import Control.Arrow
@@ -10,5 +10,5 @@ import System.Console.Hawk.Context.Base
 type Config = (String, String)
 
 
-configFromContext :: EvalContext -> Config
+configFromContext :: Context -> Config
 configFromContext = canonicalPrelude &&& moduleName

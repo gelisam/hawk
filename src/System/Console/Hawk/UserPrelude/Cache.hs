@@ -20,7 +20,7 @@ module System.Console.Hawk.UserPrelude.Cache
     , getUserPreludeFile
     , getCacheDir
     , getConfigInfosFile
-    , getEvalContextFile
+    , getContextFile
     , getExtensionsFile
     , getModulesFile
     , getCompiledFile
@@ -60,8 +60,8 @@ getCacheDir = (</> "cache")
 getConfigInfosFile :: FilePath -> FilePath
 getConfigInfosFile = (</> "configInfos") . getCacheDir
 
-getEvalContextFile :: FilePath -> FilePath
-getEvalContextFile = (</> "evalContext") . getCacheDir
+getContextFile :: FilePath -> FilePath
+getContextFile = (</> "context") . getCacheDir
 
 getModulesFile :: FilePath -> FilePath
 getModulesFile = (</> "modules") . getCacheDir
