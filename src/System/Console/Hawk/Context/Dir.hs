@@ -11,16 +11,10 @@ import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
 import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
-import System.IO
-import Text.Printf
 
 import Control.Monad.Trans.Uncertain
-import Control.Monad.Trans.State.Persistent
-import Data.Cache
 import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
-import System.Console.Hawk.UserPrelude.Parse
 
 
 -- | Create a default context

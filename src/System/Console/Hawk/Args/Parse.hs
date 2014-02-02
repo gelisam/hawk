@@ -3,7 +3,6 @@
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
-import Control.Monad
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser

@@ -6,10 +6,8 @@ module System.Console.Hawk.Context.Base
   , getContext
   ) where
 
-import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
-import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
 import System.IO
 
 import Control.Monad.Trans.Uncertain

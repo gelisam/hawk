@@ -23,11 +23,9 @@ module System.Console.Hawk.UserPrelude (
     , recompileUserPrelude'
 ) where
 
-import Control.Applicative ((<$>))
 import Control.Arrow ((&&&))
-import Control.Monad (when, unless)
+import Control.Monad (when)
 
-import Data.Time
 import System.EasyFile
 
 import System.Console.Hawk.UserPrelude.Base
@@ -35,7 +33,6 @@ import System.Console.Hawk.UserPrelude.Cache
 import System.Console.Hawk.UserPrelude.Compile
 import System.Console.Hawk.UserPrelude.Extend
 import System.Console.Hawk.UserPrelude.Parse
-import System.Console.Hawk.Lock
 
 
 -- | Imported at runtime even if missing from the user prelude.
