@@ -15,9 +15,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | As the user tunes his expression, hawk's loading time gets in the way.
 --   To shorten it, we cache the information we need from the user prelude.
-module System.Console.Hawk.Config.Cache
+module System.Console.Hawk.UserPrelude.Cache
     ( getDefaultConfigDir
-    , getConfigFile
+    , getUserPreludeFile
     , getCacheDir
     , getConfigInfosFile
     , getEvalContextFile
@@ -37,7 +37,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 
-import System.Console.Hawk.Config.Base
+import System.Console.Hawk.UserPrelude.Base
 
 
 -- | Looks less awkward on the right.
@@ -51,8 +51,8 @@ lpath <//> rpath = (</> rpath) <$> lpath
 getDefaultConfigDir :: IO FilePath
 getDefaultConfigDir = getHomeDirectory <//> ".hawk"
 
-getConfigFile :: FilePath -> FilePath
-getConfigFile = (</> "prelude.hs")
+getUserPreludeFile :: FilePath -> FilePath
+getUserPreludeFile = (</> "prelude.hs")
 
 getCacheDir :: FilePath -> FilePath
 getCacheDir = (</> "cache")

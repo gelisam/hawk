@@ -50,10 +50,10 @@ import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Compatibility
 import System.Console.Hawk.Args.Spec
-import qualified System.Console.Hawk.Eval.Context as Context
-import System.Console.Hawk.Eval.Compatibility
+import qualified System.Console.Hawk.Context as Context
+import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Sandbox
-import System.Console.Hawk.Config
+import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
@@ -63,7 +63,7 @@ import System.Console.Hawk.Version
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
 --   language extensions it specifies.
-initInterpreter :: (String, String) -- ^ config file and module name
+initInterpreter :: (String, String) -- ^ prelude file and module name
                 -> [(String,Maybe String)] -- ^ the modules maybe qualified
                 -> [Extension]
                 -> InterpreterT IO ()
@@ -71,10 +71,10 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
         
         set [languageExtensions := extensions]
 
-        -- load the config file
+        -- load the prelude file
         loadModules [preludeFile]
 
-        -- load the config module plus representable
+        -- load the prelude module plus representable
         setImportsQ $ (preludeModule,Nothing):defaultModules
                                            ++ userModules
 

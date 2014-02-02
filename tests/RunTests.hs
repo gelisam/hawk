@@ -13,7 +13,7 @@
 --   limitations under the License.
 
 import qualified System.Console.Hawk.Representable.Test as ReprTest
-import qualified System.Console.Hawk.Config.Test as ConfigTest
+import qualified System.Console.Hawk.UserPrelude.Test as PreludeTest
 import qualified System.Console.Hawk.Test as HawkTest
 
 import Test.DocTest (doctest)
@@ -25,14 +25,14 @@ main = do
     doctest ["-isrc", "src/Data/Cache.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Args/Option.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Args/Parse.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Config/Cache.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Config/Extend.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Config/Parse.hs"]
+    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Cache.hs"]
+    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Extend.hs"]
+    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Parse.hs"]
     doctest ["-isrc", "src/System/Console/Hawk/Options.hs"]
     doctest ["-isrc", "src/Control/Monad/Trans/Uncertain.hs"]
     doctest ["-isrc", "src/Control/Monad/Trans/OptionParser.hs"]
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
-        ConfigTest.spec
+        PreludeTest.spec
     HawkTest.run

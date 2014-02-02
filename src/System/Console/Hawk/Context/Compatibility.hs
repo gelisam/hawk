@@ -1,9 +1,9 @@
 -- | Convert new-style EvalContext to old-style Config.
-module System.Console.Hawk.Eval.Compatibility where
+module System.Console.Hawk.Context.Compatibility where
 
 import Control.Arrow
 
-import System.Console.Hawk.Eval.Context
+import System.Console.Hawk.Context.Base
 
 
 -- cleaned-up prelude file, module name
