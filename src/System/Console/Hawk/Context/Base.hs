@@ -35,7 +35,7 @@ data Context = Context
 getContext :: FilePath -> Bool -> IO Context
 getContext confDir True = newContext confDir
 getContext confDir False = do
-  createDefaultContextDir confDir
+  runUncertainIO $ createDefaultContextDir confDir
   -- skip `newContext` if the cached copy is still good.
   let preludeFile = getUserPreludeFile confDir
   let cacheFile   = getContextFile confDir
