@@ -17,7 +17,7 @@
 --   To shorten it, we cache the information we need from the user prelude.
 module System.Console.Hawk.UserPrelude.Cache
     ( getDefaultConfigDir
-    , getConfigFile
+    , getUserPreludeFile
     , getCacheDir
     , getConfigInfosFile
     , getEvalContextFile
@@ -51,8 +51,8 @@ lpath <//> rpath = (</> rpath) <$> lpath
 getDefaultConfigDir :: IO FilePath
 getDefaultConfigDir = getHomeDirectory <//> ".hawk"
 
-getConfigFile :: FilePath -> FilePath
-getConfigFile = (</> "prelude.hs")
+getUserPreludeFile :: FilePath -> FilePath
+getUserPreludeFile = (</> "prelude.hs")
 
 getCacheDir :: FilePath -> FilePath
 getCacheDir = (</> "cache")

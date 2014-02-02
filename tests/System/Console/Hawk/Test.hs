@@ -105,24 +105,15 @@ withDefaultConfiguration f =
     let compiled = dir </> "prelude"
     let configInfoPath = dir </> "configInfo"
 
-    (outputFile,outputModule) <- recompileConfig' prelude
-                                                 cacheDir
-                                                 source
-                                                 extensionsFile
-                                                 modulesFile
-                                                 compiled
-                                                 configInfoPath
+    (outputFile,outputModule) <- recompileUserPrelude' prelude
+                                                       cacheDir
+                                                       source
+                                                       extensionsFile
+                                                       modulesFile
+                                                       compiled
+                                                       configInfoPath
 
     modules <- read <$> readFile modulesFile
     extensions <- read <$> readFile extensionsFile
 
     f (outputFile,outputModule) modules extensions
-
---recompileConfig' :: FilePath -- ^ config file
---                 -> FilePath -- ^ cache dir
---                 -> FilePath -- ^ source file
---                 -> FilePath -- ^ output extensions cache file
---                 -> FilePath -- ^ output modules cache file
---                 -> FilePath -- ^ output compiled file
---                 -> FilePath -- ^ output config info path
---                 -> IO (String,String)

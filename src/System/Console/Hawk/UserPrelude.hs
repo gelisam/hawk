@@ -13,14 +13,14 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
--- | Hawk's configuration is essentially defined by the user prelude.
+-- | An essential part of Hawk's configuration is the user prelude.
 module System.Console.Hawk.UserPrelude (
       defaultModules
     , defaultPrelude
     , getExtensionsFile
     , getModulesFile
-    , recompileConfig
-    , recompileConfig'
+    , recompileUserPrelude
+    , recompileUserPrelude'
 ) where
 
 import Control.Applicative ((<$>))
@@ -67,21 +67,21 @@ defaultPrelude = unlines
 -- maybe (file name, module name)
 -- TODO: error handling
 
--- | A version of recompileConfig which honors caching.
-recompileConfigIfNeeded :: FilePath -> IO (String,String) -- ^ Maybe (FileName,ModuleName)
-recompileConfigIfNeeded confDir = withLock $ do
+-- | A version of recompileUserPrelude which honors caching.
+recompileUserPreludeIfNeeded :: FilePath -> IO (String,String) -- ^ Maybe (FileName,ModuleName)
+recompileUserPreludeIfNeeded confDir = withLock $ do
     createDirectoryIfMissing True confDir
-    let configFile = getConfigFile confDir
-    configFileExists <- doesFileExist configFile
-    unless configFileExists $
-        writeFile configFile defaultPrelude
+    let preludeFile = getUserPreludeFile confDir
+    preludeFileExists <- doesFileExist preludeFile
+    unless preludeFileExists $
+        writeFile preludeFile defaultPrelude
     let configInfosFile   = getConfigInfosFile confDir
     configInfosExists <- doesFileExist configInfosFile
     if configInfosExists
       then do
           configInfos <- lines <$> readFile configInfosFile
           if length configInfos /= 3 -- error
-            then recompileConfig confDir
+            then recompileUserPrelude confDir
             else do
                 let [fileName,moduleName,rawLastModTime] = configInfos
                 let hiFile = replaceExtension fileName ".hi"
@@ -89,50 +89,51 @@ recompileConfigIfNeeded confDir = withLock $ do
                 let objFile = replaceExtension fileName ".o"
                 objFileDoesntExist <- not <$> doesFileExist objFile
                 let lastModTime = (read rawLastModTime :: UTCTime)
-                currModTime <- getModificationTime configFile
+                currModTime <- getModificationTime preludeFile
                 if hiFileDoesntExist || objFileDoesntExist 
                                      || currModTime > lastModTime
-                 then recompileConfig confDir
+                 then recompileUserPrelude confDir
                  else return (fileName,moduleName)
-      else recompileConfig confDir
+      else recompileUserPrelude confDir
 
 -- | The path to the (cleaned-up) prelude file, and its module name.
 --   We need both in order for hint to import its contents.
 -- 
 -- TODO: error handling
-recompileConfig :: FilePath -> IO (String,String)
-recompileConfig confDir = recompileConfig' (getConfigFile      confDir) 
-                                           (getCacheDir        confDir)
-                                           (getSourceFile      confDir)
-                                           (getExtensionsFile  confDir)
-                                           (getModulesFile     confDir)
-                                           (getCompiledFile    confDir)
-                                           (getConfigInfosFile confDir)
+recompileUserPrelude :: FilePath -> IO (String,String)
+recompileUserPrelude confDir
+  = recompileUserPrelude' (getUserPreludeFile confDir) 
+                          (getCacheDir        confDir)
+                          (getSourceFile      confDir)
+                          (getExtensionsFile  confDir)
+                          (getModulesFile     confDir)
+                          (getCompiledFile    confDir)
+                          (getConfigInfosFile confDir)
 
-recompileConfig' :: FilePath -- ^ config file
-                 -> FilePath -- ^ cache dir
-                 -> FilePath -- ^ source file
-                 -> FilePath -- ^ output extensions cache file
-                 -> FilePath -- ^ output modules cache file
-                 -> FilePath -- ^ output compiled file
-                 -> FilePath -- ^ output config info path
-                 -> IO (String,String)
-recompileConfig' configFile
-                 cacheDir
-                 sourceFile
-                 extensionsFile
-                 modulesFile
-                 compiledFile
-                 configInfosFile = do
+recompileUserPrelude' :: FilePath -- ^ prelude file
+                      -> FilePath -- ^ cache dir
+                      -> FilePath -- ^ source file
+                      -> FilePath -- ^ output extensions cache file
+                      -> FilePath -- ^ output modules cache file
+                      -> FilePath -- ^ output compiled file
+                      -> FilePath -- ^ output config info path
+                      -> IO (String,String)
+recompileUserPrelude' preludeFile
+                      cacheDir
+                      sourceFile
+                      extensionsFile
+                      modulesFile
+                      compiledFile
+                      configInfosFile = do
     clean
     createDirectoryIfMissing True cacheDir
     
-    extensions <- readExtensions configFile
-    orig_modules <- readModules extensions configFile
-    orig_source <- readSource configFile
+    extensions <- readExtensions preludeFile
+    orig_modules <- readModules extensions preludeFile
+    orig_source <- readSource preludeFile
     
     let modules = extendModules extensions orig_modules
-    let source = extendSource configFile extensions orig_modules orig_source
+    let source = extendSource preludeFile extensions orig_modules orig_source
     
     cacheExtensions extensionsFile extensions
     cacheModules modulesFile modules
@@ -141,7 +142,7 @@ recompileConfig' configFile
     compile sourceFile compiledFile cacheDir
     
     let moduleName = getModuleName source
-    lastModTime <- getModificationTime configFile
+    lastModTime <- getModificationTime preludeFile
     writeFile configInfosFile $ unlines [sourceFile
                                          ,moduleName
                                          ,show lastModTime]

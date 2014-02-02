@@ -35,7 +35,7 @@ getEvalContext :: FilePath -> Bool -> IO EvalContext
 getEvalContext confDir True = newEvalContext confDir
 getEvalContext confDir False = do
   -- skip `newEvalContext` if the cached copy is still good.
-  let preludeFile = getConfigFile confDir
+  let preludeFile = getUserPreludeFile confDir
   let cacheFile   = getEvalContextFile confDir
   key <- getKey preludeFile
   let cache = singletonCache assocCache
@@ -50,9 +50,9 @@ getEvalContext confDir False = do
 -- | Construct an EvalContext by parsing the user prelude.
 newEvalContext :: FilePath -> IO EvalContext
 newEvalContext confDir = do
-    let originalPreludePath' = getConfigFile confDir
+    let originalPreludePath' = getUserPreludeFile confDir
     
-    (canonicalPrelude', moduleName') <- recompileConfig confDir
+    (canonicalPrelude', moduleName') <- recompileUserPrelude confDir
     extensions' <- readExtensions originalPreludePath'
     modules' <- readModules extensions' originalPreludePath'
     

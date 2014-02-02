@@ -87,13 +87,13 @@ extendSource :: FilePath
              -> [QualifiedModule]
              -> Source
              -> Source
-extendSource configFile extensions modules = addPreludeIfMissing . addModuleIfMissing
+extendSource preludeFile extensions modules = addPreludeIfMissing . addModuleIfMissing
   where
     addModuleIfMissing s = addIfNecessary (hasModuleDecl s)
-                                          (addModuleDecl configFile)
+                                          (addModuleDecl preludeFile)
                                           s
     addPreludeIfMissing = addIfNecessary (importsPrelude extensions modules)
-                                         (addImport "Prelude" configFile)
+                                         (addImport "Prelude" preludeFile)
 
 
 -- | A helper function for conditionally applying a function.
@@ -138,14 +138,14 @@ importsPrelude _ _          | otherwise                             = False
 -- |import Prelude (print)
 -- |main = print 42
 addModuleDecl :: FilePath -> Source -> Source
-addModuleDecl configFile source =
+addModuleDecl preludeFile source =
     let strippedCode = C8.dropWhile isSpace source
         maybePragma = if "{-#" `C8.isPrefixOf` strippedCode
                         then let (pragma,afterPragma) = BSS.breakAfter "#-}" strippedCode
                              in (Just pragma, afterPragma)
                         else (Nothing,strippedCode)
         line :: Int -> ByteString
-        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
+        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show preludeFile
         moduleLine = C8.pack $ unwords ["module", defaultModuleName, "where"]
     in case maybePragma of
         (Nothing,c) -> C8.unlines [moduleLine,line 1,c]
@@ -168,14 +168,14 @@ addModuleDecl configFile source =
 -- |import Prelude (print)
 -- |main = print 42
 addImport :: String -> FilePath -> Source -> Source
-addImport moduleName configFile source =
+addImport moduleName preludeFile source =
     let (premodule,postmodule)   = BSS.breakAfter "module " source
         (prewhere,postwhere)     = BSS.breakAfter " where" postmodule
         (prenewline,postnewline) = BSS.breakAfter "\n" postwhere
         preimports = premodule <> prewhere <> prenewline
         postimports = postnewline
         line :: Int -> ByteString
-        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show configFile
+        line n = C8.pack $ printf "{-# LINE %d %s #-}" n $ show preludeFile
         importLine = C8.pack $ unwords ["import", moduleName]
         m = 1 + C8.length (C8.filter (=='\n') preimports)
         extraLines = C8.unlines [importLine, line m]

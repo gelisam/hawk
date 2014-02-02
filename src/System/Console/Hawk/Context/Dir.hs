@@ -26,7 +26,7 @@ import System.Console.Hawk.UserPrelude.Parse
 createDefaultContextDir :: FilePath -> IO ()
 createDefaultContextDir dir = do
   createDirectoryIfMissing True dir
-  let preludeFile = getConfigFile dir
+  let preludeFile = getUserPreludeFile dir
   preludeExists <- doesFileExist preludeFile
   unless preludeExists $ writeFile preludeFile defaultPrelude
 

@@ -118,7 +118,7 @@ readModules extensions sourceFile = do
     result <- parseModules extensions <$> readFile sourceFile
     getResult sourceFile result
 
--- the configuration format is designed to look like a Haskell module,
+-- the user prelude format is designed to look like a Haskell module,
 -- so we just return the whole file.
 readSource :: FilePath -> IO Source
 readSource = C8.readFile
