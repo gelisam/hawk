@@ -134,15 +134,14 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- error: missing user expression
 -- *** Exception: ExitFailure 1
 -- 
--- >>> test ["-D;", "-d", "-a", "L.reverse","-c","fakedir"]
+-- >>> test ["-D;", "-d", "-a", "L.reverse","-c","somedir"]
 -- "L.reverse"
--- "fakedir"
+-- "somedir"
 -- False
--- warning: directory 'fakedir' doesn't exist, creating a default one
 -- 
--- >>> test ["-r", "-m", "L.head", "file.in","-c","fakedir"]
+-- >>> test ["-r", "-m", "L.head", "file.in","-c","somedir"]
 -- "L.head"
--- "fakedir"
+-- "somedir"
 -- True
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
