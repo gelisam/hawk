@@ -151,12 +151,11 @@ exprSpec = ExprSpec <$> configDir <*> recompile <*> expr
     configDir = do
       dir <- consumeLast Option.ConfigDirectory "" consumeString
       if null dir
-        then io findContextFromCurrDirOrDefault
+        then liftIO findContextFromCurrDirOrDefault
         else do
              mustCreate <- liftUncertain (checkContextDir dir)
-             when mustCreate (io $ createDefaultContextDir dir)
+             when mustCreate (liftIO $ createDefaultContextDir dir)
              return dir
-    io = lift . liftIO
     recompile = consumeLast Option.Recompile False consumeFlag
     expr = do
         r <- consumeExtra consumeString

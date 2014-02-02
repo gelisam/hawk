@@ -69,17 +69,17 @@ findContextFromCurrDirOrDefault = do
 
 -- | Check if a directory is a valid context and return true if the directory
 -- doesn't exist and the parent has the right permissions
-checkContextDir :: (MonadIO m) => FilePath -> UncertainT m Bool
+checkContextDir :: MonadIO m => FilePath -> UncertainT m Bool
 checkContextDir dir = do
-    fileExists <- io $ doesFileExist dir
+    fileExists <- liftIO $ doesFileExist dir
     when fileExists $ fail $ concat [
        "config directory '",dir,"' cannot be"
       ,"created because a file with the same"
       ,"name exists"]
-    dirExists <- io $ doesDirectoryExist dir
+    dirExists <- liftIO $ doesDirectoryExist dir
     if dirExists
       then do
-        permissions <- io $ getPermissions dir
+        permissions <- liftIO $ getPermissions dir
         when (not $ writable permissions) $ fail $ concat [
            "cannot use '",dir,"' as config directory because it is not "
           ,"writable"]
@@ -91,7 +91,7 @@ checkContextDir dir = do
         -- if the directory doesn't exist then its parent must be writable
         -- and searchable
         let parent = case takeDirectory dir of {"" -> ".";p -> p}
-        permissions <- io $ getPermissions parent
+        permissions <- liftIO $ getPermissions parent
         when (not $ writable permissions) $ fail $ concat[
            "cannot create config directory '",dir,"' because the parent "
           ," directory is not writable (",show permissions,")"]
@@ -101,5 +101,3 @@ checkContextDir dir = do
         warn $ concat ["directory '",dir,"' doesn't exist, creating a "
                       ,"default one"]
         return True
-  where
-    io = lift . liftIO
