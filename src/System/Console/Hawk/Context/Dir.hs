@@ -12,6 +12,7 @@ import "mtl" Control.Monad.Trans
 import System.Directory
 import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
 import System.IO
+import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
@@ -23,12 +24,14 @@ import System.Console.Hawk.UserPrelude.Parse
 
 
 -- | Create a default context
-createDefaultContextDir :: FilePath -> IO ()
+createDefaultContextDir :: FilePath -> UncertainT IO ()
 createDefaultContextDir dir = do
-  createDirectoryIfMissing True dir
-  let preludeFile = getUserPreludeFile dir
-  preludeExists <- doesFileExist preludeFile
-  unless preludeExists $ writeFile preludeFile defaultPrelude
+  _ <- checkContextDir dir
+  liftIO $ do
+    createDirectoryIfMissing True dir
+    let preludeFile = getUserPreludeFile dir
+    preludeExists <- doesFileExist preludeFile
+    unless preludeExists $ writeFile preludeFile defaultPrelude
 
 -- | Find a project context
 findContext :: FilePath -> IO (Maybe FilePath)
@@ -69,7 +72,7 @@ findContextFromCurrDirOrDefault = do
 
 -- | Check if a directory is a valid context and return true if the directory
 -- doesn't exist and the parent has the right permissions
-checkContextDir :: MonadIO m => FilePath -> UncertainT m Bool
+checkContextDir :: FilePath -> UncertainT IO Bool
 checkContextDir dir = do
     fileExists <- liftIO $ doesFileExist dir
     when fileExists $ fail $ concat [
