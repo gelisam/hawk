@@ -21,11 +21,21 @@ module System.Console.Hawk.UserPrelude.Compile
 
 import Control.Monad (when)
 
+import System.Directory
 import System.Exit
+import System.FilePath
 import System.IO
 import System.Process
 
 import System.Console.Hawk.Sandbox (extraGhcArgs)
+
+
+-- A version of `canonicalizePath` which works even if the file
+-- doesn't exist.
+absPath :: FilePath -> IO FilePath
+absPath f = do
+    pwd <- getCurrentDirectory
+    return (pwd </> f)
 
 
 -- compile a haskell file
@@ -35,13 +45,15 @@ compile :: FilePath -- ^ the source file
         -> FilePath -- ^ the directory used for compiler files
         -> IO ()
 compile sourceFile outputFile dir = do
+    absSource <- absPath sourceFile
+    absOutput <- absPath outputFile
     let basicArgs = [ "--make"
-                    , sourceFile
+                    , absSource
                     , "-i"
                     , "-ilib"
                     , "-fforce-recomp"
                     , "-v0"
-                    , "-o",outputFile]
+                    , "-o",absOutput]
     extraArgs <- extraGhcArgs
     let args = basicArgs ++ extraArgs
     compExitCode <-
