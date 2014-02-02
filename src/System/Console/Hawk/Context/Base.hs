@@ -16,6 +16,7 @@ import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
 import System.Console.Hawk.Context.Dir
+import System.Console.Hawk.Lock
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
@@ -41,8 +42,10 @@ getContext confDir False = do
   let cacheFile   = getContextFile confDir
   key <- getKey preludeFile
   let cache = singletonCache assocCache
-  withPersistentStateT cacheFile [] $ cached cache key
-                                    $ lift $ newContext confDir
+  withLock $ withPersistentStateT cacheFile []
+           $ cached cache key
+           $ lift
+           $ newContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
