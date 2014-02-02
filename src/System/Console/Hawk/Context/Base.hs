@@ -15,6 +15,7 @@ import System.IO
 import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
+import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
@@ -34,6 +35,7 @@ data Context = Context
 getContext :: FilePath -> Bool -> IO Context
 getContext confDir True = newContext confDir
 getContext confDir False = do
+  createDefaultContextDir confDir
   -- skip `newContext` if the cached copy is still good.
   let preludeFile = getUserPreludeFile confDir
   let cacheFile   = getContextFile confDir
