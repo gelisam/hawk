@@ -208,7 +208,7 @@ wrapUncertain :: (Monad m, Monad m')
               -> (UncertainT m b -> UncertainT m' b)
 wrapUncertain wrap body = wrapUncertainArg wrap' body'
   where
-    wrap' body' = wrap $ body' ()
+    wrap' f = wrap $ f ()
     body' () = body
 
 -- | A version of `wrapUncertain` for wrapping functions of type
