@@ -125,7 +125,7 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
 --                       ; lift $ print $ userExpression e
---                       ; lift $ print $ userConfigDirectory e
+--                       ; lift $ print $ userContextDirectory e
 --                       ; lift $ print $ recompilePrelude e
 --                       }
 -- :}
@@ -146,10 +146,10 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- True
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> configDir <*> recompile <*> expr
+exprSpec = ExprSpec <$> contextDir <*> recompile <*> expr
   where
-    configDir = do
-      dir <- consumeLast Option.ConfigDirectory "" consumeString
+    contextDir = do
+      dir <- consumeLast Option.ContextDirectory "" consumeString
       if null dir
         then liftIO findContextFromCurrDirOrDefault
         else return dir

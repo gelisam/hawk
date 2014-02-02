@@ -33,9 +33,9 @@ createDefaultContextDir dir = do
 -- | Find a project context
 findContext :: FilePath -> IO (Maybe FilePath)
 findContext startDir = do
-    let validConfigDirs = map (</> ".hawk") $ takeWhile (not . null)
-                                            $ iterate (init . dropFileName) startDir
-    foldM (maybe validDirOrNothing (const . return . Just)) Nothing validConfigDirs
+    let validContextDirs = map (</> ".hawk") $ takeWhile (not . null)
+                                             $ iterate (init . dropFileName) startDir
+    foldM (maybe validDirOrNothing (const . return . Just)) Nothing validContextDirs
   where
     validDirOrNothing dir = do
       dirExists <- doesDirectoryExist dir
@@ -62,10 +62,10 @@ findContextFromCurrDir = getCurrentDirectory >>= findContext
 -- | Find a project context or return the default
 findContextFromCurrDirOrDefault :: IO FilePath
 findContextFromCurrDirOrDefault = do
-    maybeProjectConfigDir <- findContextFromCurrDir
-    case maybeProjectConfigDir of
-      Nothing -> getDefaultConfigDir
-      Just projectConfigDir -> return projectConfigDir
+    maybeProjectContextDir <- findContextFromCurrDir
+    case maybeProjectContextDir of
+      Nothing -> getDefaultContextDir
+      Just projectContextDir -> return projectContextDir
 
 -- | Check if a directory is a valid context and return true if the directory
 -- doesn't exist and the parent has the right permissions
@@ -73,7 +73,7 @@ checkContextDir :: MonadIO m => FilePath -> UncertainT m Bool
 checkContextDir dir = do
     fileExists <- liftIO $ doesFileExist dir
     when fileExists $ fail $ concat [
-       "config directory '",dir,"' cannot be"
+       "context directory '",dir,"' cannot be"
       ,"created because a file with the same"
       ,"name exists"]
     dirExists <- liftIO $ doesDirectoryExist dir
@@ -81,10 +81,10 @@ checkContextDir dir = do
       then do
         permissions <- liftIO $ getPermissions dir
         when (not $ writable permissions) $ fail $ concat [
-           "cannot use '",dir,"' as config directory because it is not "
+           "cannot use '",dir,"' as context directory because it is not "
           ,"writable"]
         when (not $ searchable permissions) $ fail $ concat [
-           "cannot use '",dir,"' as config directory because it is not "
+           "cannot use '",dir,"' as context directory because it is not "
           ,"searchable"]
         return False
       else do
@@ -93,10 +93,10 @@ checkContextDir dir = do
         let parent = case takeDirectory dir of {"" -> ".";p -> p}
         permissions <- liftIO $ getPermissions parent
         when (not $ writable permissions) $ fail $ concat[
-           "cannot create config directory '",dir,"' because the parent "
+           "cannot create context directory '",dir,"' because the parent "
           ," directory is not writable (",show permissions,")"]
         when (not $ searchable permissions) $ fail $ concat[
-           "cannot create config directory '",dir,"' because the parent "
+           "cannot create context directory '",dir,"' because the parent "
           ," directory is not searchable (",show permissions,")"]
         warn $ concat ["directory '",dir,"' doesn't exist, creating a "
                       ,"default one"]

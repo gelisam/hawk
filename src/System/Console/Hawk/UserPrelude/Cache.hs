@@ -16,7 +16,7 @@
 -- | As the user tunes his expression, hawk's loading time gets in the way.
 --   To shorten it, we cache the information we need from the user prelude.
 module System.Console.Hawk.UserPrelude.Cache
-    ( getDefaultConfigDir
+    ( getDefaultContextDir
     , getUserPreludeFile
     , getCacheDir
     , getConfigInfosFile
@@ -47,9 +47,9 @@ import System.Console.Hawk.UserPrelude.Base
 (<//>) :: IO FilePath -> FilePath -> IO FilePath
 lpath <//> rpath = (</> rpath) <$> lpath
 
--- | Default configuration directory
-getDefaultConfigDir :: IO FilePath
-getDefaultConfigDir = getHomeDirectory <//> ".hawk"
+-- | Default context directory
+getDefaultContextDir :: IO FilePath
+getDefaultContextDir = getHomeDirectory <//> ".hawk"
 
 getUserPreludeFile :: FilePath -> FilePath
 getUserPreludeFile = (</> "prelude.hs")

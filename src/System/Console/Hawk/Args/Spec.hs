@@ -61,7 +61,7 @@ type Separator = ByteString
 
 
 data ExprSpec = ExprSpec
-    { userConfigDirectory :: FilePath
+    { userContextDirectory :: FilePath
     , recompilePrelude :: Bool
     , userExpression :: String
     }

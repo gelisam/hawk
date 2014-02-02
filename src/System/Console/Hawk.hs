@@ -236,11 +236,11 @@ applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let spec = Apply e i o
     let opts = optionsFromSpec spec
-    let configDir = userConfigDirectory e
+    let contextDir = userContextDirectory e
     
-    let opts' = opts { optModuleFile = Just (getModulesFile configDir) }
+    let opts' = opts { optModuleFile = Just (getModulesFile contextDir) }
     
-    context <- Context.getContext configDir (recompilePrelude e)
+    context <- Context.getContext contextDir (recompilePrelude e)
     
     let os = opts'
     let prelude = configFromContext context

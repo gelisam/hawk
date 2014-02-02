@@ -19,7 +19,7 @@ data HawkOption
     | Recompile
     | Version
     | Help
-    | ConfigDirectory
+    | ContextDirectory
   deriving (Show, Eq, Enum, Bounded)
 
 -- | In the order listed by --help.
@@ -62,7 +62,7 @@ instance Option HawkOption where
   shortName Recompile           = 'r'
   shortName Version             = 'v'
   shortName Help                = 'h'
-  shortName ConfigDirectory     = 'c'
+  shortName ContextDirectory    = 'c'
   
   longName Apply               = "apply"
   longName Map                 = "map"
@@ -73,7 +73,7 @@ instance Option HawkOption where
   longName Recompile           = "recompile"
   longName Version             = "version"
   longName Help                = "help"
-  longName ConfigDirectory     = "config-directory"
+  longName ContextDirectory    = "context-directory"
   
   helpMsg Apply                      = ["apply <expr> to the entire table"]
   helpMsg Map                        = ["apply <expr> to each row"]
@@ -81,12 +81,12 @@ instance Option HawkOption where
   helpMsg LineDelimiter              = ["default '\\n'"]
   helpMsg OutputWordDelimiter        = ["default <word-delim>"]
   helpMsg OutputLineDelimiter        = ["default <line-delim>"]
-  helpMsg Recompile                  = ["recompile <conf-dir>/prelude.hs"
+  helpMsg Recompile                  = ["recompile <ctx-dir>/prelude.hs"
                                        ,"even if it did not change"
                                        ]
   helpMsg Version                    = ["print version and exit"]
   helpMsg Help                       = ["this help"]
-  helpMsg ConfigDirectory            = ["<conf-dir> directory, default is"
+  helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
                                        ,"'~/.hawk'"]
   
   optionType Apply               = flag
@@ -98,4 +98,4 @@ instance Option HawkOption where
   optionType Recompile           = flag
   optionType Version             = flag
   optionType Help                = flag
-  optionType ConfigDirectory     = filePath
+  optionType ContextDirectory    = filePath
