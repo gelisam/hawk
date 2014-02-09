@@ -33,16 +33,16 @@ data Context = Context
 -- | Obtains a Context, either from the cache or from the user prelude.
 getContext :: FilePath -> IO Context
 getContext confDir = do
-  runUncertainIO $ createDefaultContextDir confDir
-  -- skip `newContext` if the cached copy is still good.
-  let preludeFile = getUserPreludeFile confDir
-  let cacheFile   = getContextFile confDir
-  key <- getKey preludeFile
-  let cache = singletonCache assocCache
-  withLock $ withPersistentStateT cacheFile []
-           $ cached cache key
-           $ lift
-           $ newContext confDir
+    runUncertainIO $ createDefaultContextDir confDir
+    -- skip `newContext` if the cached copy is still good.
+    let preludeFile = getUserPreludeFile confDir
+    let cacheFile   = getContextFile confDir
+    key <- getKey preludeFile
+    let cache = singletonCache assocCache
+    withLock $ withPersistentStateT cacheFile []
+             $ cached cache key
+             $ lift
+             $ newContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f

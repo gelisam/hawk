@@ -74,10 +74,10 @@ unlock = closeSocket
 
 waitForException :: IO a
 waitForException = bracket openHandle closeHandle $ \h -> do
-  s <- hGetContents h
-  length s `seq` return ()  -- blocks until EOF, which never comes
-                            -- because the server never accepted the connection
-  error $ printf "port %s in use by a program other than hawk" $ show portNumber
+    s <- hGetContents h
+    length s `seq` return ()  -- blocks until EOF, which never comes
+                              -- because the server never accepted the connection
+    error $ printf "port %s in use by a program other than hawk" $ show portNumber
 
 
 isADDRINUSE :: IOError -> Maybe ()

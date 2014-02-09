@@ -20,12 +20,12 @@ import System.Console.Hawk.UserPrelude.Cache
 -- | Create a default context
 createDefaultContextDir :: FilePath -> UncertainT IO ()
 createDefaultContextDir dir = do
-  _ <- checkContextDir dir
-  liftIO $ do
-    createDirectoryIfMissing True dir
-    let preludeFile = getUserPreludeFile dir
-    preludeExists <- doesFileExist preludeFile
-    unless preludeExists $ writeFile preludeFile defaultPrelude
+    _ <- checkContextDir dir
+    liftIO $ do
+      createDirectoryIfMissing True dir
+      let preludeFile = getUserPreludeFile dir
+      preludeExists <- doesFileExist preludeFile
+      unless preludeExists $ writeFile preludeFile defaultPrelude
 
 -- | Find a project context
 findContext :: FilePath -> IO (Maybe FilePath)
