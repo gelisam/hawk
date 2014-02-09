@@ -25,13 +25,11 @@ module System.Console.Hawk.Sandbox
     ) where
 
 import Control.Applicative
-import Control.Monad
 import Data.List
 import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
-import System.Directory (getDirectoryContents, getHomeDirectory)
-import System.Environment (getExecutablePath)
-import System.FilePath (pathSeparator, splitFileName)
+import System.Directory (getDirectoryContents)
+import System.FilePath (pathSeparator)
 import Text.Printf (printf)
 
 -- magic self-referential module created by cabal
