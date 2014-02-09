@@ -19,20 +19,23 @@ import qualified System.Console.Hawk.Test as HawkTest
 import Test.DocTest (doctest)
 import Test.Hspec (hspec)
 
+doctest' :: String -> IO ()
+doctest' file = doctest ["-isrc", "-idist/build/autogen", file]
+
 main :: IO ()
 main = do
-    doctest ["-isrc", "tests/System/Console/Hawk/Lock/Test.hs"]
-    doctest ["-isrc", "src/Data/Cache.hs"]
-    doctest ["-isrc", "-idist/build/autogen", "src/System/Console/Hawk.hs"]
-    doctest ["-isrc", "-idist/build/autogen", "tests/System/Console/Hawk/PreludeTests.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Args/Option.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Args/Parse.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Cache.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Extend.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/UserPrelude/Parse.hs"]
-    doctest ["-isrc", "src/System/Console/Hawk/Options.hs"]
-    doctest ["-isrc", "src/Control/Monad/Trans/Uncertain.hs"]
-    doctest ["-isrc", "src/Control/Monad/Trans/OptionParser.hs"]
+    doctest' "tests/System/Console/Hawk/Lock/Test.hs"
+    doctest' "src/Data/Cache.hs"
+    doctest' "src/System/Console/Hawk.hs"
+    doctest' "tests/System/Console/Hawk/PreludeTests.hs"
+    doctest' "src/System/Console/Hawk/Args/Option.hs"
+    doctest' "src/System/Console/Hawk/Args/Parse.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude/Cache.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude/Extend.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude/Parse.hs"
+    doctest' "src/System/Console/Hawk/Options.hs"
+    doctest' "src/Control/Monad/Trans/Uncertain.hs"
+    doctest' "src/Control/Monad/Trans/OptionParser.hs"
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
