@@ -69,24 +69,18 @@ recompileUserPrelude confDir
   = recompileUserPrelude' (getUserPreludeFile confDir)
                           (getCacheDir        confDir)
                           (getSourceFile      confDir)
-                          (getExtensionsFile  confDir)
-                          (getModulesFile     confDir)
                           (getCompiledFile    confDir)
                           (getConfigInfosFile confDir)
 
 recompileUserPrelude' :: FilePath -- ^ prelude file
                       -> FilePath -- ^ cache dir
                       -> FilePath -- ^ source file
-                      -> FilePath -- ^ output extensions cache file
-                      -> FilePath -- ^ output modules cache file
                       -> FilePath -- ^ output compiled file
                       -> FilePath -- ^ output config info path
                       -> IO (String,String)
 recompileUserPrelude' preludeFile
                       cacheDir
                       sourceFile
-                      extensionsFile
-                      modulesFile
                       compiledFile
                       configInfosFile = do
     clean

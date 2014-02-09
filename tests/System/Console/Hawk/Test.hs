@@ -108,8 +108,6 @@ withDefaultConfiguration f =
     (outputFile,outputModule) <- recompileUserPrelude' prelude
                                                        cacheDir
                                                        source
-                                                       extensionsFile
-                                                       modulesFile
                                                        compiled
                                                        configInfoPath
 
