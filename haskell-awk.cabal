@@ -22,31 +22,8 @@ Source-Repository head
     type: git
     location: https://github.com/gelisam/hawk
 
-Executable hawk
-    Main-is:        Main.hs
-    Default-Language: Haskell98
-    ghc-options:    -Wall
-    build-depends:  base >=4.6.0.1 && <5
-                  , bytestring >=0.10.0.2
-                  , containers -any
-                  , directory >=1.2.0.1
-                  , easy-file >=0.1.1
-                  , filepath >=1.3.0.1
-                  , haskell-src-exts >=1.14.0
-                  , hint >=0.3.3.5
-                  , MonadCatchIO-mtl >=0.3.0.0
-                  , mtl
-                  , network >=2.3.1.0
-                  , stringsearch >=0.3.6.4
-                  , process >=1.1.0.2
-                  , time -any
-                  , transformers
-    hs-source-dirs: src
-
 Library
-    exposed-modules: System.Console.Hawk.Representable
-                    ,System.Console.Hawk.Runtime
-                    ,System.Console.Hawk.IO
+    exposed-modules: System.Console.Hawk.Runtime
     ghc-options:    -Wall 
     hs-source-dirs: src
     build-depends: base >=4.6.0.1
@@ -54,30 +31,3 @@ Library
                  , containers -any
                  , stringsearch >=0.3.6.4
     Default-Language: Haskell98
-
-Test-suite reference
-  Hs-Source-Dirs:       src,tests
-  Main-Is:              RunTests.hs
-  Type:                 exitcode-stdio-1.0
-  Ghc-Options:          -Wall
-  Build-Depends:        base>=4.6.0.1 && <5
-                      , bytestring>=0.10.0.2
-                      , containers -any
-                      , directory >=1.2.0.1
-                      , doctest >= 0.8
-                      , test-framework
-                      , test-framework-hunit
-                      , temporary
-                      , hspec
-                      , HUnit
-                      , easy-file >=0.1.1
-                      , haskell-src-exts >= 1.14.0
-                      , hint >=0.3.3.5
-                      , filepath >=1.3.0.1
-                      , mtl
-                      , network >=2.3.1.0
-                      , process >=1.1.0.2
-                      , stringsearch >=0.3.6.4
-                      , time -any
-                      , transformers
-  Default-Language: Haskell98

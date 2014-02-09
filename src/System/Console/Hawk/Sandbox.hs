@@ -34,12 +34,15 @@ import System.Environment (getExecutablePath)
 import System.FilePath (pathSeparator, splitFileName)
 import Text.Printf (printf)
 
+-- magic self-referential module created by cabal
+import Paths_haskell_awk (getBinDir)
+
 
 data Sandbox = Sandbox
   { folder :: FilePath
   , packageFilePrefix :: String
   , packageFileSuffix :: String
-  }
+  } deriving Show
 
 cabalDev, cabalSandbox :: Sandbox
 cabalDev = Sandbox "cabal-dev" "packages-" ".conf"
@@ -107,9 +110,9 @@ getHawkPath = do
 -- return something like (Just "/.../cabal-dev")
 getSandboxDir :: Sandbox -> IO (Maybe String)
 getSandboxDir sandbox = do
-    (dir, _) <- splitFileName <$> getHawkPath
+    dir <- Paths_haskell_awk.getBinDir
     let sandboxFolder = folder sandbox
-    let suffix = path (sandboxFolder ++ "/bin/")
+    let suffix = path (sandboxFolder ++ "/bin")
     let basePath = suffix `isSuffixOf'` dir
     let sandboxPath = fmap (++ sandboxFolder) basePath
     return sandboxPath
