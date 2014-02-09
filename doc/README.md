@@ -139,7 +139,7 @@ So internally Hawk represents the input as a table, that is a list of lists
 of ByteString. The function that the user provides works on that datatype.
 
 ```bash
-> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[ByteString]] -> [[ByteString]]'
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[B.ByteString]] -> [[B.ByteString]]'
 1 2 3
 4 5 6
 7 8 9
@@ -172,14 +172,14 @@ Of course, tables are not the only common command-line format. If you don't
 need lines to be separated into words, simply pass an empty `--words-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -a 'show :: [ByteString] -> String'
+> seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
 Finally, to work directly on the ByteString just pass an empty `--lines-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -D -a 'show :: ByteString -> String'
+> seq 3 | hawk -d -D -a 'show :: B.ByteString -> String'
 "1\n2\n3\n"
 ```
 
@@ -222,7 +222,7 @@ Changing the type of the cell values is still valid if the given type is instanc
 of `Show`. For examples, we can use String or Float instead of ByteString.
 
 ```bash
-> hawk '[["1","2"], ["3","4"]]'     
+> hawk '[["1","2"], ["3","4"]]'
 1 2
 3 4
 ```
@@ -260,7 +260,7 @@ used for the input. They can be changed using `--output-words-delim` and
 `--output-lines-delim`.
 
 ```bash
-> hawk -O' or ' '(True,False)'                  
+> hawk -O' or ' '(True,False)'
 True or False
 ```
 
@@ -274,7 +274,7 @@ Combining the input delimiters options with the output delimiters options can
 be used to change the format of the given input.
 
 ```bash
-> > echo '1 2 3\n4 5 6'  | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id' 
+> printf '1 2 3\n4 5 6\n' | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id'
 1*2*3+4*5*6
 ```
 

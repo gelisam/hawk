@@ -39,8 +39,7 @@ import System.Console.Hawk.UserPrelude.Parse
 --   Since they are fully qualified, they should not conflict with any
 --   user-imported module.
 defaultModules :: [QualifiedModule]
-defaultModules = map fullyQualified [ 
-                                       "Prelude"
+defaultModules = map fullyQualified [ "Prelude"
                                      , "System.Console.Hawk.IO"
                                      , "System.Console.Hawk.Representable"
                                      , "System.Console.Hawk.Runtime"
@@ -67,7 +66,7 @@ defaultPrelude = unlines
 -- TODO: error handling
 recompileUserPrelude :: FilePath -> IO (String,String)
 recompileUserPrelude confDir
-  = recompileUserPrelude' (getUserPreludeFile confDir) 
+  = recompileUserPrelude' (getUserPreludeFile confDir)
                           (getCacheDir        confDir)
                           (getSourceFile      confDir)
                           (getExtensionsFile  confDir)

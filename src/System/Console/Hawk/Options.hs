@@ -42,7 +42,7 @@ defaultOptions :: Options
 defaultOptions = Options { optMode = EvalMode
                          , optLinesDelim = Nothing -- C8.singleton '\n'
                          , optWordsDelim = Nothing -- C8.singleton ' '
-                         , optOutLinesDelim = Nothing 
+                         , optOutLinesDelim = Nothing
                          , optOutWordsDelim =  Nothing
                          , optRecompile = False
                          , optVersion = False
@@ -68,7 +68,7 @@ delimiter = C8.concat . (\ls -> L.head ls:L.map subFirst (L.tail ls))
                         _ -> s
 
 options :: [OptDescr (Options -> Options)]
-options = 
+options =
  -- delimiters
  [ Option ['D'] ["lines-delimiter"] (OptArg delimiterAction "<delim>") delimiterHelp
  , Option ['d'] ["words-delimiter"] (OptArg wordsDelimAction "<delim>") wordsDelimHelp
@@ -94,7 +94,7 @@ options =
                            Nothing -> C8.pack ""
                            Just "" -> C8.pack ""
                            Just s -> delimiter $ C8.pack s
-          delimiterAction ms o = o{ optLinesDelim = Just (makeDelim ms) } 
+          delimiterAction ms o = o{ optLinesDelim = Just (makeDelim ms) }
           delimiterHelp = "lines delimiter, default '\\n'"
           wordsDelimAction ms o = o{ optWordsDelim = Just (makeDelim ms) }
           wordsDelimHelp = "words delimiter, default ' '"

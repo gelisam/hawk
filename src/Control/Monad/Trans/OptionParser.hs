@@ -410,7 +410,7 @@ consumeAll :: (Eq o, Monad m)
 consumeAll o consume = OptionParserT $ do
     matching_options <- state $ partition $ (== o) . fst
     lift . lift $ mapM (consume . snd) matching_options
-    
+
 -- | The last occurence of a given option, or a default value if the option
 --   isn't specified.
 -- 

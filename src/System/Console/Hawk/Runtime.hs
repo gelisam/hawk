@@ -68,7 +68,7 @@ sc8pack = SC8.pack
 
 dropTrailingNewline :: C8.ByteString -> C8.ByteString
 dropTrailingNewline "" = ""
-dropTrailingNewline s 
+dropTrailingNewline s
     | last_char == '\r' = s'
     | otherwise = s
   where
@@ -86,8 +86,8 @@ parseRows delim = dropLastIfEmpty . maybeDropTrailingNewline . BS.split delim
 ---- special case for space
 parseWords :: SC8.ByteString -> SC8.ByteString -> C8.ByteString -> [[C8.ByteString]]
 parseWords rowsDelim columnsDelim str = L.map f rows
-    where 
-        f 
+    where
+        f
             | columnsDelim == SC8.singleton ' ' = L.filter (not . C8.null) . BS.split columnsDelim
             | otherwise = BS.split columnsDelim
         rows = parseRows rowsDelim str
@@ -106,7 +106,7 @@ showRows :: forall a . (Rows a)
          -> C8.ByteString
 showRows rd cd = C8.intercalate rd . repr cd
 
-printRows :: forall a . (Rows a) 
+printRows :: forall a . (Rows a)
           => Bool -- ^ if printRows will continue after errors
           -> C8.ByteString -- ^ rows delimiter
           -> C8.ByteString -- ^ columns delimiter

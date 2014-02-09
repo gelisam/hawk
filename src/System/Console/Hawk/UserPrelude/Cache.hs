@@ -83,7 +83,7 @@ getSourceFile = (++ ".hs") . getSourceBasename
 cacheExtensions :: FilePath
                 -> [ExtensionName]
                 -> IO ()
-cacheExtensions extensionsFile extensions = 
+cacheExtensions extensionsFile extensions =
   writeFile extensionsFile $ show extensions'
   where
     extensions' :: [Interpreter.Extension]
