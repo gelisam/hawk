@@ -16,12 +16,12 @@ import System.Console.Hawk.Options
 optionsFromSpec :: HawkSpec -> Options
 optionsFromSpec Help = defaultOptions { optHelp = True }
 optionsFromSpec Version = defaultOptions { optVersion = True }
-optionsFromSpec (Eval  x   o) = updateOutputOptions o
+optionsFromSpec (Eval  _   o) = updateOutputOptions o
                               $ defaultOptions { optMode = EvalMode }
-optionsFromSpec (Apply x i o) = updateInputOptions i
+optionsFromSpec (Apply _ i o) = updateInputOptions i
                               $ updateOutputOptions o
                               $ defaultOptions { optMode = ApplyMode }
-optionsFromSpec (Map   x i o) = updateInputOptions i
+optionsFromSpec (Map   _ i o) = updateInputOptions i
                               $ updateOutputOptions o
                               $ defaultOptions { optMode = MapMode }
 
