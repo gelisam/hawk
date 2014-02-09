@@ -274,7 +274,7 @@ Combining the input delimiters options with the output delimiters options can
 be used to change the format of the given input.
 
 ```bash
-> > echo '1 2 3\n4 5 6'  | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id'
+> printf '1 2 3\n4 5 6\n' | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id'
 1*2*3+4*5*6
 ```
 
