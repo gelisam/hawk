@@ -52,12 +52,21 @@ testEval flags expr = test flags expr ""
 -- 100
 -- 
 -- 
--- The last example, a quick test to validate that Hawk was properly installed:
+-- The last example from the README, a quick test to validate that Hawk was
+-- properly installed:
 -- 
 -- >>> testEval [] "[1..3]"
 -- 1
 -- 2
 -- 3
+-- 
+-- 
+-- Making sure that we don't assume the user prelude exports "map":
+-- 
+-- >>> testPrelude "set" ["-m"] "const $ \"hello\"" "1-3"
+-- hello
+-- hello
+-- hello
 testPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
 testPrelude = testBuilder ("tests" </> "preludes")
 
