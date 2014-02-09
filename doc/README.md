@@ -222,7 +222,7 @@ Changing the type of the cell values is still valid if the given type is instanc
 of `Show`. For examples, we can use String or Float instead of ByteString.
 
 ```bash
-> hawk '[["1","2"], ["3","4"]]'     
+> hawk '[["1","2"], ["3","4"]]'
 1 2
 3 4
 ```
@@ -260,7 +260,7 @@ used for the input. They can be changed using `--output-words-delim` and
 `--output-lines-delim`.
 
 ```bash
-> hawk -O' or ' '(True,False)'                  
+> hawk -O' or ' '(True,False)'
 True or False
 ```
 
@@ -274,7 +274,7 @@ Combining the input delimiters options with the output delimiters options can
 be used to change the format of the given input.
 
 ```bash
-> > echo '1 2 3\n4 5 6'  | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id' 
+> > echo '1 2 3\n4 5 6'  | hawk -m -d' ' -o'*' -D'\n' -O'+' 'id'
 1*2*3+4*5*6
 ```
 

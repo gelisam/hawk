@@ -147,10 +147,10 @@ hawk opts prelude modules extensions userExpr = do
             (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
     
     (\f -> unQB . f . QB) <$> wrapErrors eitherErrorF
-    where 
+    where
           interpret' expr = do
             -- print the user expression
-            -- lift $ IO.hPutStrLn IO.stderr expr 
+            -- lift $ IO.hPutStrLn IO.stderr expr
             interpret expr (as :: QualifiedByteString -> QualifiedByteString)
           evalExpr = printf "const (%s (%s))" showRows
           mapStreamExpr = streamExpr . listMap
