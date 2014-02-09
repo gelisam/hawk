@@ -31,6 +31,11 @@ testBuilder preludeBase preludeBasename flags expr inputBasename
 test :: [String] -> String -> FilePath -> IO ()
 test = testBuilder ("tests" </> "preludes") "default"
 
+-- | A version of `test` without a custom input file either.
+testEval :: [String] -> String -> IO ()
+testEval flags expr = test flags expr ""
+
+
 -- | A version of `testBuilder` using the preludes from "tests/preludes".
 -- 
 -- The first example from the README:
@@ -49,7 +54,7 @@ test = testBuilder ("tests" </> "preludes") "default"
 -- 
 -- The last example, a quick test to validate that Hawk was properly installed:
 -- 
--- >>> test [] "[1..3]" ""
+-- >>> testEval [] "[1..3]"
 -- 1
 -- 2
 -- 3
@@ -92,5 +97,83 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 
 -- >>> test ["-ad"] "sum . L.map (read . B.unpack)" "1-3"
 -- 6
+-- 
+-- -- >>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
+-- -- 6
+-- 
+-- >>> testEval [] "2 ^ 100"
+-- 1267650600228229401496703205376
+-- 
+-- >>> test ["-a"] "L.take 2" "1-9"
+-- 1 2 3
+-- 4 5 6
+-- 
+-- >>> test ["-m"] "L.take 2" "1-9"
+-- 1 2
+-- 4 5
+-- 7 8
+-- 
+-- >>> test ["-a"] "show" "1-9"
+-- [["1","2","3"],["4","5","6"],["7","8","9"]]
+-- 
+-- -- >>> test ["-a"] "id :: [[ByteString]] -> [[ByteString]]" "1-9"
+-- -- 1 2 3
+-- -- 4 5 6
+-- -- 7 8 9
+-- 
+-- >>> test ["-a", "-d\\t"] "id" "1-9tabs"
+-- 1	2	3
+-- 4	5	6
+-- 7	8	9
+-- 
+-- >>> test ["-ad,"] "id" "1-9commas"
+-- 1,2,3
+-- 4,5,6
+-- 7,8,9
+-- 
+-- >>> test ["-D + ", "-d*", "-a"] "L.transpose" "equation"
+-- x1*x2 + y1*y2 + z1*z2
+-- 
+-- -- >>> test ["-d", "-a"] "show :: [ByteString] -> String" "1-3"
+-- -- ["1","2","3"]
+-- 
+-- -- >>> test ["-d", "-D", "-a"] "show :: ByteString -> String" "1-3"
+-- -- "1\n2\n3\n"
+-- 
+-- >>> testEval [] "[[B.pack \"1\",B.pack \"2\"], [B.pack \"3\",B.pack \"4\"]]"
+-- 1 2
+-- 3 4
+-- 
+-- >>> testEval [] "[[\"1\",\"2\"], [\"3\",\"4\"]]"
+-- 1 2
+-- 3 4
+-- 
+-- >>> testEval [] "[[1,2], [3,4]] :: [[Float]]"
+-- 1.0 2.0
+-- 3.0 4.0
+-- 
+-- >>> testEval [] "1 :: Double"
+-- 1.0
+-- 
+-- >>> testEval [] "(True,False)"
+-- True
+-- False
+-- 
+-- >>> testEval [] "[(1,2),(3,4)] :: [(Int,Float)]"
+-- 1 2.0
+-- 3 4.0
+-- 
+-- >>> testEval ["-O or "] "(True,False)"
+-- True or False
+-- 
+-- >>> testEval ["-o\\t"] "[(1,2),(3,4.0)] :: [(Int,Float)]"
+-- 1	2.0
+-- 3	4.0
+-- 
+-- >>> test ["-m", "-d ", "-o*", "-D\\n", "-O+"] "id" "1-6"
+-- 1*2*3+4*5*6
+-- 
+-- >> testEval ["-a"] "L.length"
+-- 3
 testDoc :: String -> [String] -> String -> FilePath -> IO ()
 testDoc = testBuilder "doc"
