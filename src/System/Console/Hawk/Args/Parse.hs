@@ -144,14 +144,13 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- True
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> contextDir <*> recompile <*> expr
+exprSpec = ExprSpec <$> contextDir <*> expr
   where
     contextDir = do
       dir <- consumeLast Option.ContextDirectory "" consumeString
       if null dir
         then liftIO findContextFromCurrDirOrDefault
         else return dir
-    recompile = consumeLast Option.Recompile False consumeFlag
     expr = do
         r <- consumeExtra consumeString
         case r of

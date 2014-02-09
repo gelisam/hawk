@@ -31,9 +31,8 @@ data Context = Context
   } deriving (Eq, Read, Show)
 
 -- | Obtains a Context, either from the cache or from the user prelude.
-getContext :: FilePath -> Bool -> IO Context
-getContext confDir True = newContext confDir
-getContext confDir False = do
+getContext :: FilePath -> IO Context
+getContext confDir = do
   runUncertainIO $ createDefaultContextDir confDir
   -- skip `newContext` if the cached copy is still good.
   let preludeFile = getUserPreludeFile confDir
