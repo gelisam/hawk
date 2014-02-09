@@ -96,11 +96,8 @@ recompileUserPrelude' preludeFile
     orig_modules <- readModules extensions preludeFile
     orig_source <- readSource preludeFile
     
-    let modules = extendModules extensions orig_modules
     let source = extendSource preludeFile extensions orig_modules orig_source
     
-    cacheExtensions extensionsFile extensions
-    cacheModules modulesFile modules
     cacheSource sourceFile source
     
     compile sourceFile compiledFile cacheDir
