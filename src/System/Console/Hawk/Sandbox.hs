@@ -64,8 +64,8 @@ isSuffixOf' suffix s = if suffix `isSuffixOf` s
 -- convert slashes to backslashes if needed
 path :: String -> String
 path = map replaceSeparator where
-  replaceSeparator '/' = pathSeparator
-  replaceSeparator x = x
+    replaceSeparator '/' = pathSeparator
+    replaceSeparator x = x
 
 
 -- if hawk has been compiled by a sandboxing tool,

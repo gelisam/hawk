@@ -16,15 +16,12 @@ import System.Console.Hawk.Options
 optionsFromSpec :: HawkSpec -> Options
 optionsFromSpec Help = defaultOptions { optHelp = True }
 optionsFromSpec Version = defaultOptions { optVersion = True }
-optionsFromSpec (Eval  x   o) = updateExprOptions x
-                              $ updateOutputOptions o
+optionsFromSpec (Eval  _   o) = updateOutputOptions o
                               $ defaultOptions { optMode = EvalMode }
-optionsFromSpec (Apply x i o) = updateExprOptions x
-                              $ updateInputOptions i
+optionsFromSpec (Apply _ i o) = updateInputOptions i
                               $ updateOutputOptions o
                               $ defaultOptions { optMode = ApplyMode }
-optionsFromSpec (Map   x i o) = updateExprOptions x
-                              $ updateInputOptions i
+optionsFromSpec (Map   _ i o) = updateInputOptions i
                               $ updateOutputOptions o
                               $ defaultOptions { optMode = MapMode }
 
@@ -43,12 +40,6 @@ updateOutputOptions (OutputSpec _ format) = go format
     go (OutputFormat lineD wordD) o = o { optOutLinesDelim = Just lineD
                                         , optOutWordsDelim = Just wordD
                                         }
-
-updateExprOptions :: ExprSpec -> Options -> Options
-updateExprOptions (ExprSpec _ b _) = updatePreludeOptions b
-
-updatePreludeOptions :: Bool -> Options -> Options
-updatePreludeOptions b o = o { optRecompile = b }
 
 
 -- | The "not option"s are the extra string arguments after all the flags.

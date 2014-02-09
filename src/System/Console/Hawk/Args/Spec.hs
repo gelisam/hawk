@@ -62,7 +62,6 @@ type Separator = ByteString
 
 data ExprSpec = ExprSpec
     { userContextDirectory :: FilePath
-    , recompilePrelude :: Bool
     , userExpression :: String
     }
   deriving (Show, Eq)

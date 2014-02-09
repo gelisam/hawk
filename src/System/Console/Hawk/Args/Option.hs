@@ -16,7 +16,6 @@ data HawkOption
     | LineDelimiter
     | OutputWordDelimiter
     | OutputLineDelimiter
-    | Recompile
     | Version
     | Help
     | ContextDirectory
@@ -59,7 +58,6 @@ instance Option HawkOption where
   shortName LineDelimiter       = 'D'
   shortName OutputWordDelimiter = 'o'
   shortName OutputLineDelimiter = 'O'
-  shortName Recompile           = 'r'
   shortName Version             = 'v'
   shortName Help                = 'h'
   shortName ContextDirectory    = 'c'
@@ -70,7 +68,6 @@ instance Option HawkOption where
   longName LineDelimiter       = "line-delimiter"
   longName OutputWordDelimiter = "output-word-delim"
   longName OutputLineDelimiter = "output-line-delim"
-  longName Recompile           = "recompile"
   longName Version             = "version"
   longName Help                = "help"
   longName ContextDirectory    = "context-directory"
@@ -81,9 +78,6 @@ instance Option HawkOption where
   helpMsg LineDelimiter              = ["default '\\n'"]
   helpMsg OutputWordDelimiter        = ["default <word-delim>"]
   helpMsg OutputLineDelimiter        = ["default <line-delim>"]
-  helpMsg Recompile                  = ["recompile <ctx-dir>/prelude.hs"
-                                       ,"even if it did not change"
-                                       ]
   helpMsg Version                    = ["print version and exit"]
   helpMsg Help                       = ["this help"]
   helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
@@ -95,7 +89,6 @@ instance Option HawkOption where
   optionType LineDelimiter       = delimiter
   optionType OutputWordDelimiter = delimiter
   optionType OutputLineDelimiter = delimiter
-  optionType Recompile           = flag
   optionType Version             = flag
   optionType Help                = flag
   optionType ContextDirectory    = filePath

@@ -240,7 +240,7 @@ applyExpr e i o = do
     
     let opts' = opts { optModuleFile = Just (getModulesFile contextDir) }
     
-    context <- Context.getContext contextDir (recompilePrelude e)
+    context <- Context.getContext contextDir
     
     let os = opts'
     let prelude = configFromContext context

@@ -125,7 +125,6 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- let test = testP $ do { e <- exprSpec
 --                       ; lift $ print $ userExpression e
 --                       ; lift $ print $ userContextDirectory e
---                       ; lift $ print $ recompilePrelude e
 --                       }
 -- :}
 -- 
@@ -136,22 +135,15 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- >>> test ["-D;", "-d", "-a", "L.reverse","-c","somedir"]
 -- "L.reverse"
 -- "somedir"
--- False
--- 
--- >>> test ["-r", "-m", "L.head", "file.in","-c","somedir"]
--- "L.head"
--- "somedir"
--- True
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> contextDir <*> recompile <*> expr
+exprSpec = ExprSpec <$> contextDir <*> expr
   where
     contextDir = do
       dir <- consumeLast Option.ContextDirectory "" consumeString
       if null dir
         then liftIO findContextFromCurrDirOrDefault
         else return dir
-    recompile = consumeLast Option.Recompile False consumeFlag
     expr = do
         r <- consumeExtra consumeString
         case r of
