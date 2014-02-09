@@ -12,9 +12,17 @@ import System.Console.Hawk
 -- 
 -- >>> testCustomPrelude "default" ["-d:", "-m"] "head" "passwd"
 -- root
+-- 
+-- 
+-- The second example, which adds `takeLast` to the user prelude:
+-- 
+-- >>> testCustomPrelude "readme" ["-a"] "takeLast 3" "0-100"
+-- 98
+-- 99
+-- 100
 testCustomPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
 testCustomPrelude preludeBasename flags expr inputBasename = processArgs args
   where
-    args = flags ++ [expr, inputPath]
+    args = ["-c", preludePath] ++ flags ++ [expr, inputPath]
     preludePath = "tests" </> "preludes" </> preludeBasename
     inputPath = "tests" </> "inputs" </> inputBasename
