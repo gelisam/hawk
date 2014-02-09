@@ -107,8 +107,8 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-ad"] "sum . L.map (read . B.unpack)" "1-3"
 -- 6
 -- 
--- -- >>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
--- -- 6
+-- >>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
+-- 6
 -- 
 -- >>> testEval [] "2 ^ 100"
 -- 1267650600228229401496703205376
