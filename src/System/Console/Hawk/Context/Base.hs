@@ -55,8 +55,8 @@ newContext confDir = do
     let originalPreludePath' = getUserPreludeFile confDir
     
     (canonicalPrelude', moduleName') <- recompileUserPrelude confDir
-    extensions' <- readExtensions originalPreludePath'
-    modules' <- readModules extensions' originalPreludePath'
+    extensions' <- readExtensions canonicalPrelude'
+    modules' <- readModules extensions' canonicalPrelude'
     
     -- I think it hint will automatically use the version we have just
     -- compiled if we give it the path to the .hs file.
