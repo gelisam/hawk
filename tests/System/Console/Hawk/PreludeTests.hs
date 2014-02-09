@@ -10,7 +10,7 @@ import System.Console.Hawk
 -- 
 -- The first example from the README:
 -- 
--- >>> testCustomPrelude "default" ["-d:", "-m"] "head" "passwd"
+-- >>> testCustomPrelude "" ["-d:", "-m"] "head" "passwd"
 -- root
 -- 
 -- 
@@ -20,9 +20,27 @@ import System.Console.Hawk
 -- 98
 -- 99
 -- 100
+-- 
+-- 
+-- The last example, a quick test to validate that Hawk was properly installed:
+-- 
+-- >>> testCustomPrelude "" [] "[1..3]" ""
+-- 1
+-- 2
+-- 3
 testCustomPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
 testCustomPrelude preludeBasename flags expr inputBasename = processArgs args
   where
-    args = ["-c", preludePath] ++ flags ++ [expr, inputPath]
-    preludePath = "tests" </> "preludes" </> preludeBasename
-    inputPath = "tests" </> "inputs" </> inputBasename
+    args = preludeArgs preludeBasename
+        ++ flags
+        ++ [expr]
+        ++ inputArgs inputBasename
+    
+    preludePath f = "tests" </> "preludes" </> f
+    inputPath f = "tests" </> "inputs" </> f
+    
+    preludeArgs "" = preludeArgs "default"
+    preludeArgs f = ["-c", preludePath f]
+    
+    inputArgs "" = []
+    inputArgs f = [inputPath f]
