@@ -139,7 +139,7 @@ So internally Hawk represents the input as a table, that is a list of lists
 of ByteString. The function that the user provides works on that datatype.
 
 ```bash
-> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[ByteString]] -> [[ByteString]]'
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[B.ByteString]] -> [[B.ByteString]]'
 1 2 3
 4 5 6
 7 8 9
@@ -172,14 +172,14 @@ Of course, tables are not the only common command-line format. If you don't
 need lines to be separated into words, simply pass an empty `--words-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -a 'show :: [ByteString] -> String'
+> seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
 Finally, to work directly on the ByteString just pass an empty `--lines-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -D -a 'show :: ByteString -> String'
+> seq 3 | hawk -d -D -a 'show :: B.ByteString -> String'
 "1\n2\n3\n"
 ```
 

@@ -116,10 +116,10 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-a"] "show" "1-9"
 -- [["1","2","3"],["4","5","6"],["7","8","9"]]
 -- 
--- -- >>> test ["-a"] "id :: [[ByteString]] -> [[ByteString]]" "1-9"
--- -- 1 2 3
--- -- 4 5 6
--- -- 7 8 9
+-- >>> test ["-a"] "id :: [[B.ByteString]] -> [[B.ByteString]]" "1-9"
+-- 1 2 3
+-- 4 5 6
+-- 7 8 9
 -- 
 -- >>> test ["-a", "-d\\t"] "id" "1-9tabs"
 -- 1	2	3
@@ -134,11 +134,11 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-D + ", "-d*", "-a"] "L.transpose" "equation"
 -- x1*x2 + y1*y2 + z1*z2
 -- 
--- -- >>> test ["-d", "-a"] "show :: [ByteString] -> String" "1-3"
--- -- ["1","2","3"]
+-- >>> test ["-d", "-a"] "show :: [B.ByteString] -> String" "1-3"
+-- ["1","2","3"]
 -- 
--- -- >>> test ["-d", "-D", "-a"] "show :: ByteString -> String" "1-3"
--- -- "1\n2\n3\n"
+-- >>> test ["-d", "-D", "-a"] "show :: B.ByteString -> String" "1-3"
+-- "1\n2\n3\n"
 -- 
 -- >>> testEval [] "[[B.pack \"1\",B.pack \"2\"], [B.pack \"3\",B.pack \"4\"]]"
 -- 1 2
