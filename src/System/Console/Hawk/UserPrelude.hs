@@ -17,8 +17,6 @@
 module System.Console.Hawk.UserPrelude (
       defaultModules
     , defaultPrelude
-    , getExtensionsFile
-    , getModulesFile
     , recompileUserPrelude
     , recompileUserPrelude'
 ) where
