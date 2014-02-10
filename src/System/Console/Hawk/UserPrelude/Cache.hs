@@ -19,14 +19,9 @@ module System.Console.Hawk.UserPrelude.Cache
     ( getDefaultContextDir
     , getUserPreludeFile
     , getCacheDir
-    , getConfigInfosFile
     , getContextFile
-    , getExtensionsFile
-    , getModulesFile
     , getCompiledFile
     , getSourceFile
-    , cacheExtensions
-    , cacheModules
     , cacheSource
     )
   where
@@ -34,7 +29,6 @@ module System.Console.Hawk.UserPrelude.Cache
 import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as B
-import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 
 import System.Console.Hawk.UserPrelude.Base
@@ -57,17 +51,8 @@ getUserPreludeFile = (</> "prelude.hs")
 getCacheDir :: FilePath -> FilePath
 getCacheDir = (</> "cache")
 
-getConfigInfosFile :: FilePath -> FilePath
-getConfigInfosFile = (</> "configInfos") . getCacheDir
-
 getContextFile :: FilePath -> FilePath
 getContextFile = (</> "context") . getCacheDir
-
-getModulesFile :: FilePath -> FilePath
-getModulesFile = (</> "modules") . getCacheDir
-
-getExtensionsFile :: FilePath -> FilePath
-getExtensionsFile = (</> "extensions") . getCacheDir
 
 
 getSourceBasename :: FilePath -> String
@@ -79,20 +64,6 @@ getCompiledFile = getSourceBasename
 getSourceFile :: FilePath -> String
 getSourceFile = (++ ".hs") . getSourceBasename
 
-
-cacheExtensions :: FilePath
-                -> [ExtensionName]
-                -> IO ()
-cacheExtensions extensionsFile extensions =
-  writeFile extensionsFile $ show extensions'
-  where
-    extensions' :: [Interpreter.Extension]
-    extensions' = map read extensions
-
-cacheModules :: FilePath
-             -> [QualifiedModule]
-             -> IO ()
-cacheModules modulesFile modules = writeFile modulesFile $ show modules
 
 cacheSource :: FilePath
             -> Source

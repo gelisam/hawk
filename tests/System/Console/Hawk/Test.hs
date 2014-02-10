@@ -28,6 +28,8 @@ import Test.HUnit
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
   (hawk)
+import System.Console.Hawk.Context
+import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Options
 import System.Console.Hawk.TestUtils
@@ -94,26 +96,9 @@ withDefaultConfiguration :: ((String,String)
                              -> [Extension]
                              -> IO ())
                          -> IO ()
-withDefaultConfiguration f =
-  withTempDir' "HawkTest" $ \dir -> do
-    let prelude = dir </> "prelude.hs"
-    writeFile prelude defaultPrelude
-    let cacheDir = dir </> "cache"
-    let source = dir </> "post_process_prelude.hs"
-    let extensionsFile = dir </> "extensions"
-    let modulesFile = dir </> "modules"
-    let compiled = dir </> "prelude"
-    let configInfoPath = dir </> "configInfo"
+withDefaultConfiguration f = do
+    context <- getContext "tests/preludes/default"
 
-    (outputFile,outputModule) <- recompileUserPrelude' prelude
-                                                       cacheDir
-                                                       source
-                                                       extensionsFile
-                                                       modulesFile
-                                                       compiled
-                                                       configInfoPath
-
-    modules <- read <$> readFile modulesFile
-    extensions <- read <$> readFile extensionsFile
-
-    f (outputFile,outputModule) modules extensions
+    f (configFromContext context)
+      (modules context)
+      (map read $ extensions context)
