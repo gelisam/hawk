@@ -34,8 +34,7 @@ data Options = Options { optMode :: Mode
                        , optOutWordsDelim :: Maybe ByteString
                        , optRecompile :: Bool
                        , optVersion :: Bool
-                       , optHelp :: Bool
-                       , optModuleFile :: Maybe FP.FilePath}
+                       , optHelp :: Bool}
     deriving Show
 
 defaultOptions :: Options
@@ -46,8 +45,7 @@ defaultOptions = Options { optMode = EvalMode
                          , optOutWordsDelim =  Nothing
                          , optRecompile = False
                          , optVersion = False
-                         , optHelp = False
-                         , optModuleFile = Nothing }
+                         , optHelp = False}
 
 -- | Handle a few typical but exceptional delimiters.
 -- 
