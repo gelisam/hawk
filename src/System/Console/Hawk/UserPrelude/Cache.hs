@@ -29,7 +29,6 @@ module System.Console.Hawk.UserPrelude.Cache
 import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as B
-import qualified Language.Haskell.Interpreter as Interpreter
 import System.EasyFile
 
 import System.Console.Hawk.UserPrelude.Base

@@ -19,7 +19,6 @@ import Data.ByteString (ByteString)
 
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.List as L
-import qualified System.FilePath as FP
 
 import System.Console.GetOpt
 
