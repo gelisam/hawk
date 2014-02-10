@@ -1,0 +1,77 @@
+{-# LANGUAGE OverloadedStrings #-}
+-- | The part of a HawkSpec used at Runtime. The API may change at any time.
+module System.Console.Hawk.Runtime.Base
+  ( HawkRuntime(..)
+  , processTable
+  ) where
+
+import Control.Applicative
+import Data.ByteString.Lazy.Char8 as B
+import Data.ByteString.Lazy.Search as Search
+
+import System.Console.Hawk.Args.Spec
+import System.Console.Hawk.Representable
+
+
+data HawkRuntime = HawkRuntime
+    { inputSpec :: InputSpec
+    , outputSpec :: OutputSpec
+    }
+
+processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> IO ()
+processTable runtime f = do
+    xss <- getTable (inputSpec runtime)
+    outputRows (outputSpec runtime) (f xss)
+
+
+getTable :: InputSpec -> IO [[B.ByteString]]
+getTable spec = splitIntoTable' <$> getInputString'
+  where
+    splitIntoTable' = splitIntoTable (inputFormat spec)
+    getInputString' = getInputString (inputSource spec)
+
+getInputString :: InputSource -> IO B.ByteString
+getInputString NoInput = return B.empty
+getInputString UseStdin = B.getContents
+getInputString (InputFile f) = B.readFile f
+
+-- [[contents]]
+-- or
+-- [[line0], [line1], ...]
+-- or
+-- [[field0, field1, ...], [field0, field1, ...], ...]
+splitIntoTable :: InputFormat -> B.ByteString -> [[B.ByteString]]
+splitIntoTable RawStream = return . return
+splitIntoTable (Lines sep format) = fmap splitIntoFields' . splitIntoLines'
+  where
+    splitIntoFields' = splitIntoFields format
+    splitIntoLines' = splitIntoLines sep
+
+-- [line0, line1, ...]
+splitIntoLines :: Separator -> B.ByteString -> [B.ByteString]
+splitIntoLines sep = fmap postprocess . Search.split sep
+  where
+    postprocess | sep == "\n" = dropWindowsNewline
+                | otherwise   = id
+    
+    dropWindowsNewline :: B.ByteString -> B.ByteString
+    dropWindowsNewline "" = ""
+    dropWindowsNewline s
+        | last_char == '\r' = s'
+        | otherwise = s
+      where
+        last_char = B.last s
+        n = B.length s
+        s' = B.take (n - 1) s
+
+-- [line]
+-- or
+-- [field0, field1, ...]
+splitIntoFields :: LineFormat -> B.ByteString -> [B.ByteString]
+splitIntoFields RawLine = return
+splitIntoFields (Words sep) = Search.split sep
+
+
+-- TODO
+outputRows :: Rows a => OutputSpec -> a -> IO ()
+outputRows = undefined
