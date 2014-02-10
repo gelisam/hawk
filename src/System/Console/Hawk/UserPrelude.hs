@@ -68,19 +68,16 @@ recompileUserPrelude confDir
                           (getCacheDir        confDir)
                           (getSourceFile      confDir)
                           (getCompiledFile    confDir)
-                          (getConfigInfosFile confDir)
 
 recompileUserPrelude' :: FilePath -- ^ prelude file
                       -> FilePath -- ^ cache dir
                       -> FilePath -- ^ source file
                       -> FilePath -- ^ output compiled file
-                      -> FilePath -- ^ output config info path
                       -> IO (String,String)
 recompileUserPrelude' preludeFile
                       cacheDir
                       sourceFile
-                      compiledFile
-                      configInfosFile = do
+                      compiledFile = do
     clean
     createDirectoryIfMissing True cacheDir
     
@@ -95,10 +92,6 @@ recompileUserPrelude' preludeFile
     compile sourceFile compiledFile cacheDir
     
     let moduleName = getModuleName source
-    lastModTime <- getModificationTime preludeFile
-    writeFile configInfosFile $ unlines [sourceFile
-                                         ,moduleName
-                                         ,show lastModTime]
     
     return (sourceFile, moduleName)
   where

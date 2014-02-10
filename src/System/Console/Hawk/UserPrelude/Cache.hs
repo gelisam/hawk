@@ -19,7 +19,6 @@ module System.Console.Hawk.UserPrelude.Cache
     ( getDefaultContextDir
     , getUserPreludeFile
     , getCacheDir
-    , getConfigInfosFile
     , getContextFile
     , getCompiledFile
     , getSourceFile
@@ -52,9 +51,6 @@ getUserPreludeFile = (</> "prelude.hs")
 
 getCacheDir :: FilePath -> FilePath
 getCacheDir = (</> "cache")
-
-getConfigInfosFile :: FilePath -> FilePath
-getConfigInfosFile = (</> "configInfos") . getCacheDir
 
 getContextFile :: FilePath -> FilePath
 getContextFile = (</> "context") . getCacheDir
