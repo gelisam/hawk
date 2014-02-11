@@ -72,6 +72,14 @@ splitIntoFields RawLine = return
 splitIntoFields (Words sep) = Search.split sep
 
 
--- TODO
 outputRows :: Rows a => OutputSpec -> a -> IO ()
-outputRows = undefined
+outputRows (OutputSpec _ spec) x = do
+    let s = join' (toRows x)
+    B.putStr s
+  where
+    join' = join (B.fromStrict $ lineDelimiter spec)
+    toRows = repr (B.fromStrict $ wordDelimiter spec)
+    
+    join :: B.ByteString -> [B.ByteString] -> B.ByteString
+    join "\n" = B.unlines
+    join sep  = B.intercalate sep
