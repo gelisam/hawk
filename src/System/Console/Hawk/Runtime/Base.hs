@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
 -- | The part of a HawkSpec used at Runtime. The API may change at any time.
 module System.Console.Hawk.Runtime.Base
   ( HawkRuntime(..)
@@ -8,6 +8,7 @@ module System.Console.Hawk.Runtime.Base
 import Control.Applicative
 import Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Search as Search
+import Data.Typeable.Internal
 
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Representable
@@ -17,6 +18,7 @@ data HawkRuntime = HawkRuntime
     { inputSpec :: InputSpec
     , outputSpec :: OutputSpec
     }
+  deriving (Show, Eq, Typeable)
 
 processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> IO ()
 processTable runtime f = do

@@ -58,6 +58,7 @@ import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.IO
 import System.Console.Hawk.Options
+import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Version
 
 
@@ -84,6 +85,9 @@ errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
     header = "Won't compile:"
     indent (GhcError e) = ('\t':e)
 errorString e = P.show e
+
+wrapErrorsM :: Monad m => m (Either InterpreterError a) -> UncertainT m a
+wrapErrorsM = lift >=> wrapErrors
 
 wrapErrors :: Monad m => Either InterpreterError a -> UncertainT m a
 wrapErrors (Left e) = fail $ errorString e
@@ -122,6 +126,15 @@ instance Typeable.Typeable QualifiedByteString where
   typeOf (QB bs) = let TypeRep fp tc trs = Typeable.typeOf bs
                    in TypeRep fp
                               tc{ tyConName = "Data.ByteString.Lazy.Char8."
+                                          ++ tyConName tc }
+                              trs
+
+newtype QualifiedHawkRuntime = QR { unQR :: HawkRuntime }
+
+instance Typeable.Typeable QualifiedHawkRuntime where
+  typeOf (QR bs) = let TypeRep fp tc trs = Typeable.typeOf bs
+                   in TypeRep fp
+                              tc{ tyConName = "System.Console.Hawk.Runtime.Base."
                                           ++ tyConName tc }
                               trs
 
@@ -248,7 +261,27 @@ applyExpr e i o = do
     let modules = Context.modules context
     let expr = userExpression e
 
-    f <- runUncertainIO $ hawk os prelude modules extensions expr
-    input <- getInput file
-    let output = f input
-    printOutput output
+    processRuntime <- runUncertainIO
+                    $ wrapErrorsM
+                    $ runLockedHawkInterpreter
+                    $ do
+      initInterpreter prelude modules extensions
+      interpret' (processTable expr)
+    processRuntime (QR hawkRuntime)
+  where
+    interpret' expr = do
+      interpret expr (as :: QualifiedHawkRuntime -> IO ())
+    
+    hawkRuntime = HawkRuntime i o
+    
+    processTable :: String -> String
+    processTable = printf "(%s) (%s) (%s)" (prel "flip")
+                                           (runtime "processTable")
+    
+    -- we cannot use any unqualified symbols in the user expression,
+    -- because we don't know which modules the user prelude will import.
+    qualify :: String -> String -> String
+    qualify moduleName = printf "%s.%s" moduleName
+    
+    prel = qualify "Prelude"
+    runtime = qualify "System.Console.Hawk.Runtime.Base"

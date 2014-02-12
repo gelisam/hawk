@@ -40,7 +40,7 @@ defaultModules :: [QualifiedModule]
 defaultModules = map fullyQualified [ "Prelude"
                                      , "System.Console.Hawk.IO"
                                      , "System.Console.Hawk.Representable"
-                                     , "System.Console.Hawk.Runtime"
+                                     , "System.Console.Hawk.Runtime.Base"
                                      , "System.IO.Unsafe"
                                      , "Data.ByteString.Lazy.Char8"
                                      ]
