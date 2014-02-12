@@ -124,7 +124,7 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 --
 -- For example:
 --
--- >>> IO.putStrLn $ show [1,2,3,4]
+-- >>> putStrLn $ show [1,2,3,4]
 -- [1,2,3,4]
 --
 -- >>> Data.ByteString.Lazy.Char8.putStrLn $ repr' (Data.ByteString.Lazy.Char8.pack " ") [1,2,3,4]
