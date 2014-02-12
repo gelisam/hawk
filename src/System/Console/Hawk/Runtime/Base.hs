@@ -11,6 +11,7 @@ import Data.ByteString.Lazy.Search as Search
 import Data.Typeable.Internal
 
 import System.Console.Hawk.Args.Spec
+import System.Console.Hawk.IO
 import System.Console.Hawk.Representable
 
 
@@ -77,7 +78,7 @@ splitIntoFields (Words sep) = Search.split sep
 outputRows :: Rows a => OutputSpec -> a -> IO ()
 outputRows (OutputSpec _ spec) x = do
     let s = join' (toRows x)
-    B.putStr s
+    printOutput s
   where
     join' = join (B.fromStrict $ lineDelimiter spec)
     toRows = repr (B.fromStrict $ wordDelimiter spec)
