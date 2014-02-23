@@ -6,12 +6,14 @@ module System.Console.Hawk.Runtime.Base
   ) where
 
 import Control.Applicative
+import Control.Exception
 import Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Search as Search
 import Data.Typeable.Internal
+import GHC.IO.Exception
+import System.IO
 
 import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.IO
 import System.Console.Hawk.Representable
 
 
@@ -76,9 +78,10 @@ splitIntoFields (Words sep) = Search.split sep
 
 
 outputRows :: Rows a => OutputSpec -> a -> IO ()
-outputRows (OutputSpec _ spec) x = do
+outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
-    printOutput s
+    B.putStr s
+    hFlush stdout
   where
     join' = join (B.fromStrict $ lineDelimiter spec)
     toRows = repr (B.fromStrict $ wordDelimiter spec)
@@ -86,3 +89,12 @@ outputRows (OutputSpec _ spec) x = do
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
+
+-- Don't fret if stdout is closed early, that is the way of shell pipelines.
+ignoringBrokenPipe :: IO () -> IO ()
+ignoringBrokenPipe = handleJust isBrokenPipe $ \_ -> do
+    -- ignore the broken pipe
+    return ()
+  where
+    isBrokenPipe e | ioe_type e == ResourceVanished = Just e
+    isBrokenPipe _ | otherwise                      = Nothing
