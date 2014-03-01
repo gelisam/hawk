@@ -53,21 +53,21 @@ run :: IO ()
 run = withContextHSpec $ \itEval itApply itMap ->
         describe "Hawk" $ do
           itEval "" `into` ""
-          itEval "1" `into` "1"
-          itEval "1+1" `into` "2"
+          itEval "1" `into` "1\n"
+          itEval "1+1" `into` "2\n"
           itEval "[]" `into` ""
-          itEval "[1]" `into` "1"
-          itEval "[1,2]" `into` "1\n2"
-          itEval "(1,2)" `into` "1\n2"
-          itEval "[[1]]" `into` "1"
-          itEval "[[1,2]]" `into` "1 2"
-          itEval "[[1,2],[3,4]]" `into` "1 2\n3 4"
+          itEval "[1]" `into` "1\n"
+          itEval "[1,2]" `into` "1\n2\n"
+          itEval "(1,2)" `into` "1\n2\n"
+          itEval "[[1]]" `into` "1\n"
+          itEval "[[1,2]]" `into` "1 2\n"
+          itEval "[[1,2],[3,4]]" `into` "1 2\n3 4\n"
           
-          itApply "id" `onInput` "foo" `into` "foo"
-          itApply "L.transpose" `onInput` "1 2\n3 4" `into` "1 3\n2 4"
-          itApply "L.map (!! 1)" `onInput` "1 2\n3 4" `into` "2\n4"
+          itApply "id" `onInput` "foo" `into` "foo\n"
+          itApply "L.transpose" `onInput` "1 2\n3 4" `into` "1 3\n2 4\n"
+          itApply "L.map (!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
 
-          itMap "(!! 1)" `onInput` "1 2\n3 4" `into` "2\n4"
+          itMap "(!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
   where onInput f x = f x
         into f x = f x
 
