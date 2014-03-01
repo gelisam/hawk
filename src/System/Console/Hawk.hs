@@ -42,7 +42,6 @@ import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
-import System.Console.Hawk.Args.Compatibility
 import System.Console.Hawk.Args.Spec
 import qualified System.Console.Hawk.Context as Context
 import System.Console.Hawk.Context.Compatibility
