@@ -76,6 +76,7 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
         setImportsQ $ (preludeModule,Nothing):defaultModules
                                            ++ userModules
 
+
 errorString :: InterpreterError -> String
 errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
   where
@@ -90,23 +91,10 @@ wrapErrors :: Monad m => Either InterpreterError a -> UncertainT m a
 wrapErrors (Left e) = fail $ errorString e
 wrapErrors (Right x) = return x
 
+
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
 runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
-
-data StreamFormat = StreamFormat | LinesFormat | WordsFormat
-    deriving (P.Eq,P.Show,P.Read)
-
--- | Omitting the argument to the `-D` and `-d` flags prevents the input from
---   being split into lines or words. Each combination is implemented via a
---   dedicated stream format.
-streamFormat :: B.ByteString
-             -> B.ByteString
-             -> StreamFormat
-streamFormat ld wd
-    | B.null ld = StreamFormat
-    | B.null wd = LinesFormat
-    | P.otherwise = WordsFormat
 
 -- | Wrapper used to force `typeOf` to fully-qualify the type
 --   `HawkRuntime`. Otherwise hint may try to use a type which
