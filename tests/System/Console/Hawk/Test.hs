@@ -67,7 +67,7 @@ withContextHSpec :: ((String -> String -> Spec)
                     -> (String -> String -> String -> Spec)
                     -> Spec)
                  -> IO ()
-withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -> do
+withContextHSpec body = do
   let it' flags expr input expected =
         let descr = "evals " ++ show expr ++
                     " on input " ++ show input ++
@@ -78,7 +78,10 @@ withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -
              str <- hPutStr tmph input
              hClose tmph
              out <- catchOutput $ do
-               processArgs (flags ++ [expr, tmpf])
+               processArgs $ concat [ ["-c", "tests/preludes/default"]
+                                    , flags
+                                    , [expr, tmpf]
+                                    ]
              removeFile tmpf
              assertEqual descr expected out
   let [itApply,itMap] = map it' [["-a"],["-m"]]
