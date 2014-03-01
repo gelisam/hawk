@@ -18,12 +18,9 @@
            , TupleSections #-}
 -- | Hawk as seen from the outside world: parsing command-line arguments,
 --   evaluating user expressions.
-module System.Console.Hawk (
-
-    hawk
-  , processArgs
-
-) where
+module System.Console.Hawk
+  ( processArgs
+  ) where
 
 
 import Control.Applicative ((<$>))
@@ -137,81 +134,6 @@ instance Typeable.Typeable QualifiedHawkRuntime where
                               tc{ tyConName = "System.Console.Hawk.Runtime.Base."
                                           ++ tyConName tc }
                               trs
-
-hawk :: Options                 -- ^ Program options
-     -> (String,String)         -- ^ The prelude file and module name
-     -> [(String,Maybe String)] -- ^ The modules maybe qualified
-     -> [Extension]             -- ^ The extensions to enable
-     -> String                  -- ^ The user expression to evaluate
-     -> UncertainT IO (LB.ByteString -> LB.ByteString)
-hawk opts prelude modules extensions userExpr = do
-    eitherErrorF <- lift $ runLockedHawkInterpreter $ do
-
-        initInterpreter prelude modules extensions
-        
-        -- eval program based on the existence of a delimiter
-        case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_)             -> interpret' $ evalExpr      userExpr
-            (ApplyMode,StreamFormat) -> interpret' $ streamExpr    userExpr
-            (ApplyMode,LinesFormat)  -> interpret' $ linesExpr     userExpr
-            (ApplyMode,WordsFormat)  -> interpret' $ wordsExpr     userExpr
-            (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr userExpr
-            (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  userExpr
-            (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
-    
-    (\f -> unQB . f . QB) <$> wrapErrors eitherErrorF
-    where
-          interpret' expr = do
-            -- print the user expression
-            -- lift $ IO.hPutStrLn IO.stderr expr
-            interpret expr (as :: QualifiedByteString -> QualifiedByteString)
-          evalExpr = printf "const (%s (%s))" showRows
-          mapStreamExpr = streamExpr . listMap
-          mapLinesExpr = linesExpr . listMap
-          mapWordsExpr = wordsExpr . listMap
-          streamExpr expr = compose [showRows, expr]
-          linesExpr expr = compose [showRows, expr, parseRows]
-          wordsExpr expr = compose [showRows, expr, parseWords]
-          linesDelim = case optLinesDelim opts of
-                         Nothing -> defaultLineSeparator
-                         Just d -> d
-          wordsDelim = case optWordsDelim opts of
-                         Nothing -> defaultWordSeparator
-                         Just d -> d
-          outLinesDelim = case optOutLinesDelim opts of
-                            Nothing -> linesDelim
-                            Just delim -> delim
-          outWordsDelim = case optOutWordsDelim opts of
-                            Nothing -> wordsDelim
-                            Just delim -> delim
-          compose :: [String] -> String
-          compose = L.intercalate (prel ".") . P.map (printf "(%s)")
-          listMap :: String -> String
-          listMap = printf (runtime "listMap (%s)")
-          c8pack :: String -> String
-          c8pack = printf (runtime "c8pack (%s)")
-          sc8pack :: String -> String
-          sc8pack = printf (runtime "sc8pack (%s)")
-          showRows :: String
-          showRows = printf (runtime "showRows (%s) (%s)")
-                             (c8pack $ P.show outLinesDelim)
-                             (c8pack $ P.show outWordsDelim)
-          parseRows :: String
-          parseRows = printf (runtime "parseRows (%s)")
-                             (sc8pack $ P.show linesDelim)
-
-          parseWords :: String
-          parseWords = printf (runtime "parseWords (%s) (%s)")
-                              (sc8pack $ P.show linesDelim)
-                              (sc8pack $ P.show wordsDelim)
-          
-          -- we cannot use any unqualified symbols in the user expression,
-          -- because we don't know which modules the user prelude will import.
-          qualify :: String -> String -> String
-          qualify moduleName = printf "%s.%s" moduleName
-          
-          prel = qualify "Prelude"
-          runtime = qualify "System.Console.Hawk.Runtime"
 
 
 -- | Same as if the given arguments were passed to Hawk on the command-line.
