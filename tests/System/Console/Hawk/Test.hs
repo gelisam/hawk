@@ -15,8 +15,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Test where
 
-import Language.Haskell.Interpreter
-  (Extension)
 import System.Directory
 import System.IO
 import Test.Hspec
@@ -24,21 +22,7 @@ import Test.HUnit
 import GHC.IO.Handle
 
 import System.Console.Hawk
-import System.Console.Hawk.Context
-import System.Console.Hawk.Context.Compatibility
-import System.Console.Hawk.Options
 
-
---hawk :: Options                -- ^ Program options
---     -> (String,String)         -- ^ The prelude file and module name
---     -> [(String,Maybe String)] -- ^ The modules maybe qualified
---     -> [Extension]             -- ^ The extensions to enable
---     -> String                  -- ^ The user expression to evaluate
---     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
-
-mode :: Mode
-     -> Options
-mode m = defaultOptions{ optMode = m }
 
 run :: IO ()
 run = withContextHSpec $ \itEval itApply itMap ->
@@ -75,7 +59,7 @@ withContextHSpec body = do
         in it descr $ do
              tmpd <- getTemporaryDirectory
              (tmpf, tmph) <- openTempFile tmpd "hawk_input"
-             str <- hPutStr tmph input
+             hPutStr tmph input
              hClose tmph
              out <- catchOutput $ do
                processArgs $ concat [ ["-c", "tests/preludes/default"]
@@ -87,21 +71,6 @@ withContextHSpec body = do
   let [itApply,itMap] = map it' [["-a"],["-m"]]
   let itEval expr expected = it' [] expr "" expected
   hspec $ body itEval itApply itMap
-
-
--- itEval <str> `withInput` <input> `equalsTo` <expected>
-
-withDefaultConfiguration :: ((String,String) 
-                             -> [(String,Maybe String)]
-                             -> [Extension]
-                             -> IO ())
-                         -> IO ()
-withDefaultConfiguration f = do
-    context <- getContext "tests/preludes/default"
-
-    f (configFromContext context)
-      (modules context)
-      (map read $ extensions context)
 
 
 -- from http://stackoverflow.com/a/9664017/3286185
