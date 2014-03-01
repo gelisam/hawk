@@ -54,11 +54,8 @@ splitIntoTable (Lines sep format) = fmap splitIntoFields' . splitIntoLines'
 
 -- [line0, line1, ...]
 splitIntoLines :: Separator -> B.ByteString -> [B.ByteString]
-splitIntoLines sep = fmap postprocess . Search.split sep
+splitIntoLines "\n" = fmap dropWindowsNewline . B.lines
   where
-    postprocess | sep == "\n" = dropWindowsNewline
-                | otherwise   = id
-    
     dropWindowsNewline :: B.ByteString -> B.ByteString
     dropWindowsNewline "" = ""
     dropWindowsNewline s
@@ -68,6 +65,7 @@ splitIntoLines sep = fmap postprocess . Search.split sep
         last_char = B.last s
         n = B.length s
         s' = B.take (n - 1) s
+splitIntoLines sep = Search.split sep
 
 -- [line]
 -- or
