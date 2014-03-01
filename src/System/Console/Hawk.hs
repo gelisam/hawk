@@ -145,16 +145,12 @@ wrapExpr f e = e'
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
-    let spec = Apply e i o
-    let opts = optionsFromSpec spec
     let contextDir = userContextDirectory e
     
     context <- Context.getContext contextDir
     
-    let os = opts
     let prelude = configFromContext context
     
-    let file = fileFromInputSource (inputSource i)
     let extensions = P.map P.read $ Context.extensions context
     let modules = Context.modules context
     let expr = userExpression e
