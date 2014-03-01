@@ -15,90 +15,74 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Test where
 
-import Control.Applicative
-  ((<$>))
-import Data.ByteString.Lazy.Char8
-  (ByteString)
-import Language.Haskell.Interpreter
-  (Extension)
-import System.FilePath
+import System.Directory
+import System.IO
 import Test.Hspec
 import Test.HUnit
+import GHC.IO.Handle
 
-import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
-  (hawk)
-import System.Console.Hawk.Context
-import System.Console.Hawk.Context.Compatibility
-import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.Options
-import System.Console.Hawk.TestUtils
-  (withTempDir')
 
-
---hawk :: Options                -- ^ Program options
---     -> (String,String)         -- ^ The prelude file and module name
---     -> [(String,Maybe String)] -- ^ The modules maybe qualified
---     -> [Extension]             -- ^ The extensions to enable
---     -> String                  -- ^ The user expression to evaluate
---     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
-
-mode :: Mode
-     -> Options
-mode m = defaultOptions{ optMode = m }
 
 run :: IO ()
 run = withContextHSpec $ \itEval itApply itMap ->
         describe "Hawk" $ do
-          itEval "" `into` ""
-          itEval "1" `into` "1"
-          itEval "1+1" `into` "2"
+          itEval "" `into` "\n"
+          itEval "1" `into` "1\n"
+          itEval "1+1" `into` "2\n"
           itEval "[]" `into` ""
-          itEval "[1]" `into` "1"
-          itEval "[1,2]" `into` "1\n2"
-          itEval "(1,2)" `into` "1\n2"
-          itEval "[[1]]" `into` "1"
-          itEval "[[1,2]]" `into` "1 2"
-          itEval "[[1,2],[3,4]]" `into` "1 2\n3 4"
+          itEval "[1]" `into` "1\n"
+          itEval "[1,2]" `into` "1\n2\n"
+          itEval "(1,2)" `into` "1\n2\n"
+          itEval "[[1]]" `into` "1\n"
+          itEval "[[1,2]]" `into` "1 2\n"
+          itEval "[[1,2],[3,4]]" `into` "1 2\n3 4\n"
           
-          itApply "id" `onInput` "foo" `into` "foo"
-          itApply "L.transpose" `onInput` "1 2\n3 4" `into` "1 3\n2 4"
-          itApply "L.map (!! 1)" `onInput` "1 2\n3 4" `into` "2\n4"
+          itApply "id" `onInput` "foo" `into` "foo\n"
+          itApply "L.transpose" `onInput` "1 2\n3 4" `into` "1 3\n2 4\n"
+          itApply "L.map (!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
 
-          itMap "(!! 1)" `onInput` "1 2\n3 4" `into` "2\n4"
+          itMap "(!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
   where onInput f x = f x
         into f x = f x
 
-withContextHSpec :: ((String -> ByteString -> Spec)
-                    -> (String -> ByteString -> ByteString -> Spec)
-                    -> (String -> ByteString -> ByteString -> Spec)
+withContextHSpec :: ((String -> String -> Spec)
+                    -> (String -> String -> String -> Spec)
+                    -> (String -> String -> String -> Spec)
                     -> Spec)
                  -> IO ()
-withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -> do
-  let dhawk m expr = hawk (mode m) prelude modules extensions expr
-  let it' m expr input expected =
+withContextHSpec body = do
+  let it' flags expr input expected =
         let descr = "evals " ++ show expr ++
                     " on input " ++ show input ++
                     " equals to " ++ show expected
-        in it descr $ do eitherErrorF <- runWarningsIO $ dhawk m expr
-                         case eitherErrorF of
-                           Left e -> assertFailure (show e)
-                           Right f -> assertEqual descr expected (f input)
-  let [itApply,itMap] = map it' [ApplyMode,MapMode]
-  let itEval expr expected = it' EvalMode expr "" expected
+        in it descr $ do
+             tmpd <- getTemporaryDirectory
+             (tmpf, tmph) <- openTempFile tmpd "hawk_input"
+             hPutStr tmph input
+             hClose tmph
+             out <- catchOutput $ do
+               processArgs $ concat [ ["-c", "tests/preludes/default"]
+                                    , flags
+                                    , [expr, tmpf]
+                                    ]
+             removeFile tmpf
+             assertEqual descr expected out
+  let [itApply,itMap] = map it' [["-a"],["-m"]]
+  let itEval expr expected = it' [] expr "" expected
   hspec $ body itEval itApply itMap
 
 
--- itEval <str> `withInput` <input> `equalsTo` <expected>
-
-withDefaultConfiguration :: ((String,String) 
-                             -> [(String,Maybe String)]
-                             -> [Extension]
-                             -> IO ())
-                         -> IO ()
-withDefaultConfiguration f = do
-    context <- getContext "tests/preludes/default"
-
-    f (configFromContext context)
-      (modules context)
-      (map read $ extensions context)
+-- from http://stackoverflow.com/a/9664017/3286185
+catchOutput :: IO () -> IO String
+catchOutput f = do
+    tmpd <- getTemporaryDirectory
+    (tmpf, tmph) <- openTempFile tmpd "haskell_stdout"
+    stdout_dup <- hDuplicate stdout
+    hDuplicateTo tmph stdout
+    hClose tmph
+    f
+    hDuplicateTo stdout_dup stdout
+    str <- readFile tmpf
+    removeFile tmpf
+    return str
