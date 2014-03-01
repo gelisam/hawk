@@ -12,6 +12,9 @@ import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
 
+-- $setup
+-- >>> import System.Console.Hawk.Args.Spec
+
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
 --   language extensions it specifies.
