@@ -15,27 +15,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Test where
 
-import Control.Applicative
-  ((<$>))
-import Data.ByteString.Lazy.Char8
-  (ByteString)
 import Language.Haskell.Interpreter
   (Extension)
 import System.Directory
-import System.FilePath
 import System.IO
 import Test.Hspec
 import Test.HUnit
 import GHC.IO.Handle
 
-import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
 import System.Console.Hawk.Context
 import System.Console.Hawk.Context.Compatibility
-import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Options
-import System.Console.Hawk.TestUtils
-  (withTempDir')
 
 
 --hawk :: Options                -- ^ Program options

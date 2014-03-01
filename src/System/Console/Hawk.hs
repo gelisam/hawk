@@ -23,7 +23,6 @@ module System.Console.Hawk
   ) where
 
 
-import Control.Applicative ((<$>))
 import Control.Monad
 import qualified Data.List as L
 import Data.List ((++))
@@ -35,8 +34,6 @@ import qualified Data.Typeable.Internal as Typeable
 import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
 import Language.Haskell.Interpreter
 import qualified Prelude as P
 import qualified System.IO as IO
@@ -53,8 +50,6 @@ import System.Console.Hawk.Sandbox
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
-import System.Console.Hawk.IO
-import System.Console.Hawk.Options
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Version
 
