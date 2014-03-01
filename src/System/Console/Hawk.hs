@@ -108,24 +108,17 @@ streamFormat ld wd
     | B.null wd = LinesFormat
     | P.otherwise = WordsFormat
 
--- | 'ByteString' wrapper used to force `typeOf` to fully-qualify the type
---   `ByteString`. Otherwise hint may try to use a type which we haven't
---   explicitly imported.
+-- | Wrapper used to force `typeOf` to fully-qualify the type
+--   `HawkRuntime`. Otherwise hint may try to use a type which
+--   we haven't explicitly imported.
 -- 
--- >>> Typeable.typeOf (fromString "test" :: LB.ByteString)
--- ByteString
+-- >>> let runtime = HawkRuntime defaultInputSpec defaultOutputSpec
 -- 
--- >>> Typeable.typeOf $ QB (fromString "test" :: LB.ByteString)
--- Data.ByteString.Lazy.Char8.ByteString
-newtype QualifiedByteString = QB { unQB :: LB.ByteString }
-
-instance Typeable.Typeable QualifiedByteString where
-  typeOf (QB bs) = let TypeRep fp tc trs = Typeable.typeOf bs
-                   in TypeRep fp
-                              tc{ tyConName = "Data.ByteString.Lazy.Char8."
-                                          ++ tyConName tc }
-                              trs
-
+-- >>> Typeable.typeOf runtime
+-- HawkRuntime
+-- 
+-- >>> Typeable.typeOf $ QR runtime
+-- System.Console.Hawk.Runtime.Base.HawkRuntime
 newtype QualifiedHawkRuntime = QR { unQR :: HawkRuntime }
 
 instance Typeable.Typeable QualifiedHawkRuntime where
