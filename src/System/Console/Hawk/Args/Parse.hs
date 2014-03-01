@@ -3,6 +3,7 @@
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
+import Data.Char                                 (isSpace)
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser
@@ -151,7 +152,7 @@ exprSpec = ExprSpec <$> contextDir <*> expr
     expr = do
         r <- consumeExtra consumeString
         case r of
-          Just e  -> if null e
+          Just e  -> if null e || all isSpace e
                       then fail "user expression cannot be empty"
                       else return e
           Nothing -> fail "missing user expression"
