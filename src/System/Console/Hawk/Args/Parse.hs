@@ -132,6 +132,10 @@ outputSpec (l, w) = OutputSpec <$> sink <*> format
 -- error: missing user expression
 -- *** Exception: ExitFailure 1
 -- 
+-- >>> test [""]
+-- error: user expression cannot be empty
+-- *** Exception: ExitFailure 1
+--
 -- >>> test ["-D;", "-d", "-a", "L.reverse","-c","somedir"]
 -- "L.reverse"
 -- "somedir"
@@ -147,7 +151,9 @@ exprSpec = ExprSpec <$> contextDir <*> expr
     expr = do
         r <- consumeExtra consumeString
         case r of
-          Just e  -> return e
+          Just e  -> if null e
+                      then fail "user expression cannot be empty"
+                      else return e
           Nothing -> fail "missing user expression"
 
 
