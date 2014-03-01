@@ -52,7 +52,7 @@ mode m = defaultOptions{ optMode = m }
 run :: IO ()
 run = withContextHSpec $ \itEval itApply itMap ->
         describe "Hawk" $ do
-          itEval "" `into` ""
+          itEval "" `into` "\n"
           itEval "1" `into` "1\n"
           itEval "1+1" `into` "2\n"
           itEval "[]" `into` ""
