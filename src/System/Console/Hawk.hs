@@ -102,7 +102,7 @@ runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
 -- 
 -- >>> Typeable.typeOf $ QR runtime
 -- System.Console.Hawk.Runtime.Base.HawkRuntime
-newtype QualifiedHawkRuntime = QR { unQR :: HawkRuntime }
+newtype QualifiedHawkRuntime = QR HawkRuntime
 
 instance Typeable.Typeable QualifiedHawkRuntime where
   typeOf (QR bs) = let TypeRep fp tc trs = Typeable.typeOf bs
