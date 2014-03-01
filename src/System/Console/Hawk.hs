@@ -12,8 +12,7 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-{-# LANGUAGE NoImplicitPrelude
-           , OverloadedStrings
+{-# LANGUAGE OverloadedStrings
            , ScopedTypeVariables
            , TupleSections #-}
 -- | Hawk as seen from the outside world: parsing command-line arguments,
@@ -24,20 +23,16 @@ module System.Console.Hawk
 
 
 import Control.Monad
-import qualified Data.List as L
 import Data.List ((++))
 import Data.Either
 import Data.Function
 import Data.Maybe
 import Data.String
-import qualified Data.Typeable.Internal as Typeable
 import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
 import Language.Haskell.Interpreter
-import qualified Prelude as P
-import qualified System.IO as IO
-import System.IO (IO)
+import System.IO
 import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
@@ -66,7 +61,7 @@ processArgs args = do
 --   instead of a sequence of strings.
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
-processSpec Version       = IO.putStrLn versionString
+processSpec Version       = putStrLn versionString
 processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
 processSpec (Apply e i o) = applyExpr e                    i       o
 processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
@@ -93,7 +88,7 @@ applyExpr e i o = do
     
     let prelude = configFromContext context
     
-    let extensions = P.map P.read $ Context.extensions context
+    let extensions = map read $ Context.extensions context
     let modules = Context.modules context
     let expr = userExpression e
 

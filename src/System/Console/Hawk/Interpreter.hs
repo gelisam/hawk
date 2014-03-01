@@ -2,26 +2,19 @@
 module System.Console.Hawk.Interpreter where
 
 import Control.Monad
-import qualified Data.List as L
-import Data.List ((++))
+import Data.List
 import Data.Either
 import Data.Function
 import Data.Maybe
 import Data.String
-import qualified Data.Typeable.Internal as Typeable
-import Data.Typeable.Internal
-  (TypeRep(..)
-  ,tyConName)
+import Data.Typeable.Internal as Typeable
 import Language.Haskell.Interpreter
-import qualified Prelude as P
-import qualified System.IO as IO
-import System.IO (IO)
+import System.IO
 import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
-import qualified System.Console.Hawk.Context as Context
 import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.UserPrelude
@@ -50,11 +43,11 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
 
 
 errorString :: InterpreterError -> String
-errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
+errorString (WontCompile es) = intercalate "\n" (header : map indent es)
   where
     header = "Won't compile:"
     indent (GhcError e) = ('\t':e)
-errorString e = P.show e
+errorString e = show e
 
 wrapErrorsM :: Monad m => m (Either InterpreterError a) -> UncertainT m a
 wrapErrorsM = lift >=> wrapErrors
@@ -80,7 +73,7 @@ runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
 -- System.Console.Hawk.Runtime.Base.HawkRuntime
 newtype QualifiedHawkRuntime = QR HawkRuntime
 
-instance Typeable.Typeable QualifiedHawkRuntime where
+instance Typeable QualifiedHawkRuntime where
   typeOf (QR bs) = let TypeRep fp tc trs = Typeable.typeOf bs
                    in TypeRep fp
                               tc{ tyConName = "System.Console.Hawk.Runtime.Base."
