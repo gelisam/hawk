@@ -22,17 +22,7 @@ module System.Console.Hawk
   ) where
 
 
-import Control.Monad
-import Data.List ((++))
-import Data.Either
-import Data.Function
-import Data.Maybe
-import Data.String
-import Data.Typeable.Internal
-  (TypeRep(..)
-  ,tyConName)
 import Language.Haskell.Interpreter
-import System.IO
 import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
@@ -40,11 +30,8 @@ import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import qualified System.Console.Hawk.Context as Context
 import System.Console.Hawk.Context.Compatibility
-import System.Console.Hawk.Sandbox
-import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
-import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Version
 

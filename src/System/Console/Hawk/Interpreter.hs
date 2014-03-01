@@ -3,25 +3,14 @@ module System.Console.Hawk.Interpreter where
 
 import Control.Monad
 import Data.List
-import Data.Either
-import Data.Function
-import Data.Maybe
-import Data.String
 import Data.Typeable.Internal as Typeable
 import Language.Haskell.Interpreter
-import System.IO
-import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
-import System.Console.Hawk.Args
-import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Sandbox
 import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
-import System.Console.Hawk.Version
 
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
