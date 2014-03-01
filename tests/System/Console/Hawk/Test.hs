@@ -82,7 +82,13 @@ withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -
                     " on input " ++ show input ++
                     " equals to " ++ show expected
         in it descr $ do
-             out <- catchOutput $ processArgs (flags ++ [expr])
+             tmpd <- getTemporaryDirectory
+             (tmpf, tmph) <- openTempFile tmpd "hawk_input"
+             str <- hPutStr tmph input
+             hClose tmph
+             out <- catchOutput $ do
+               processArgs (flags ++ [expr, tmpf])
+             removeFile tmpf
              assertEqual descr expected out
   let [itApply,itMap] = map it' [["-a"],["-m"]]
   let itEval expr expected = it' [] expr "" expected
