@@ -266,7 +266,7 @@ applyExpr e i o = do
                     $ runLockedHawkInterpreter
                     $ do
       initInterpreter prelude modules extensions
-      interpret' (processTable expr)
+      interpret' $ processTable $ tableExpr expr
     processRuntime (QR hawkRuntime)
   where
     interpret' expr = do
@@ -277,6 +277,24 @@ applyExpr e i o = do
     processTable :: String -> String
     processTable = printf "(%s) (%s) (%s)" (prel "flip")
                                            (runtime "processTable")
+    
+    -- turn the user into an expression manipulating [[B.ByteString]]
+    tableExpr :: String -> String
+    tableExpr e = e `compose` fromTable
+      where
+        fromTable = case inputFormat i of
+            RawStream         -> head' `compose` head'
+            Lines _ RawLine   -> map' head'
+            Lines _ (Words _) -> prel "id"
+    
+    compose :: String -> String -> String
+    compose f g = printf "(%s) %s (%s)" f (prel ".") g
+    
+    head' :: String
+    head' = prel "head"
+    
+    map' :: String -> String
+    map' = printf "(%s) (%s)" (prel "map")
     
     -- we cannot use any unqualified symbols in the user expression,
     -- because we don't know which modules the user prelude will import.
