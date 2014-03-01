@@ -152,7 +152,7 @@ exprSpec = ExprSpec <$> contextDir <*> expr
     expr = do
         r <- consumeExtra consumeString
         case r of
-          Just e  -> if null e || all isSpace e
+          Just e  -> if all isSpace e
                       then fail "user expression cannot be empty"
                       else return e
           Nothing -> fail "missing user expression"
