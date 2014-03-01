@@ -21,13 +21,15 @@ import Data.ByteString.Lazy.Char8
   (ByteString)
 import Language.Haskell.Interpreter
   (Extension)
+import System.Directory
 import System.FilePath
+import System.IO
 import Test.Hspec
 import Test.HUnit
+import GHC.IO.Handle
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk
-  (hawk)
 import System.Console.Hawk.Context
 import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.UserPrelude
@@ -69,23 +71,21 @@ run = withContextHSpec $ \itEval itApply itMap ->
   where onInput f x = f x
         into f x = f x
 
-withContextHSpec :: ((String -> ByteString -> Spec)
-                    -> (String -> ByteString -> ByteString -> Spec)
-                    -> (String -> ByteString -> ByteString -> Spec)
+withContextHSpec :: ((String -> String -> Spec)
+                    -> (String -> String -> String -> Spec)
+                    -> (String -> String -> String -> Spec)
                     -> Spec)
                  -> IO ()
 withContextHSpec body = withDefaultConfiguration $ \prelude modules extensions -> do
-  let dhawk m expr = hawk (mode m) prelude modules extensions expr
-  let it' m expr input expected =
+  let it' flags expr input expected =
         let descr = "evals " ++ show expr ++
                     " on input " ++ show input ++
                     " equals to " ++ show expected
-        in it descr $ do eitherErrorF <- runWarningsIO $ dhawk m expr
-                         case eitherErrorF of
-                           Left e -> assertFailure (show e)
-                           Right f -> assertEqual descr expected (f input)
-  let [itApply,itMap] = map it' [ApplyMode,MapMode]
-  let itEval expr expected = it' EvalMode expr "" expected
+        in it descr $ do
+             out <- catchOutput $ processArgs (flags ++ [expr])
+             assertEqual descr expected out
+  let [itApply,itMap] = map it' [["-a"],["-m"]]
+  let itEval expr expected = it' [] expr "" expected
   hspec $ body itEval itApply itMap
 
 
@@ -102,3 +102,18 @@ withDefaultConfiguration f = do
     f (configFromContext context)
       (modules context)
       (map read $ extensions context)
+
+
+-- from http://stackoverflow.com/a/9664017/3286185
+catchOutput :: IO () -> IO String
+catchOutput f = do
+    tmpd <- getTemporaryDirectory
+    (tmpf, tmph) <- openTempFile tmpd "haskell_stdout"
+    stdout_dup <- hDuplicate stdout
+    hDuplicateTo tmph stdout
+    hClose tmph
+    f
+    hDuplicateTo stdout_dup stdout
+    str <- readFile tmpf
+    removeFile tmpf
+    return str
