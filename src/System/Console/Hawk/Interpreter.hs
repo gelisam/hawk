@@ -1,7 +1,7 @@
 -- | A wrapper around the hint library, specialized for Hawk usage.
 module System.Console.Hawk.Interpreter
   ( QualifiedHawkRuntime(..)
-  , initInterpreter
+  , applyContext
   , runHawkInterpreter
   ) where
 
@@ -11,6 +11,7 @@ import Data.Typeable.Internal as Typeable
 import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
+import qualified System.Console.Hawk.Context as Context
 import qualified System.Console.Hawk.Sandbox as Sandbox
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Lock
@@ -22,20 +23,24 @@ import System.Console.Hawk.Runtime.Base
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
 --   language extensions it specifies.
-initInterpreter :: (String, String) -- ^ prelude file and module name
-                -> [(String,Maybe String)] -- ^ the modules maybe qualified
-                -> [Extension]
-                -> InterpreterT IO ()
-initInterpreter (preludeFile,preludeModule) userModules extensions = do
-        
-        set [languageExtensions := extensions]
-
-        -- load the prelude file
-        loadModules [preludeFile]
-
-        -- load the prelude module plus representable
-        setImportsQ $ (preludeModule,Nothing):defaultModules
-                                           ++ userModules
+applyContext :: FilePath -- ^ context directory
+             -> InterpreterT IO ()
+applyContext contextDir = do
+    context <- lift $ Context.getContext contextDir
+    
+    let extensions = map read $ Context.extensions context
+    let preludeFile = Context.canonicalPrelude context
+    let preludeModule = Context.moduleName context
+    let userModules = Context.modules context
+    
+    set [languageExtensions := extensions]
+    
+    -- load the prelude file
+    loadModules [preludeFile]
+    
+    -- load the prelude module plus representable etc.
+    setImportsQ $ (preludeModule,Nothing):defaultModules
+                                       ++ userModules
 
 
 errorString :: InterpreterError -> String
