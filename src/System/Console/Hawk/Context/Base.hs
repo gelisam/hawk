@@ -31,6 +31,9 @@ data Context = Context
   } deriving (Eq, Read, Show)
 
 -- | Obtains a Context, either from the cache or from the user prelude.
+-- 
+-- Must be called inside a `withLock` block, otherwise the cache file
+-- might get accessed by two instances of Hawk at once.
 getContext :: FilePath -> IO Context
 getContext confDir = do
     runUncertainIO $ createDefaultContextDir confDir
@@ -39,10 +42,9 @@ getContext confDir = do
     let cacheFile   = getContextFile confDir
     key <- getKey preludeFile
     let cache = singletonCache assocCache
-    withLock $ withPersistentStateT cacheFile []
-             $ cached cache key
-             $ lift
-             $ newContext confDir
+    withPersistentStateT cacheFile [] $ cached cache key
+                                      $ lift
+                                      $ newContext confDir
   where
     getKey f = do
         modifiedTime <- getModificationTime f
