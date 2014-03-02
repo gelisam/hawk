@@ -1,7 +1,7 @@
 -- | A wrapper around the hint library, specialized for Hawk usage.
 module System.Console.Hawk.Interpreter
   ( QualifiedHawkRuntime(..)
-  , initInterpreter
+  , applyContext
   , runHawkInterpreter
   ) where
 
@@ -23,9 +23,9 @@ import System.Console.Hawk.Runtime.Base
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
 --   language extensions it specifies.
-initInterpreter :: FilePath -- ^ context directory
-                -> InterpreterT IO ()
-initInterpreter contextDir = do
+applyContext :: FilePath -- ^ context directory
+             -> InterpreterT IO ()
+applyContext contextDir = do
     context <- lift $ Context.getContext contextDir
     
     let extensions = map read $ Context.extensions context

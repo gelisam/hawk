@@ -71,7 +71,7 @@ applyExpr e i o = do
     let expr = userExpression e
     
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
-      initInterpreter contextDir
+      applyContext contextDir
       interpret' $ processTable $ tableExpr expr
     processRuntime (QR hawkRuntime)
   where
