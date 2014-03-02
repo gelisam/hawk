@@ -84,7 +84,7 @@ applyExpr e i o = do
     processTable' = printf "(%s) (%s) (%s)" (prel "flip")
                                             (runtime "processTable")
     
-    -- turn the user into an expression manipulating [[B.ByteString]]
+    -- turn the user expr into an expression manipulating [[B.ByteString]]
     tableExpr :: String -> String
     tableExpr = (`compose` fromTable)
       where
