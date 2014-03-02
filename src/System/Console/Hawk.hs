@@ -72,7 +72,7 @@ applyExpr e i o = do
     
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
-      interpret' $ processTable $ tableExpr expr
+      interpret' $ processTable' $ tableExpr expr
     processRuntime (QR hawkRuntime)
   where
     interpret' expr = do
@@ -80,13 +80,13 @@ applyExpr e i o = do
     
     hawkRuntime = HawkRuntime i o
     
-    processTable :: String -> String
-    processTable = printf "(%s) (%s) (%s)" (prel "flip")
-                                           (runtime "processTable")
+    processTable' :: String -> String
+    processTable' = printf "(%s) (%s) (%s)" (prel "flip")
+                                            (runtime "processTable")
     
     -- turn the user into an expression manipulating [[B.ByteString]]
     tableExpr :: String -> String
-    tableExpr e = e `compose` fromTable
+    tableExpr = (`compose` fromTable)
       where
         fromTable = case inputFormat i of
             RawStream         -> head' `compose` head'
