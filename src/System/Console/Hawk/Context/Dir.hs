@@ -1,6 +1,5 @@
 {-# LANGUAGE PackageImports #-}
--- | Everything we need to know in order to evaluate a user expression,
---   except for the user expression itself.
+-- | About the directory in which the context is persited.
 module System.Console.Hawk.Context.Dir
   ( createDefaultContextDir
   , findContextFromCurrDirOrDefault
