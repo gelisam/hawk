@@ -96,7 +96,7 @@ for easy conversion from ByteString.
 
 ## Modes
 
-Without any flag, Hawk simply evaluates the given Haskell expressions.
+Without any flag, Hawk simply evaluates the given Haskell expression.
 
 ```bash
 > hawk '2 ^ 100'
