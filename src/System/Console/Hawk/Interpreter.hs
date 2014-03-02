@@ -1,5 +1,9 @@
 -- | A wrapper around the hint library, specialized for Hawk usage.
-module System.Console.Hawk.Interpreter where
+module System.Console.Hawk.Interpreter
+  ( QualifiedHawkRuntime(..)
+  , initInterpreter
+  , runHawkInterpreter
+  ) where
 
 import Control.Monad
 import Data.List
@@ -7,7 +11,7 @@ import Data.Typeable.Internal as Typeable
 import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
-import System.Console.Hawk.Sandbox
+import qualified System.Console.Hawk.Sandbox as Sandbox
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
@@ -49,9 +53,6 @@ wrapErrors (Left e) = fail $ errorString e
 wrapErrors (Right x) = return x
 
 
-runLockedHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
-runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
-
 -- | Wrapper used to force `typeOf` to fully-qualify the type
 --   `HawkRuntime`. Otherwise hint may try to use a type which
 --   we haven't explicitly imported.
@@ -71,3 +72,7 @@ instance Typeable QualifiedHawkRuntime where
                               tc{ tyConName = "System.Console.Hawk.Runtime.Base."
                                           ++ tyConName tc }
                               trs
+
+
+runHawkInterpreter :: InterpreterT IO a -> UncertainT IO a
+runHawkInterpreter = wrapErrorsM . withLock . Sandbox.runHawkInterpreter

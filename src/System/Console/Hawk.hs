@@ -79,10 +79,7 @@ applyExpr e i o = do
     let modules = Context.modules context
     let expr = userExpression e
 
-    processRuntime <- runUncertainIO
-                    $ wrapErrorsM
-                    $ runLockedHawkInterpreter
-                    $ do
+    processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       initInterpreter prelude modules extensions
       interpret' $ processTable $ tableExpr expr
     processRuntime (QR hawkRuntime)
