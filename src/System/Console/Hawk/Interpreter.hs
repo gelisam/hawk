@@ -11,6 +11,8 @@ import Data.Typeable.Internal as Typeable
 import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
+import qualified System.Console.Hawk.Context as Context
+import System.Console.Hawk.Context.Compatibility
 import qualified System.Console.Hawk.Sandbox as Sandbox
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Lock
@@ -22,20 +24,27 @@ import System.Console.Hawk.Runtime.Base
 
 -- | Tell hint to load the user prelude, the modules it imports, and the
 --   language extensions it specifies.
-initInterpreter :: (String, String) -- ^ prelude file and module name
-                -> [(String,Maybe String)] -- ^ the modules maybe qualified
-                -> [Extension]
+initInterpreter :: FilePath -- ^ context directory
                 -> InterpreterT IO ()
-initInterpreter (preludeFile,preludeModule) userModules extensions = do
-        
-        set [languageExtensions := extensions]
+initInterpreter contextDir = do
+    context <- lift $ Context.getContext contextDir
+    
+    let prelude = configFromContext context
+    
+    let extensions = map read $ Context.extensions context
+    let modules = Context.modules context
 
-        -- load the prelude file
-        loadModules [preludeFile]
+    let (preludeFile,preludeModule) = prelude
+    let userModules = modules
+    
+    set [languageExtensions := extensions]
 
-        -- load the prelude module plus representable
-        setImportsQ $ (preludeModule,Nothing):defaultModules
-                                           ++ userModules
+    -- load the prelude file
+    loadModules [preludeFile]
+
+    -- load the prelude module plus representable
+    setImportsQ $ (preludeModule,Nothing):defaultModules
+                                       ++ userModules
 
 
 errorString :: InterpreterError -> String

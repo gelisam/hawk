@@ -28,8 +28,6 @@ import Text.Printf (printf)
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
-import qualified System.Console.Hawk.Context as Context
-import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
@@ -70,17 +68,10 @@ wrapExpr f e = e'
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let contextDir = userContextDirectory e
-    
-    context <- Context.getContext contextDir
-    
-    let prelude = configFromContext context
-    
-    let extensions = map read $ Context.extensions context
-    let modules = Context.modules context
     let expr = userExpression e
-
+    
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
-      initInterpreter prelude modules extensions
+      initInterpreter contextDir
       interpret' $ processTable $ tableExpr expr
     processRuntime (QR hawkRuntime)
   where
