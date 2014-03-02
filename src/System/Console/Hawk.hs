@@ -12,9 +12,6 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-{-# LANGUAGE OverloadedStrings
-           , ScopedTypeVariables
-           , TupleSections #-}
 -- | Hawk as seen from the outside world: parsing command-line arguments,
 --   evaluating user expressions.
 module System.Console.Hawk
