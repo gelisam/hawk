@@ -12,7 +12,6 @@ import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Context as Context
-import System.Console.Hawk.Context.Compatibility
 import qualified System.Console.Hawk.Sandbox as Sandbox
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Lock
@@ -29,20 +28,17 @@ initInterpreter :: FilePath -- ^ context directory
 initInterpreter contextDir = do
     context <- lift $ Context.getContext contextDir
     
-    let prelude = configFromContext context
-    
     let extensions = map read $ Context.extensions context
-    let modules = Context.modules context
-
-    let (preludeFile,preludeModule) = prelude
-    let userModules = modules
+    let preludeFile = Context.canonicalPrelude context
+    let preludeModule = Context.moduleName context
+    let userModules = Context.modules context
     
     set [languageExtensions := extensions]
-
+    
     -- load the prelude file
     loadModules [preludeFile]
-
-    -- load the prelude module plus representable
+    
+    -- load the prelude module plus representable etc.
     setImportsQ $ (preludeModule,Nothing):defaultModules
                                        ++ userModules
 
