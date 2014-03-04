@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE OverloadedStrings, PackageImports #-}
 -- | Parser combinators for processing HaskellSource.
 module Data.HaskellSource.Parse where
 
@@ -68,3 +68,59 @@ line = do
     case x of
       Left s -> return s
       Right s -> return (B.pack s)
+
+-- |
+-- >>> testP "-- single line comment" comment
+-- "-- single line comment"
+-- ["-- single line comment"]
+-- 
+-- >>> testP "{- multi\n   line\n   comment -}\n" comment
+-- "{- multi"
+-- "   line"
+-- "   comment -}"
+-- ["{- multi","   line","   comment -}"]
+comment :: SourceParser [B.ByteString]
+comment = single_line_comment <|> multi_line_comment
+  where
+    single_line_comment = do
+        x <- line
+        guard ("--" `B.isPrefixOf` x)
+        return [x]
+    
+    -- nested comments not supported
+    multi_line_comment = do
+        x <- line
+        guard ("{-" `B.isPrefixOf` x)
+        xs <- inside_comment x
+        return (x:xs)
+    
+    inside_comment s | "-}" `B.isInfixOf` s = return []
+    inside_comment s | otherwise = do
+        x <- line
+        xs <- inside_comment x
+        return (x:xs)
+
+-- |
+-- >>> testP "module Foo where\nmain = 42\n" module_declaration
+-- "module Foo where"
+-- ["module Foo where"]
+-- "main = 42"
+-- 
+-- >>> testP "module Foo\n  ( main\n  ) where\nmain = 42\n" module_declaration
+-- "module Foo"
+-- "  ( main"
+-- "  ) where"
+-- ["module Foo","  ( main","  ) where"]
+-- "main = 42"
+module_declaration :: SourceParser [B.ByteString]
+module_declaration = do
+    x <- line
+    guard ("module " `B.isPrefixOf` x)
+    xs <- inside_declaration x
+    return (x:xs)
+  where
+    inside_declaration s | " where" `B.isInfixOf` s = return []
+    inside_declaration s | otherwise = do
+        x <- line
+        xs <- inside_declaration x
+        return (x:xs)
