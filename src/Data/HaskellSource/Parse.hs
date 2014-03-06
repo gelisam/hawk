@@ -11,14 +11,17 @@ import Control.Monad.Trans.Writer
 import qualified Data.ByteString.Char8 as B
 import Data.Functor.Identity
 
+import Data.Chunks
 import Data.HaskellSource
 
 
--- | Consume part of a HaskellSource, writing those parts along the way.
-type SourceParser a = StateT HaskellSource (WriterT HaskellSource Maybe) a
+-- | Consume part of a HaskellSource, splitting it into chunks along the way.
+type SourceParser a = StateT HaskellSource               -- yet to be parsed
+                    ( WriterT (StickyList HaskellSource) -- emitted chunks
+                      Maybe) a                           -- backtracking
 
 
--- | Print the consumed lines, the result, and the remaining lines.
+-- | Print the consumed chunks, the result, and the remaining lines.
 -- >>> testP "foo" (return 42)
 -- 42
 -- "foo"
@@ -26,13 +29,19 @@ testP :: Show a => String -> SourceParser a -> IO ()
 testP str = go . runWriterT . (`runStateT` source)
   where
     source = parseSource (B.pack str)
+    
     go Nothing = putStrLn "Nothing"
-    go (Just ((r, xs), ys)) = do
-      mapM_ show' ys
+    go (Just ((r, xs), chunks)) = do
+      mapM_ show_chunk $ toLists chunks
       print r
-      mapM_ show' xs
-    show' (Left s) = print s
-    show' (Right s) = print s
+      mapM_ show_line xs
+    
+    show_line (Left s) = print s
+    show_line (Right s) = print s
+    
+    show_chunk xs = do
+        mapM_ show_line xs
+        putStrLn "==="
 
 -- |
 -- >>> testP "foo" eof
@@ -64,10 +73,20 @@ line :: SourceParser B.ByteString
 line = do
     (x:xs) <- get
     put xs
-    lift $ tell [x]
+    lift $ tell $ singleton [x]
     case x of
       Left s -> return s
       Right s -> return (B.pack s)
+
+-- |
+-- >>> testP "foo\nbar\nbaz\n" (line >> line >> next_chunk >> line)
+-- "foo"
+-- "bar"
+-- ===
+-- "baz"
+-- ()
+next_chunk :: SourceParser ()
+next_chunk = lift $ tell $ divider
 
 -- |
 -- >>> testP "-- single line comment" comment
