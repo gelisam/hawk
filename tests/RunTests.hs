@@ -26,6 +26,7 @@ main :: IO ()
 main = do
     doctest' "tests/System/Console/Hawk/Lock/Test.hs"
     doctest' "src/Data/Cache.hs"
+    doctest' "src/Data/Chunks.hs"
     doctest' "src/Data/HaskellSource.hs"
     doctest' "src/System/Console/Hawk.hs"
     doctest' "tests/System/Console/Hawk/PreludeTests.hs"
