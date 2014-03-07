@@ -22,6 +22,13 @@ type SourceParser a = StateT HaskellSource               -- yet to be parsed
                       Maybe) a                           -- backtracking
 
 
+-- | Use a SourceParser to split a HaskellSource into pieces.
+-- >>> let s = parseSource $ S.pack "{-# LANGUAGE OverloadedStrings,\n    PackageImports #-}\nmodule Foo where\n"
+-- >>> fmap (map length) $ splitSource (comment >> next_chunk >> module_declaration) s
+-- Just [2,1]"
+splitSource :: SourceParser () -> HaskellSource -> Maybe [HaskellSource]
+splitSource p = fmap toLists . execWriterT . (p `runStateT`)
+
 -- | Print the consumed chunks, the result, and the remaining lines.
 -- >>> testP "foo" (return 42)
 -- 42
