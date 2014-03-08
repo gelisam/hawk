@@ -169,6 +169,42 @@ module_declaration = do
             x' <- stripped_line
             inside_declaration x'
 
+-- |
+-- >>> testP "import Foo\nmain = 42\n" import_declaration
+-- "import Foo"
+-- ===
+-- ()
+-- "main = 42"
+-- 
+-- >>> testP "import Foo ( foo\n           , bar\n           )\nmain = 42" import_declaration
+-- "import Foo ( foo"
+-- "           , bar"
+-- "           )"
+-- ===
+-- ()
+-- "main = 42"
+-- 
+-- >>> testP "import Control.Applicative\n  ((<$>), (<|>), (<*>))\n" import_declaration
+-- "import Control.Applicative"
+-- "  ((<$>), (<|>), (<*>))"
+-- ===
+-- ()
+-- 
+-- not supported: a newline before "qualified" or "as".
+import_declaration :: SourceParser ()
+import_declaration = do
+    x <- stripped_line
+    guard ("import " `B.isPrefixOf` x)
+    x' <- nested_tags "(" ")" x
+    when (x == x') $ do
+      -- maybe the identifier list start on the next line?
+      identifier_list <|> return ()
+  where
+    identifier_list = do
+        x <- stripped_line
+        guard ("(" `B.isPrefixOf` x)
+        void $ nested_tags "(" ")" x
+
 -- | Given a line which already contains some opening tags, keep
 --   consuming lines until all the tags are closed.
 -- 
