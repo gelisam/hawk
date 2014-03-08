@@ -1,3 +1,4 @@
+-- based on http://hackage.haskell.org/package/monoids-0.3.2/docs/src/Data-Monoid-Ord.html
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 ---- |
@@ -27,7 +28,6 @@ module Data.Monoid.Ord
     ) where
 
 import Data.Monoid (Monoid, mappend, mempty)
-import Data.Monoid.Reducer (Reducer, unit)
 
 -- | The 'Monoid' @('max','minBound')@
 newtype Max a = Max { getMax :: a } deriving (Eq,Ord,Show,Read,Bounded)
@@ -35,9 +35,6 @@ newtype Max a = Max { getMax :: a } deriving (Eq,Ord,Show,Read,Bounded)
 instance (Ord a, Bounded a) => Monoid (Max a) where
     mempty = Max minBound
     mappend = max
-
-instance (Ord a, Bounded a) => Reducer a (Max a) where
-    unit = Max
 
 instance Functor Max where 
     fmap f (Max a) = Max (f a)
@@ -48,9 +45,6 @@ newtype Min a = Min { getMin :: a } deriving (Eq,Ord,Show,Read,Bounded)
 instance (Ord a, Bounded a) => Monoid (Min a) where
     mempty = Min maxBound
     mappend = min
-
-instance (Ord a, Bounded a) => Reducer a (Min a) where
-    unit = Min
 
 instance Functor Min where
     fmap f (Min a) = Min (f a)
@@ -64,9 +58,6 @@ newtype MaxPriority a = MaxPriority { getMaxPriority :: Maybe a } deriving (Eq,O
 instance Ord a => Monoid (MaxPriority a) where
     mempty = MaxPriority Nothing
     mappend = max
-
-instance Ord a => Reducer (Maybe a) (MaxPriority a) where
-    unit = MaxPriority
 
 instance Functor MaxPriority where
     fmap f (MaxPriority a) = MaxPriority (fmap f a)
@@ -86,9 +77,6 @@ instance Ord a => Ord (MinPriority a) where
 instance Ord a => Monoid (MinPriority a) where
     mempty = MinPriority Nothing
     mappend = min
-
-instance Ord a => Reducer (Maybe a) (MinPriority a) where
-    unit = MinPriority
 
 instance Functor MinPriority where
     fmap f (MinPriority a) = MinPriority (fmap f a)
