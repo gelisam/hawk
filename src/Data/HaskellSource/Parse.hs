@@ -91,13 +91,24 @@ line = do
       Left s -> return s
       Right s -> return (B.pack s)
 
--- | Consume a line, stripping the whitespace at both ends.
+-- | Consume a line, stripping the whitespace at both ends. Skip empty lines.
+-- 
 -- >>> testP "  hello  " stripped_line
 -- "  hello  "
 -- ===
 -- "hello"
+-- 
+-- >>> testP "  \n  hello  \n" stripped_line
+-- "  "
+-- "  hello  "
+-- ===
+-- "hello"
 stripped_line :: SourceParser B.ByteString
-stripped_line = strip <$> line
+stripped_line = do
+    s <- strip <$> line
+    if B.null s
+      then stripped_line
+      else return s
   where
     strip = dropWhileEnd isSpace
           . B.dropWhile isSpace
