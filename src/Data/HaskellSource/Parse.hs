@@ -9,6 +9,7 @@ import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Writer
 import qualified Data.ByteString.Char8 as B
+import Data.ByteString.Search
 import Data.Char
 import Data.Functor.Identity
 
@@ -132,16 +133,12 @@ comment = single_line_comment <|> multi_line_comment
         x <- stripped_line
         guard ("--" `B.isPrefixOf` x)
     
-    -- nested comments not supported
+    -- limitation: "{-}" is supposed to behave like "{-", not "{--}"
     multi_line_comment = do
         x <- stripped_line
         guard ("{-" `B.isPrefixOf` x)
-        inside_comment x
-    
-    inside_comment s | "-}" `B.isSuffixOf` s = return ()
-    inside_comment s | otherwise = do
-        x <- stripped_line
-        inside_comment x
+        x' <- nested_tags "{-" "-}" x
+        guard ("-}" `B.isSuffixOf` x')
 
 -- |
 -- >>> testP "module Foo where\nmain = 42\n" module_declaration
@@ -163,7 +160,59 @@ module_declaration = do
     guard ("module " `B.isPrefixOf` x)
     inside_declaration x
   where
-    inside_declaration s | " where" `B.isSuffixOf` s = return ()
-    inside_declaration s | otherwise = do
-        x <- stripped_line
-        inside_declaration x
+    inside_declaration :: B.ByteString -> SourceParser ()
+    inside_declaration s = do
+        x <- nested_tags "(" ")" s
+        if " where" `B.isSuffixOf` x
+          then return ()
+          else do
+            x' <- stripped_line
+            inside_declaration x'
+
+-- | Given a line which already contains some opening tags, keep
+--   consuming lines until all the tags are closed.
+-- 
+-- >>> testP "foo(\n...\n)\n" (line >>= nested_tags (B.pack "(") (B.pack ")"))
+-- "foo("
+-- "..."
+-- ")"
+-- ===
+-- ")"
+-- 
+-- >>> testP "(hello (\n  bar() (\n    ...))\n);" (line >>= nested_tags (B.pack "(") (B.pack ")"))
+-- "(hello ("
+-- "  bar() ("
+-- "    ...))"
+-- ");"
+-- ===
+-- ");"
+nested_tags :: B.ByteString              -- ^ open tag
+            -> B.ByteString              -- ^ close tag
+            -> B.ByteString              -- ^ first line
+            -> SourceParser B.ByteString -- ^ last line
+nested_tags = go 0
+  where
+    go x open close str = do
+        let x' = open_close open close str x
+        if x' == 0
+          then return str
+          else do
+            str' <- stripped_line
+            go x' open close str'
+    
+    -- | Count how many closing tags are still expected.
+    -- 
+    -- >>> open_close (B.pack "(") (B.pack ")") (B.pack "(())())") 1
+    -- 0
+    -- >>> open_close (B.pack "(") (B.pack ")") (B.pack "(())()") 1
+    -- 1
+    -- >>> open_close (B.pack "{-") (B.pack "-}") (B.pack "-}{-{--}{--}") 1
+    -- 1
+    open_close :: B.ByteString -- ^ open tag
+               -> B.ByteString -- ^ close tag
+               -> B.ByteString -- ^ string to search
+               -> Int          -- ^ number of open tags occuring before the start
+               -> Int          -- ^ number of closed tags expected after the end
+    open_close open close str x = x + count open - count close
+      where
+        count tag = length (indices tag str)
