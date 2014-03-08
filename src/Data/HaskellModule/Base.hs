@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | A version of HaskellSource with slightly more semantics.
-module Data.HaskellModule where
+module Data.HaskellModule.Base where
 
 import Control.Applicative
 import Data.ByteString.Char8 as B
