@@ -27,6 +27,7 @@ main = do
     doctest' "tests/System/Console/Hawk/Lock/Test.hs"
     doctest' "src/Data/Cache.hs"
     doctest' "src/Data/HaskellSource.hs"
+    doctest' "src/Data/HaskellModule/Parse.hs"
     doctest' "src/System/Console/Hawk.hs"
     doctest' "tests/System/Console/Hawk/PreludeTests.hs"
     doctest' "src/System/Console/Hawk/Args/Option.hs"
