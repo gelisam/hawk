@@ -23,9 +23,9 @@ type SourceParser a = StateT HaskellSource               -- yet to be parsed
 
 
 -- | Use a SourceParser to split a HaskellSource into pieces.
--- >>> let s = parseSource $ S.pack "{-# LANGUAGE OverloadedStrings,\n    PackageImports #-}\nmodule Foo where\n"
+-- >>> let s = parseSource $ B.pack "{-# LANGUAGE OverloadedStrings,\n    PackageImports #-}\nmodule Foo where\n"
 -- >>> fmap (map length) $ splitSource (comment >> next_chunk >> module_declaration) s
--- Just [2,1]"
+-- Just [2,1]
 splitSource :: SourceParser () -> HaskellSource -> Maybe [HaskellSource]
 splitSource p = fmap toLists . execWriterT . (p `runStateT`)
 
@@ -67,6 +67,7 @@ eof = do
 -- 
 -- >>> testP "foo\nbar\n" line
 -- "foo"
+-- ===
 -- "foo"
 -- "bar"
 -- 
@@ -77,6 +78,7 @@ eof = do
 -- 
 -- >>> testP "foo\nbar\n" ((line >> eof) <|> (line >> return ()))
 -- "foo"
+-- ===
 -- ()
 -- "bar"
 line :: SourceParser B.ByteString
@@ -91,6 +93,7 @@ line = do
 -- | Consume a line, stripping the whitespace at both ends.
 -- >>> testP "  hello  " stripped_line
 -- "  hello  "
+-- ===
 -- "hello"
 stripped_line :: SourceParser B.ByteString
 stripped_line = strip <$> line
@@ -100,11 +103,12 @@ stripped_line = strip <$> line
     dropWhileEnd p = fst . B.spanEnd p 
 
 -- |
--- >>> testP "foo\nbar\nbaz\n" (line >> line >> next_chunk >> line)
+-- >>> testP "foo\nbar\nbaz\n" (line >> line >> next_chunk >> line >> return ())
 -- "foo"
 -- "bar"
 -- ===
 -- "baz"
+-- ===
 -- ()
 next_chunk :: SourceParser ()
 next_chunk = lift $ tell $ divider
@@ -112,55 +116,54 @@ next_chunk = lift $ tell $ divider
 -- |
 -- >>> testP "-- single line comment" comment
 -- "-- single line comment"
--- ["-- single line comment"]
+-- ===
+-- ()
 -- 
--- >>> testP "{- multi\n   line\n   comment -}\n" comment
+-- >>> testP "{- multi      \n   line       \n   comment -} \n" comment
 -- "{- multi      "
 -- "   line       "
 -- "   comment -} "
--- ["{- multi","   line","   comment -}"]
-comment :: SourceParser [B.ByteString]
+-- ===
+-- ()
+comment :: SourceParser ()
 comment = single_line_comment <|> multi_line_comment
   where
     single_line_comment = do
         x <- stripped_line
         guard ("--" `B.isPrefixOf` x)
-        return [x]
     
     -- nested comments not supported
     multi_line_comment = do
         x <- stripped_line
         guard ("{-" `B.isPrefixOf` x)
-        xs <- inside_comment x
-        return (x:xs)
+        inside_comment x
     
-    inside_comment s | "-}" `B.isSuffixOf` s = return []
+    inside_comment s | "-}" `B.isSuffixOf` s = return ()
     inside_comment s | otherwise = do
         x <- stripped_line
-        xs <- inside_comment x
-        return (x:xs)
+        inside_comment x
 
 -- |
 -- >>> testP "module Foo where\nmain = 42\n" module_declaration
 -- "module Foo where"
--- ["module Foo where"]
+-- ===
+-- ()
 -- "main = 42"
 -- 
--- >>> testP "module Foo\n  ( main\n  ) where\nmain = 42\n" module_declaration
+-- >>> testP "module Foo\n  ( main  \n  ) where \nmain = 42\n" module_declaration
 -- "module Foo"
 -- "  ( main  "
 -- "  ) where "
--- ["module Foo","  ( main","  ) where"]
+-- ===
+-- ()
 -- "main = 42"
-module_declaration :: SourceParser [B.ByteString]
+module_declaration :: SourceParser ()
 module_declaration = do
     x <- stripped_line
     guard ("module " `B.isPrefixOf` x)
-    xs <- inside_declaration x
-    return (x:xs)
+    inside_declaration x
   where
-    inside_declaration s | " where" `B.isSuffixOf` s = return []
+    inside_declaration s | " where" `B.isSuffixOf` s = return ()
     inside_declaration s | otherwise = do
         x <- stripped_line
-        xs <- inside_declaration x
-        return (x:xs)
+        inside_declaration x
