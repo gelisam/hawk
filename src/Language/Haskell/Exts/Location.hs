@@ -1,16 +1,9 @@
 -- | Easier access to haskell-src-exts's SrcLoc values.
 module Language.Haskell.Exts.Location where
 
-import Control.Arrow
 import Control.Monad.Trans.Writer
-import qualified Data.ByteString.Char8 as B
-import Language.Haskell.Exts
-import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.Syntax
 
-import Control.Monad.Trans.Uncertain
-import Data.HaskellModule.Base
-import Data.HaskellSource
 import Data.Monoid.Ord
 
 

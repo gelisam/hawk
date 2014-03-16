@@ -2,8 +2,6 @@
 -- | A version of HaskellSource with slightly more semantics.
 module Data.HaskellModule.Base where
 
-import Control.Applicative
-import Data.ByteString.Char8 as B
 import Text.Printf
 
 import Data.HaskellSource
