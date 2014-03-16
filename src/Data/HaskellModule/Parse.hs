@@ -29,7 +29,7 @@ locatedModuleName = fmap go . not_located
     go :: ModuleName -> Maybe String
     go (ModuleName "Main") = Nothing  -- TODO: distinguish between
                                       -- "module Main where" and default.
-    go (ModuleName name) = Just name
+    go (ModuleName moduleName) = Just moduleName
     
     -- Unfortunately, haskell-src-exts does not give a location
     -- for the module declaration.
@@ -55,18 +55,18 @@ locatedImports = fmap go . located
 testM :: FilePath -> IO ()
 testM f = do
     m <- runUncertainIO $ readModule f
-    printSource (pragmaSource m)
+    putSource (pragmaSource m)
     print (languageExtensions m)
     putStrLn "==="
-    printSource (moduleSource m)
+    putSource (moduleSource m)
     print (moduleName m)
     putStrLn "==="
-    printSource (importSource m)
+    putSource (importSource m)
     print (importedModules m)
     putStrLn "==="
-    printSource (codeSource m)
+    putSource (codeSource m)
   where
-    printSource = mapM_ (print . either id B.pack)
+    putSource = mapM_ (print . either id B.pack)
 
 
 -- Due to a limitation of haskell-parse-exts, there is no `parseModule`
@@ -94,9 +94,9 @@ readModule f = do
     s <- lift $ readSource f
     r <- lift $ parseFile f
     case r of
-      ParseOk (Module _ moduleDecl pragmas _ exports imports decls)
+      ParseOk (Module _ moduleDecl pragmas _ _ imports decls)
         -> return $ go s pragmas moduleDecl imports decls
-      ParseFailed loc err -> fail err
+      ParseFailed _ err -> fail err
   where
     go source pragmas moduleDecl imports decls = HaskellModule {..}
       where
