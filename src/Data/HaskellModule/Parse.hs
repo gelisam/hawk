@@ -17,6 +17,46 @@ import Data.Monoid.Ord
 import Language.Haskell.Exts.Location
 
 
+locatedExtensions :: [ModulePragma] -> Located [ExtensionName]
+locatedExtensions = fmap go . located
+  where
+    go :: [ModulePragma] -> [ExtensionName]
+    go = concatMap extNames
+    
+    extNames :: ModulePragma -> [ExtensionName]
+    extNames (LanguagePragma _ exts) = map prettyPrint exts
+    extNames (OptionsPragma _ _ _) = []  -- TODO: accept "-XExtName"
+    extNames _ = []
+
+locatedModuleName :: ModuleName -> Located (Maybe String)
+locatedModuleName = fmap go . not_located
+  where
+    go :: ModuleName -> Maybe String
+    go (ModuleName "Main") = Nothing  -- TODO: distinguish between
+                                      -- "module Main where" and default.
+    go (ModuleName name) = Just name
+    
+    -- Unfortunately, haskell-src-exts does not give a location
+    -- for the module declaration.
+    not_located :: a -> Located a
+    not_located = return
+
+locatedImports :: [ImportDecl] -> Located [QualifiedModule]
+locatedImports = fmap go . located
+  where
+    go :: [ImportDecl] -> [QualifiedModule]
+    go = map qualify
+    
+    qualify :: ImportDecl -> QualifiedModule
+    qualify decl = (fullName decl, qualifiedName decl)
+    
+    fullName :: ImportDecl -> String
+    fullName = prettyPrint . importModule
+    
+    qualifiedName :: ImportDecl -> Maybe String
+    qualifiedName = fmap prettyPrint . importAs
+
+
 testM :: FilePath -> IO ()
 testM f = do
     m <- runUncertainIO $ readModule f
@@ -69,23 +109,20 @@ readModule f = do
                       importedModules'    importSource'
                                           codeSource'
       where
-        languageExtensions' = map prettyPrint
-                            $ concatMap languagePragma
+        languageExtensions' = fst
+                            $ runLocated
+                            $ locatedExtensions
                             $ pragmas
-        languagePragma (LanguagePragma _ exts) = exts
-        languagePragma (OptionsPragma _ _ _) = []  -- TODO: accept "-XExtName"
-        languagePragma _ = []
         
-        moduleName' = case moduleDecl of
-            ModuleName "Main" -> Nothing  -- TODO: distinguish between
-                                          -- "module Main where" and default.
-            ModuleName name -> Just name
+        moduleName' = fst
+                    $ runLocated
+                    $ locatedModuleName
+                    $ moduleDecl
         
-        importedModules' = fmap qualifiedImport imports
-        qualifiedImport decl = (fullName decl, qualifiedName decl)
-          where
-            fullName = prettyPrint . importModule
-            qualifiedName = fmap prettyPrint . importAs
+        importedModules' = fst
+                         $ runLocated
+                         $ locatedImports
+                         $ imports
         
         pragmaSource' = take 1 source
         moduleSource' = []
