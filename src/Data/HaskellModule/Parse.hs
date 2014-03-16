@@ -2,18 +2,13 @@
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
-import Control.Arrow
 import "mtl" Control.Monad.Trans
-import Control.Monad.Trans.Writer
 import qualified Data.ByteString.Char8 as B
 import Language.Haskell.Exts
-import Language.Haskell.Exts.Parser
-import Language.Haskell.Exts.Syntax
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule.Base
 import Data.HaskellSource
-import Data.Monoid.Ord
 import Language.Haskell.Exts.Location
 
 
