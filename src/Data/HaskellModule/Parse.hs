@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE PackageImports, RecordWildCards #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
@@ -103,28 +103,24 @@ readModule f = do
         -> return $ go s pragmas moduleDecl imports decls
       ParseFailed loc err -> fail err
   where
-    go source pragmas moduleDecl imports decls
-      = HaskellModule languageExtensions' pragmaSource'
-                      moduleName'         moduleSource'
-                      importedModules'    importSource'
-                                          codeSource'
+    go source pragmas moduleDecl imports decls = HaskellModule {..}
       where
-        languageExtensions' = fst
-                            $ runLocated
-                            $ locatedExtensions
-                            $ pragmas
+        languageExtensions = fst
+                           $ runLocated
+                           $ locatedExtensions
+                           $ pragmas
         
-        moduleName' = fst
-                    $ runLocated
-                    $ locatedModuleName
-                    $ moduleDecl
+        moduleName = fst
+                   $ runLocated
+                   $ locatedModuleName
+                   $ moduleDecl
         
-        importedModules' = fst
-                         $ runLocated
-                         $ locatedImports
-                         $ imports
+        importedModules = fst
+                        $ runLocated
+                        $ locatedImports
+                        $ imports
         
-        pragmaSource' = take 1 source
-        moduleSource' = []
-        importSource' = drop 1 source
-        codeSource' = []
+        pragmaSource = take 1 source
+        moduleSource = []
+        importSource = drop 1 source
+        codeSource = []
