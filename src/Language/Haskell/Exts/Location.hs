@@ -1,6 +1,7 @@
 -- | Easier access to haskell-src-exts's SrcLoc values.
 module Language.Haskell.Exts.Location where
 
+import Control.Monad
 import Control.Monad.Trans.Writer
 import Language.Haskell.Exts.Syntax
 
@@ -55,6 +56,9 @@ instance Location Decl where
 
 instance Location Match where
   location (Match loc _ _ _ _ _) = Just loc
+
+instance Location a => Location (Maybe a) where
+  location = join . fmap location
 
 instance Location a => Location [a] where
   -- the earliest location.
