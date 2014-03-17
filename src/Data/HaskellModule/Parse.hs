@@ -1,8 +1,10 @@
-{-# LANGUAGE PackageImports, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
 import "mtl" Control.Monad.Trans
+import qualified Data.ByteString.Char8 as B
+import Data.List
 import Language.Haskell.Exts
 
 import Control.Monad.Trans.Uncertain
@@ -69,6 +71,12 @@ locatedImports = fmap go . located
     qualifiedName = fmap prettyPrint . importAs
 
 
+-- line numbers start at 1, list indices start at 0.
+line2index, index2line :: Int -> Int
+line2index = subtract 1
+index2line = (+ 1)
+
+
 -- | A variant of `splitAt` which makes it easy to make `snd` empty.
 -- 
 -- >>> maybeSplitAt Nothing "abc"
@@ -120,10 +128,6 @@ multiSplit (j:js) xs = ys1 : ys2 : yss
 --   Omitted source locations will produce empty pieces.
 splitSource :: [Maybe SrcLoc] -> HaskellSource -> [HaskellSource]
 splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
-  where
-    -- line numbers start at 1, list indices start at 0.
-    line2index :: Int -> Int
-    line2index = subtract 1
 
 
 -- Due to a limitation of haskell-parse-exts, there is no `parseModule`
@@ -174,16 +178,27 @@ readModule f = do
     s <- lift $ readSource f
     r <- lift $ parseFile f
     case r of
-      ParseOk (Module _ moduleDecl pragmas _ _ imports decls)
-        -> return $ go s pragmas moduleDecl imports decls
+      ParseOk (Module srcLoc moduleDecl pragmas _ _ imports decls)
+        -> return $ go s srcLoc pragmas moduleDecl imports decls
       ParseFailed _ err -> fail err
   where
-    go source pragmas moduleDecl imports decls = HaskellModule {..}
+    go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
       where
         (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
-        (moduleName,      moduleLoc) = runLocated (locatedModuleName moduleDecl)
+        (moduleName,              _) = runLocated (locatedModuleName moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
         (_,                 declLoc) = runLocated (located decls)
+        
+        isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
+        isModuleDecl (Right xs) = "module " `isPrefixOf` xs
+        
+        moduleLine :: Maybe Int
+        moduleLine = fmap index2line $ findIndex isModuleDecl source
+        
+        moduleLoc :: Maybe SrcLoc
+        moduleLoc = do
+            line <- moduleLine
+            return $ srcLoc { srcLine = line }
         
         sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
         [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
