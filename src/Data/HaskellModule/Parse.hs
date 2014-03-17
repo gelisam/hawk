@@ -164,7 +164,7 @@ splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
 -- ===
 -- "takeLast n = reverse . take n . reverse"
 -- 
--- >>> testM "tests/preludes/modulename/prelude.hs"
+-- >>> testM "tests/preludes/moduleName/prelude.hs"
 -- []
 -- ===
 -- "module MyPrelude where"
