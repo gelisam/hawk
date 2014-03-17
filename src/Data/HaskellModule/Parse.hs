@@ -42,19 +42,6 @@ locatedExtensions = fmap go . located
     extNames (OptionsPragma _ _ _) = []  -- TODO: accept "-XExtName"
     extNames _ = []
 
-locatedModuleName :: ModuleName -> Located (Maybe String)
-locatedModuleName = fmap go . not_located
-  where
-    go :: ModuleName -> Maybe String
-    go (ModuleName "Main") = Nothing  -- TODO: distinguish between
-                                      -- "module Main where" and default.
-    go (ModuleName moduleName) = Just moduleName
-    
-    -- Unfortunately, haskell-src-exts does not give a location
-    -- for the module declaration.
-    not_located :: a -> Located a
-    not_located = return
-
 locatedImports :: [ImportDecl] -> Located [QualifiedModule]
 locatedImports = fmap go . located
   where
@@ -195,7 +182,6 @@ readModule f = do
     go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
       where
         (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
-        (moduleName,              _) = runLocated (locatedModuleName moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
         (_,                 declLoc) = runLocated (located decls)
         
@@ -209,6 +195,12 @@ readModule f = do
         moduleLoc = do
             line <- moduleLine
             return $ srcLoc { srcLine = line }
+        
+        moduleName :: Maybe String
+        moduleName = do
+            _ <- moduleLoc
+            let ModuleName s = moduleDecl
+            return s
         
         sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
         [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
