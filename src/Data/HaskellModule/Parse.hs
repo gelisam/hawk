@@ -173,7 +173,7 @@ readModule f = do
         (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
         (moduleName,      moduleLoc) = runLocated (locatedModuleName moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
-        declLoc = Nothing
+        (_,                 declLoc) = runLocated (located decls)
         
         sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
         [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
