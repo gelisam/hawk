@@ -3,13 +3,30 @@
 module Data.HaskellModule.Parse (readModule) where
 
 import "mtl" Control.Monad.Trans
-import qualified Data.ByteString.Char8 as B
 import Language.Haskell.Exts
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule.Base
 import Data.HaskellSource
 import Language.Haskell.Exts.Location
+
+-- $setup
+-- >>> import qualified Data.ByteString.Char8 as B
+-- >>> let putSource = mapM_ (print . either id B.pack)
+-- >>> :{
+-- let testM f = do
+--     m <- runUncertainIO $ readModule f
+--     putSource (pragmaSource m)
+--     print (languageExtensions m)
+--     putStrLn "==="
+--     putSource (moduleSource m)
+--     print (moduleName m)
+--     putStrLn "==="
+--     putSource (importSource m)
+--     print (importedModules m)
+--     putStrLn "==="
+--     putSource (codeSource m)
+-- :}
 
 
 locatedExtensions :: [ModulePragma] -> Located [ExtensionName]
@@ -50,23 +67,6 @@ locatedImports = fmap go . located
     
     qualifiedName :: ImportDecl -> Maybe String
     qualifiedName = fmap prettyPrint . importAs
-
-
-testM :: FilePath -> IO ()
-testM f = do
-    m <- runUncertainIO $ readModule f
-    putSource (pragmaSource m)
-    print (languageExtensions m)
-    putStrLn "==="
-    putSource (moduleSource m)
-    print (moduleName m)
-    putStrLn "==="
-    putSource (importSource m)
-    print (importedModules m)
-    putStrLn "==="
-    putSource (codeSource m)
-  where
-    putSource = mapM_ (print . either id B.pack)
 
 
 -- Due to a limitation of haskell-parse-exts, there is no `parseModule`
