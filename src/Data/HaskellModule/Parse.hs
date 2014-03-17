@@ -173,6 +173,16 @@ splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
 -- []
 -- ===
 -- "t = take"
+-- 
+-- >>> testM "tests/preludes/moduleNamedMain/prelude.hs"
+-- []
+-- ===
+-- "module Main where"
+-- Just "Main"
+-- ===
+-- []
+-- ===
+-- "t = take"
 readModule :: FilePath -> UncertainT IO HaskellModule
 readModule f = do
     s <- lift $ readSource f
