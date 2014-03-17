@@ -69,6 +69,63 @@ locatedImports = fmap go . located
     qualifiedName = fmap prettyPrint . importAs
 
 
+-- | A variant of `splitAt` which makes it easy to make `snd` empty.
+-- 
+-- >>> maybeSplitAt Nothing "abc"
+-- ("abc","")
+-- 
+-- >>> maybeSplitAt (Just 0) "abc"
+-- ("","abc")
+maybeSplitAt :: Maybe Int -> [a] -> ([a], [a])
+maybeSplitAt Nothing  ys = (ys, [])
+maybeSplitAt (Just i) ys = splitAt i ys
+
+-- | Given n ordered indices before which to split, split the list into n+1 pieces.
+--   Omitted indices will produce empty pieces.
+-- 
+-- >>> multiSplit [] "foo"
+-- ["foo"]
+-- 
+-- >>> multiSplit [Just 0, Just 1, Just 2] "foo"
+-- ["","f","o","o"]
+-- 
+-- >>> multiSplit [Just 0, Just 1, Nothing] "foo"
+-- ["","f","oo",""]
+-- 
+-- >>> multiSplit [Just 0, Nothing, Just 2] "foo"
+-- ["","fo","","o"]
+-- 
+-- >>> multiSplit [Just 0, Nothing, Nothing] "foo"
+-- ["","foo","",""]
+-- 
+-- >>> multiSplit [Nothing, Just 1, Just 2] "foo"
+-- ["f","","o","o"]
+-- 
+-- >>> multiSplit [Nothing, Just 1, Nothing] "foo"
+-- ["f","","oo",""]
+-- 
+-- >>> multiSplit [Nothing, Nothing, Just 2] "foo"
+-- ["fo","","","o"]
+-- 
+-- >>> multiSplit [Nothing, Nothing, Nothing] "foo"
+-- ["foo","","",""]
+multiSplit :: [Maybe Int] -> [a] -> [[a]]
+multiSplit []           xs = [xs]
+multiSplit (j:js) xs = ys1 : ys2 : yss
+  where
+    (ys:yss) = multiSplit js xs
+    (ys1, ys2) = maybeSplitAt j ys
+
+-- | Given n ordered source locations, split the source into n+1 pieces.
+--   Omitted source locations will produce empty pieces.
+splitSource :: [Maybe SrcLoc] -> HaskellSource -> [HaskellSource]
+splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
+  where
+    -- line numbers start at 1, list indices start at 0.
+    line2index :: Int -> Int
+    line2index = subtract 1
+
+
 -- Due to a limitation of haskell-parse-exts, there is no `parseModule`
 -- variant of `readModule` which would parse from a String instead of a file.
 -- 
@@ -100,11 +157,10 @@ readModule f = do
   where
     go source pragmas moduleDecl imports decls = HaskellModule {..}
       where
-        (languageExtensions, extLoc) = runLocated (locatedExtensions pragmas)
-        (moduleName,        Nothing) = runLocated (locatedModuleName moduleDecl)
+        (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
+        (moduleName,      moduleLoc) = runLocated (locatedModuleName moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
+        declLoc = Nothing
         
-        pragmaSource = take 1 source
-        moduleSource = []
-        importSource = drop 1 source
-        codeSource = []
+        sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
+        [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
