@@ -146,6 +146,19 @@ splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
 -- "import qualified Data.List as L"
 -- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
 -- ===
+-- 
+-- >>> testM "tests/preludes/readme/prelude.hs"
+-- "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
+-- ["ExtendedDefaultRules","OverloadedStrings"]
+-- ===
+-- Nothing
+-- ===
+-- "import Prelude"
+-- "import qualified Data.ByteString.Lazy.Char8 as B"
+-- "import qualified Data.List as L"
+-- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
+-- ===
+-- "takeLast n = reverse . take n . reverse"
 readModule :: FilePath -> UncertainT IO HaskellModule
 readModule f = do
     s <- lift $ readSource f
