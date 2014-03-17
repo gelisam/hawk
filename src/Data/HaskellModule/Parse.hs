@@ -100,20 +100,9 @@ readModule f = do
   where
     go source pragmas moduleDecl imports decls = HaskellModule {..}
       where
-        languageExtensions = fst
-                           $ runLocated
-                           $ locatedExtensions
-                           $ pragmas
-        
-        moduleName = fst
-                   $ runLocated
-                   $ locatedModuleName
-                   $ moduleDecl
-        
-        importedModules = fst
-                        $ runLocated
-                        $ locatedImports
-                        $ imports
+        (languageExtensions, extLoc) = runLocated (locatedExtensions pragmas)
+        (moduleName,        Nothing) = runLocated (locatedModuleName moduleDecl)
+        (importedModules, importLoc) = runLocated (locatedImports imports)
         
         pragmaSource = take 1 source
         moduleSource = []
