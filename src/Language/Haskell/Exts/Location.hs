@@ -13,6 +13,9 @@ import Data.Monoid.Ord
 class Location a where
   location :: a -> Maybe SrcLoc
 
+instance Location SrcLoc where
+  location = Just
+
 instance Location Module where
   location (Module loc _ _ _ _ _ _) = Just loc
 

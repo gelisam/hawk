@@ -57,6 +57,17 @@ locatedImports = fmap go . located
     qualifiedName :: ImportDecl -> Maybe String
     qualifiedName = fmap prettyPrint . importAs
 
+locatedModule :: SrcLoc -> HaskellSource -> ModuleName -> Located (Maybe String)
+locatedModule srcLoc source (ModuleName mName) = case moduleLine of
+    Nothing -> return Nothing
+    Just line -> located (srcLoc {srcLine = line}) >> return (Just mName)
+  where
+    isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
+    isModuleDecl (Right xs) = "module " `isPrefixOf` xs
+    
+    moduleLine :: Maybe Int
+    moduleLine = fmap index2line $ findIndex isModuleDecl source
+
 
 -- line numbers start at 1, list indices start at 0.
 line2index, index2line :: Int -> Int
@@ -182,25 +193,9 @@ readModule f = do
     go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
       where
         (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
+        (moduleName,      moduleLoc) = runLocated (locatedModule srcLoc source moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
         (_,                 declLoc) = runLocated (located decls)
-        
-        isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
-        isModuleDecl (Right xs) = "module " `isPrefixOf` xs
-        
-        moduleLine :: Maybe Int
-        moduleLine = fmap index2line $ findIndex isModuleDecl source
-        
-        moduleLoc :: Maybe SrcLoc
-        moduleLoc = do
-            line <- moduleLine
-            return $ srcLoc { srcLine = line }
-        
-        moduleName :: Maybe String
-        moduleName = do
-            _ <- moduleLoc
-            let ModuleName s = moduleDecl
-            return s
         
         sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
         [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
