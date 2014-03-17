@@ -159,6 +159,16 @@ splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
 -- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
 -- ===
 -- "takeLast n = reverse . take n . reverse"
+-- 
+-- >>> testM "tests/preludes/modulename/prelude.hs"
+-- []
+-- ===
+-- "module MyPrelude where"
+-- Just "MyPrelude"
+-- ===
+-- []
+-- ===
+-- "t = take"
 readModule :: FilePath -> UncertainT IO HaskellModule
 readModule f = do
     s <- lift $ readSource f
