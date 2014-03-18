@@ -12,24 +12,6 @@ import Data.HaskellModule.Base
 import Data.HaskellSource
 import Language.Haskell.Exts.Location
 
--- $setup
--- >>> import qualified Data.ByteString.Char8 as B
--- >>> let putSource = mapM_ (print . either id B.pack)
--- >>> :{
--- let testM f = do
---     m <- runUncertainIO $ readModule f
---     putSource (pragmaSource m)
---     print (languageExtensions m)
---     putStrLn "==="
---     putSource (moduleSource m)
---     print (moduleName m)
---     putStrLn "==="
---     putSource (importSource m)
---     print (importedModules m)
---     putStrLn "==="
---     putSource (codeSource m)
--- :}
-
 
 locatedExtensions :: [ModulePragma] -> Located [ExtensionName]
 locatedExtensions = fmap go . located
@@ -136,51 +118,6 @@ splitSource = multiSplit . (fmap . fmap) (line2index . srcLine)
 -- 
 -- [1] http://hackage.haskell.org/package/haskell-src-exts-1.14.0.1/docs/Language-Haskell-Exts-Parser.html#t:ParseMode
 
--- |
--- >>> testM "tests/preludes/default/prelude.hs"
--- "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
--- ["ExtendedDefaultRules","OverloadedStrings"]
--- ===
--- Nothing
--- ===
--- "import Prelude"
--- "import qualified Data.ByteString.Lazy.Char8 as B"
--- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
--- ===
--- 
--- >>> testM "tests/preludes/readme/prelude.hs"
--- "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
--- ["ExtendedDefaultRules","OverloadedStrings"]
--- ===
--- Nothing
--- ===
--- "import Prelude"
--- "import qualified Data.ByteString.Lazy.Char8 as B"
--- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
--- ===
--- "takeLast n = reverse . take n . reverse"
--- 
--- >>> testM "tests/preludes/moduleName/prelude.hs"
--- []
--- ===
--- "module MyPrelude where"
--- Just "MyPrelude"
--- ===
--- []
--- ===
--- "t = take"
--- 
--- >>> testM "tests/preludes/moduleNamedMain/prelude.hs"
--- []
--- ===
--- "module Main where"
--- Just "Main"
--- ===
--- []
--- ===
--- "t = take"
 readModule :: FilePath -> UncertainT IO HaskellModule
 readModule f = do
     s <- lift $ readSource f

@@ -30,6 +30,7 @@ main = do
     doctest' "src/Data/HaskellModule/Parse.hs"
     doctest' "src/System/Console/Hawk.hs"
     doctest' "tests/System/Console/Hawk/PreludeTests.hs"
+    doctest' "tests/Data/HaskellModule/Parse/Test.hs"
     doctest' "src/System/Console/Hawk/Args/Option.hs"
     doctest' "src/System/Console/Hawk/Args/Parse.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Cache.hs"
