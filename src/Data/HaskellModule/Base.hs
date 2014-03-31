@@ -25,6 +25,10 @@ data HaskellModule = HaskellModule
   } deriving (Show, Eq)
 
 
+emptyModule :: HaskellModule
+emptyModule = HaskellModule [] [] Nothing [] [] [] []
+
+
 addExtension :: ExtensionName -> HaskellModule -> HaskellModule
 addExtension e m = m
     { languageExtensions = extraExtensions e ++ languageExtensions m
