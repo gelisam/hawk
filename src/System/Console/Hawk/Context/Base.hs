@@ -14,7 +14,7 @@ import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
 import System.Console.Hawk.Context.Dir
-import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.UserPrelude.Compatibility
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
 import System.Console.Hawk.UserPrelude.Parse

@@ -12,7 +12,7 @@ import System.Directory
 import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
 
 import Control.Monad.Trans.Uncertain
-import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.UserPrelude.Compatibility
 import System.Console.Hawk.UserPrelude.Cache
 
 

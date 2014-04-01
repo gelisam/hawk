@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | An essential part of Hawk's configuration is the user prelude.
-module System.Console.Hawk.UserPrelude (
+module System.Console.Hawk.UserPrelude.Compatibility (
       defaultModules
     , defaultPrelude
     , recompileUserPrelude

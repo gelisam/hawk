@@ -13,7 +13,7 @@ import Language.Haskell.Interpreter
 import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Context as Context
 import qualified System.Console.Hawk.Sandbox as Sandbox
-import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.UserPrelude.Compatibility
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
 
