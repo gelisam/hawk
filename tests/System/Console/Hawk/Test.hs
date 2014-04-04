@@ -27,7 +27,6 @@ import System.Console.Hawk
 run :: IO ()
 run = withContextHSpec $ \itEval itApply itMap ->
         describe "Hawk" $ do
-          itEval "" `into` "\n"
           itEval "1" `into` "1\n"
           itEval "1+1" `into` "2\n"
           itEval "[]" `into` ""
