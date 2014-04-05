@@ -20,19 +20,19 @@ parseSource = fmap Left . B.lines
 --   are reported about the original file instead of the modified one.
 -- 
 -- >>> let (x:xs) = parseSource $ B.pack "import Data.ByteString\nmain = print 42\n"
--- >>> B.putStr $ printSource "orig.hs" (x:xs)
+-- >>> B.putStr $ showSource "orig.hs" (x:xs)
 -- import Data.ByteString
 -- main = print 42
 -- 
--- >>> B.putStr $ printSource "orig.hs" (x:Right "import Prelude":xs)
+-- >>> B.putStr $ showSource "orig.hs" (x:Right "import Prelude":xs)
 -- import Data.ByteString
 -- import Prelude
 -- {-# LINE 2 "orig.hs" #-}
 -- main = print 42
-printSource :: FilePath -- ^ the original's filename,
-                        --   used for fixing up line numbers
-            -> HaskellSource -> B.ByteString
-printSource orig = B.unlines . go True 1
+showSource :: FilePath -- ^ the original's filename,
+                       --   used for fixing up line numbers
+           -> HaskellSource -> B.ByteString
+showSource orig = B.unlines . go True 1
   where
     go :: Bool -- ^ are line numbers already ok?
        -> Int  -- ^ the original number of the next original line
@@ -59,4 +59,4 @@ writeSource :: FilePath -- ^ the original's filename,
             -> FilePath
             -> HaskellSource
             -> IO ()
-writeSource orig f = B.writeFile f . printSource orig
+writeSource orig f = B.writeFile f . showSource orig

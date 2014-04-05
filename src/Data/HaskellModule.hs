@@ -7,7 +7,7 @@ module Data.HaskellModule
   ( HaskellModule
   , emptyModule, addExtension, addImport
   , readModule
-  , printModule, writeModule
+  , showModule, writeModule
   ) where
 
 import qualified Data.ByteString.Char8 as B
@@ -20,17 +20,17 @@ import Data.HaskellModule.Parse
 
 
 -- |
--- >>> B.putStr $ printModule "orig.hs" $ emptyModule
+-- >>> B.putStr $ showModule "orig.hs" $ emptyModule
 -- 
--- >>> B.putStr $ printModule "orig.hs" $ addExtension "OverloadedStrings" $ addImport ("Data.ByteString.Char8", Just "B") $ addExtension "RecordWildCards" $ addImport ("Prelude", Nothing) $ emptyModule
+-- >>> B.putStr $ showModule "orig.hs" $ addExtension "OverloadedStrings" $ addImport ("Data.ByteString.Char8", Just "B") $ addExtension "RecordWildCards" $ addImport ("Prelude", Nothing) $ emptyModule
 -- {-# LANGUAGE OverloadedStrings #-}
 -- {-# LANGUAGE RecordWildCards #-}
 -- import qualified Data.ByteString.Char8 as B
 -- import Prelude
-printModule :: FilePath -- ^ the original's filename,
-                        --   used for fixing up line numbers
-            -> HaskellModule -> B.ByteString
-printModule orig (HaskellModule {..}) = printSource orig fullSource
+showModule :: FilePath -- ^ the original's filename,
+                       --   used for fixing up line numbers
+           -> HaskellModule -> B.ByteString
+showModule orig (HaskellModule {..}) = showSource orig fullSource
   where
     fullSource = concat [ pragmaSource
                         , moduleSource
@@ -44,4 +44,4 @@ writeModule :: FilePath -- ^ the original's filename,
             -> FilePath
             -> HaskellModule
             -> IO ()
-writeModule orig f = B.writeFile f . printModule orig
+writeModule orig f = B.writeFile f . showModule orig
