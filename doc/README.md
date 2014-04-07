@@ -311,7 +311,7 @@ module. The support is planned for future releases
 
 ## Contribute
 
-Here is a quick tour of the codebase, as of af2345972f570a86a219b09636d832213a488d10.
+Here is a quick tour of the codebase, as of [af2345](https://github.com/gelisam/hawk/tree/af2345972f570a86a219b09636d832213a488d10).
 
 First, [`parseArgs`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/src/System/Console/Hawk/Args/Parse.hs#L194) converts the command-line arguments into a [`HawkSpec`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/runtime/System/Console/Hawk/Args/Spec.hs#L8), a precise type describing the valid commands which can be passed to the `hawk` executable.
 
