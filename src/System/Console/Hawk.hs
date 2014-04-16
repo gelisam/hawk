@@ -16,51 +16,46 @@
            , OverloadedStrings
            , ScopedTypeVariables
            , TupleSections #-}
-
-module System.Console.Hawk (
-
-    hawk
-  , main
-
-) where
+-- | Hawk as seen from the outside world: parsing command-line arguments,
+--   evaluating user expressions.
+module System.Console.Hawk
+  ( processArgs
+  ) where
 
 
-import Control.Applicative ((<$>))
 import Control.Monad
 import qualified Data.List as L
-import Data.List ((++),(!!))
+import Data.List ((++))
 import Data.Either
 import Data.Function
-import Data.Ord
 import Data.Maybe
 import Data.String
 import qualified Data.Typeable.Internal as Typeable
 import Data.Typeable.Internal
   (TypeRep(..)
   ,tyConName)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
-import Data.Version (versionBranch)
 import Language.Haskell.Interpreter
 import qualified Prelude as P
-import System.Console.GetOpt (usageInfo)
-import System.Environment (getArgs,getProgName)
-import System.Exit (exitFailure,exitSuccess)
 import qualified System.IO as IO
 import System.IO (IO)
 import Text.Printf (printf)
 
+import Control.Monad.Trans.Uncertain
+import System.Console.Hawk.Args
+import System.Console.Hawk.Args.Spec
+import qualified System.Console.Hawk.Context as Context
+import System.Console.Hawk.Context.Compatibility
 import System.Console.Hawk.Sandbox
-import System.Console.Hawk.Config
+import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.Help
 import System.Console.Hawk.Lock
-import System.Console.Hawk.IO
-import System.Console.Hawk.Options
-
--- magic self-referential module created by cabal
-import Paths_haskell_awk (version)
+import System.Console.Hawk.Runtime.Base
+import System.Console.Hawk.Version
 
 
-initInterpreter :: (String, String) -- ^ config file and module name
+-- | Tell hint to load the user prelude, the modules it imports, and the
+--   language extensions it specifies.
+initInterpreter :: (String, String) -- ^ prelude file and module name
                 -> [(String,Maybe String)] -- ^ the modules maybe qualified
                 -> [Extension]
                 -> InterpreterT IO ()
@@ -68,169 +63,136 @@ initInterpreter (preludeFile,preludeModule) userModules extensions = do
         
         set [languageExtensions := extensions]
 
-        -- load the config file
+        -- load the prelude file
         loadModules [preludeFile]
 
-        -- load the config module plus representable
+        -- load the prelude module plus representable
         setImportsQ $ (preludeModule,Nothing):defaultModules
                                            ++ userModules
 
-printErrors :: InterpreterError -> IO ()
-printErrors e = case e of
-                  WontCompile es' -> do
-                    IO.hPutStrLn IO.stderr "\nWon't compile:"
-                    forM_ es' $ \e' ->
-                      case e' of
-                        GhcError e'' -> IO.hPutStrLn IO.stderr $ '\t':e'' ++ "\n"
-                  _ -> IO.print e
 
-runHawk :: Options
-        ->  (String,String)
-        -> [String]
-        -> IO ()
-runHawk os prelude nos = do
-  let file = if L.length nos > 1 then Just (nos !! 1) else Nothing
-  extensions <- P.read <$> (getExtensionsFile >>= IO.readFile)
-  modules <- maybe (return []) (\f -> P.read <$> IO.readFile f) (optModuleFile os)
+errorString :: InterpreterError -> String
+errorString (WontCompile es) = L.intercalate "\n" (header : P.map indent es)
+  where
+    header = "Won't compile:"
+    indent (GhcError e) = ('\t':e)
+errorString e = P.show e
 
-  maybe_f <- hawk os prelude modules extensions (L.head nos)
-  case maybe_f of
-    Left ie -> printErrors ie
-    Right f -> getInput file >>= printOutput . f
+wrapErrorsM :: Monad m => m (Either InterpreterError a) -> UncertainT m a
+wrapErrorsM = lift >=> wrapErrors
+
+wrapErrors :: Monad m => Either InterpreterError a -> UncertainT m a
+wrapErrors (Left e) = fail $ errorString e
+wrapErrors (Right x) = return x
+
 
 runLockedHawkInterpreter :: forall a . InterpreterT IO a
                             -> IO (Either InterpreterError a)
-runLockedHawkInterpreter i = do
-    withLock $ runHawkInterpreter i
+runLockedHawkInterpreter i = withLock $ runHawkInterpreter i
 
-data StreamFormat = StreamFormat | LinesFormat | WordsFormat
-    deriving (P.Eq,P.Show,P.Read)
+-- | Wrapper used to force `typeOf` to fully-qualify the type
+--   `HawkRuntime`. Otherwise hint may try to use a type which
+--   we haven't explicitly imported.
+-- 
+-- >>> let runtime = HawkRuntime defaultInputSpec defaultOutputSpec
+-- 
+-- >>> Typeable.typeOf runtime
+-- HawkRuntime
+-- 
+-- >>> Typeable.typeOf $ QR runtime
+-- System.Console.Hawk.Runtime.Base.HawkRuntime
+newtype QualifiedHawkRuntime = QR HawkRuntime
 
-streamFormat :: B.ByteString
-             -> B.ByteString
-             -> StreamFormat
-streamFormat ld wd = if B.null ld
-                        then StreamFormat
-                        else if B.null wd
-                                then LinesFormat
-                                else WordsFormat
-
--- | 'ByteString' wrapper used to override the 'ByteString' @typeOf@ into
--- a qualified version
--- @typeOf (ByteString.pack "test") == "ByteString"@
--- @typeof (QualifiedByteString $ ByteString.pack "test") == "Data.ByteString.Lazy.Char8.Bytestring"@
-newtype QualifiedByteString = QB { unQB :: LB.ByteString }
-
-instance Typeable.Typeable QualifiedByteString where
-  typeOf (QB bs) = let TypeRep fp tc trs = Typeable.typeOf bs
+instance Typeable.Typeable QualifiedHawkRuntime where
+  typeOf (QR bs) = let TypeRep fp tc trs = Typeable.typeOf bs
                    in TypeRep fp
-                              tc{ tyConName = "Data.ByteString.Lazy.Char8."
+                              tc{ tyConName = "System.Console.Hawk.Runtime.Base."
                                           ++ tyConName tc }
                               trs
 
-hawk :: Options                -- ^ Program options
-     -> (String,String)         -- ^ The prelude file and module name
-     -> [(String,Maybe String)] -- ^ The modules maybe qualified
-     -> [Extension]             -- ^ The extensions to enable
-     -> String                  -- ^ The user expression to evaluate
-     -> IO (Either InterpreterError (LB.ByteString -> LB.ByteString))
-hawk opts prelude modules extensions userExpr = do
-    eitherErrorF <- runLockedHawkInterpreter $ do
 
-        initInterpreter prelude modules extensions
-        
-        -- eval program based on the existence of a delimiter
-        case (optMode opts,streamFormat linesDelim wordsDelim) of
-            (EvalMode,_)             -> interpret' $ evalExpr      userExpr
-            (ApplyMode,StreamFormat) -> interpret' $ streamExpr    userExpr
-            (ApplyMode,LinesFormat)  -> interpret' $ linesExpr     userExpr
-            (ApplyMode,WordsFormat)  -> interpret' $ wordsExpr     userExpr
-            (MapMode,StreamFormat)   -> interpret' $ mapStreamExpr userExpr
-            (MapMode,LinesFormat)    -> interpret' $ mapLinesExpr  userExpr
-            (MapMode,WordsFormat)    -> interpret' $ mapWordsExpr  userExpr
+-- | Same as if the given arguments were passed to Hawk on the command-line.
+processArgs :: [String] -> IO ()
+processArgs args = do
+    r <- runWarningsIO $ parseArgs args
+    case r of
+      Left err -> failHelp err
+      Right spec -> processSpec spec
+
+-- | A variant of `processArgs` which accepts a structured specification
+--   instead of a sequence of strings.
+processSpec :: HawkSpec -> IO ()
+processSpec Help          = help
+processSpec Version       = IO.putStrLn versionString
+processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
+processSpec (Apply e i o) = applyExpr e                    i       o
+processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+
+wrapExpr :: String -> ExprSpec -> ExprSpec
+wrapExpr f e = e'
+  where
+    u = userExpression e
+    u' = printf "%s (%s)" (prel f) u
+    e' = e { userExpression = u' }
     
-    return ((\f -> unQB . f . QB) <$> eitherErrorF)
-    where 
-          interpret' expr = do
-            -- print the user expression
-            -- lift $ IO.hPutStrLn IO.stderr expr 
-            interpret expr (as :: QualifiedByteString -> QualifiedByteString)
-          evalExpr = printf "const (%s (%s))" showRows
-          mapStreamExpr = streamExpr . listMap
-          mapLinesExpr = linesExpr . listMap
-          mapWordsExpr = wordsExpr . listMap
-          streamExpr expr = compose [showRows, expr]
-          linesExpr expr = compose [showRows, expr, parseRows]
-          wordsExpr expr = compose [showRows, expr, parseWords]
-          linesDelim = optLinesDelim opts
-          wordsDelim = optWordsDelim opts
-          outLinesDelim = case optOutLinesDelim opts of
-                            Nothing -> linesDelim
-                            Just delim -> delim
-          outWordsDelim = case optOutWordsDelim opts of
-                            Nothing -> wordsDelim
-                            Just delim -> delim
-          compose :: [String] -> String
-          compose = L.intercalate (prel ".") . P.map (printf "(%s)")
-          listMap :: String -> String
-          listMap = printf (runtime "listMap (%s)")
-          c8pack :: String -> String
-          c8pack = printf (runtime "c8pack (%s)")
-          sc8pack :: String -> String
-          sc8pack = printf (runtime "sc8pack (%s)")
-          showRows :: String
-          showRows = printf (runtime "showRows (%s) (%s)")
-                             (c8pack $ P.show outLinesDelim)
-                             (c8pack $ P.show outWordsDelim)
-          parseRows :: String
-          parseRows = printf (runtime "parseRows (%s)")
-                             (sc8pack $ P.show linesDelim)
+    -- we cannot use any unqualified symbols in the user expression,
+    -- because we don't know which modules the user prelude will import.
+    qualify :: String -> String -> String
+    qualify moduleName = printf "%s.%s" moduleName
+    
+    prel = qualify "Prelude"
 
-          parseWords :: String
-          parseWords = printf (runtime "parseWords (%s) (%s)")
-                              (sc8pack $ P.show linesDelim)
-                              (sc8pack $ P.show wordsDelim)
-          
-          qualify :: String -> String -> String
-          qualify moduleName = printf "%s.%s" moduleName
-          
-          prel = qualify "Prelude"
-          runtime = qualify "System.Console.Hawk.Runtime"
+applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
+applyExpr e i o = do
+    let contextDir = userContextDirectory e
+    
+    context <- Context.getContext contextDir
+    
+    let prelude = configFromContext context
+    
+    let extensions = P.map P.read $ Context.extensions context
+    let modules = Context.modules context
+    let expr = userExpression e
 
-getUsage :: IO String
-getUsage = do
-    pn <- getProgName
-    return $ usageInfo ("Usage: " ++ pn ++ " [<options>] <expr> [<file>]") 
-                       options
-
-main :: IO ()
-main = do
-    moduleFile <- getModulesFile
-    optsArgs <- processArgs moduleFile <$> getArgs
-    either printErrorAndExit go optsArgs
-    where processArgs moduleFile args =
-                case compileOpts args of
-                    Left err -> Left err
-                    Right (opts,notOpts) -> 
-                        Right (opts{ optModuleFile = Just moduleFile},notOpts)
-          printErrorAndExit errors = errorMessage errors >> exitFailure
-          errorMessage errs = do
-                usage <- getUsage
-                IO.hPutStr IO.stderr $ L.intercalate "\n" (errs ++ ['\n':usage])
-          go (opts,notOpts) = do
-                config <- if optRecompile opts
-                              then recompileConfig
-                              else recompileConfigIfNeeded
-                
-                when (optVersion opts) $ do
-                  let versionString = L.intercalate "."
-                                    $ P.map P.show
-                                    $ versionBranch version
-                  IO.putStrLn versionString
-                  exitSuccess
-                
-                when (optHelp opts) $ do
-                  getUsage >>= IO.putStr
-                  exitSuccess
-                
-                runHawk opts config notOpts
+    processRuntime <- runUncertainIO
+                    $ wrapErrorsM
+                    $ runLockedHawkInterpreter
+                    $ do
+      initInterpreter prelude modules extensions
+      interpret' $ processTable $ tableExpr expr
+    processRuntime (QR hawkRuntime)
+  where
+    interpret' expr = do
+      interpret expr (as :: QualifiedHawkRuntime -> IO ())
+    
+    hawkRuntime = HawkRuntime i o
+    
+    processTable :: String -> String
+    processTable = printf "(%s) (%s) (%s)" (prel "flip")
+                                           (runtime "processTable")
+    
+    -- turn the user into an expression manipulating [[B.ByteString]]
+    tableExpr :: String -> String
+    tableExpr e = e `compose` fromTable
+      where
+        fromTable = case inputFormat i of
+            RawStream         -> head' `compose` head'
+            Lines _ RawLine   -> map' head'
+            Lines _ (Words _) -> prel "id"
+    
+    compose :: String -> String -> String
+    compose f g = printf "(%s) %s (%s)" f (prel ".") g
+    
+    head' :: String
+    head' = prel "head"
+    
+    map' :: String -> String
+    map' = printf "(%s) (%s)" (prel "map")
+    
+    -- we cannot use any unqualified symbols in the user expression,
+    -- because we don't know which modules the user prelude will import.
+    qualify :: String -> String -> String
+    qualify moduleName = printf "%s.%s" moduleName
+    
+    prel = qualify "Prelude"
+    runtime = qualify "System.Console.Hawk.Runtime.Base"

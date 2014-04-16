@@ -13,12 +13,15 @@
 --   limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
-module System.Console.Hawk.Config.Parse
+-- | In which the user prelude is deconstructed into the parts we care about.
+module System.Console.Hawk.UserPrelude.Parse
     ( ExtensionName
     , QualifiedModule
     , parseExtensions
     , parseModules
-    , parseSource
+    , readExtensions
+    , readModules
+    , readSource
     )
   where
 
@@ -26,7 +29,7 @@ import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as C8
 import Data.Maybe
-import Language.Haskell.Exts ( parseFileWithExts )
+import Language.Haskell.Exts ( parseFileContentsWithExts )
 import Language.Haskell.Exts.Extension ( parseExtension, Extension (..) )
 import Language.Haskell.Exts.Parser
     ( getTopPragmas
@@ -36,9 +39,11 @@ import Language.Haskell.Exts.Syntax
 import System.Exit
 import Text.Printf
 
-import System.Console.Hawk.Config.Base
+import System.Console.Hawk.UserPrelude.Base
 
 
+-- | Our parse methods terminate the program upon failure,
+--   but those from Haskell.Exts don't.
 getResult :: FilePath -> ParseResult a -> IO a
 getResult _ (ParseOk x) = return x
 getResult sourceFile (ParseFailed srcLoc err) = do
@@ -46,10 +51,15 @@ getResult sourceFile (ParseFailed srcLoc err) = do
     exitFailure
 
 
-parseExtensions :: FilePath -> IO [ExtensionName]
-parseExtensions sourceFile = do
-    result <- getTopPragmas <$> readFile sourceFile 
-    listExtensions <$> getResult sourceFile result
+-- | The LANGUAGE pragma at the top of the user prelude, if any.
+-- 
+-- >>> parseExtensions "{-# LANGUAGE OverloadedStrings, GADTs #-}\nmain = print 42\n"
+-- ParseOk ["OverloadedStrings","GADTs"]
+-- 
+-- >>> parseExtensions "main = print 42\n"
+-- ParseOk []
+parseExtensions :: String -> ParseResult [ExtensionName]
+parseExtensions = fmap listExtensions . getTopPragmas
   where
     listExtensions :: [ModulePragma] -> [ExtensionName]
     listExtensions = map getName . concat . mapMaybe extensionNames
@@ -63,14 +73,29 @@ parseExtensions sourceFile = do
     getName (Symbol s) = s
 
 
-parseModules :: FilePath -> [ExtensionName] -> IO [QualifiedModule]
-parseModules sourceFile extensions = do
-    result <- parseFileWithExts extensions' sourceFile
-    Module _ _ _ _ _ importDeclarations _ <- getResult sourceFile result
-    return $ concatMap toHintModules importDeclarations
+-- | The modules imported by the user prelude.
+-- 
+-- >>> parseModules [] "import Data.Maybe\nmain = print 42\n"
+-- ParseOk [("Data.Maybe",Nothing)]
+-- 
+-- >>> parseModules [] "import qualified Data.Maybe as M"
+-- ParseOk [("Data.Maybe",Just "M")]
+-- 
+-- >>> parseModules ["PackageImports"] "import \"network\" Network.Socket"
+-- ParseOk [("Network.Socket",Nothing)]
+parseModules :: [ExtensionName] -> String -> ParseResult [QualifiedModule]
+parseModules extensions = fmap getQualifiedModules
+                        . parseFileContentsWithExts extensions'
   where
     extensions' :: [Extension]
     extensions' = map parseExtension extensions
+    
+    getImportDecls :: Module -> [ImportDecl]
+    getImportDecls (Module _ _ _ _ _ ds _) = ds
+    
+    getQualifiedModules :: Module -> [QualifiedModule]
+    getQualifiedModules = concatMap toHintModules
+                        . getImportDecls
     
     toHintModules :: ImportDecl -> [QualifiedModule]
     toHintModules importDecl =
@@ -83,7 +108,17 @@ parseModules sourceFile extensions = do
                               [(mn,Just s)]
 
 
--- the configuration format is designed to look like a Haskell module,
+readExtensions :: FilePath -> IO [ExtensionName]
+readExtensions sourceFile = do
+    result <- parseExtensions <$> readFile sourceFile
+    getResult sourceFile result
+
+readModules :: [ExtensionName] -> FilePath -> IO [QualifiedModule]
+readModules extensions sourceFile = do
+    result <- parseModules extensions <$> readFile sourceFile
+    getResult sourceFile result
+
+-- the user prelude format is designed to look like a Haskell module,
 -- so we just return the whole file.
-parseSource :: FilePath -> IO Source
-parseSource = C8.readFile
+readSource :: FilePath -> IO Source
+readSource = C8.readFile

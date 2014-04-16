@@ -12,13 +12,15 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-module System.Console.Hawk.Config.Test where
+module System.Console.Hawk.UserPrelude.Test where
 
-import System.Console.Hawk.Config (
+import Language.Haskell.Exts.Parser (
+    ParseResult (..)
+    )
+
+import System.Console.Hawk.UserPrelude.Parse (
     parseModules)
 import Test.Hspec 
-
-import System.Console.Hawk.TestUtils
 
 
 spec :: Spec
@@ -27,22 +29,17 @@ spec = parseModulesSpec
 parseModulesSpec :: Spec
 parseModulesSpec = describe "parseModules" $ do
     it "returns empty when no modules are declared" $ do
-        res <- withTempFile'' $ \file -> parseModules file []
-        res `shouldBe` []
+        parseModules [] ""
+          `shouldBe'` ParseOk []
     it "returns the module with Nothing for unqualified imports" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import Data.List"
-            parseModules file []
-        res `shouldBe` [("Data.List",Nothing)]
+        parseModules [] "import Data.List"
+          `shouldBe'` ParseOk [("Data.List",Nothing)]
     it "returns the module with its qualification for qualified imports" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import qualified Data.List as L"
-            parseModules file []
-        res `shouldBe` [("Data.List",Just "L")]
+        parseModules [] "import qualified Data.List as L"
+          `shouldBe'` ParseOk [("Data.List",Just "L")]
     it "returns the module both unqualified and with qualification for mixed" $ do
-        res <- withTempFile'' $ \file -> do
-            writeFile file "import Data.List as L"
-            parseModules file []
-        res `shouldBe` [("Data.List",Nothing),("Data.List",Just "L")]
-
-    where withTempFile'' = withTempFile' "parseModulesSpec.hs"
+        parseModules [] "import Data.List as L"
+          `shouldBe'` ParseOk [("Data.List",Nothing),("Data.List",Just "L")]
+  where
+    shouldBe' :: Show a => ParseResult a -> ParseResult a -> Expectation
+    shouldBe' x y = show x `shouldBe` show y

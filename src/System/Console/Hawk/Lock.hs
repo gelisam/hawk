@@ -12,6 +12,9 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+-- | Two concurrent Hawk processes (when the output of a Hawk command is piped
+--   into another, for example) are in a race condition to compile and cache
+--   the user prelude. The global application lock prevents this.
 module System.Console.Hawk.Lock
     ( withLock
     , withTestLock
@@ -71,10 +74,10 @@ unlock = closeSocket
 
 waitForException :: IO a
 waitForException = bracket openHandle closeHandle $ \h -> do
-  s <- hGetContents h
-  length s `seq` return ()  -- blocks until EOF, which never comes
-                            -- because the server never accepted the connection
-  error $ printf "port %s in use by a program other than hawk" $ show portNumber
+    s <- hGetContents h
+    length s `seq` return ()  -- blocks until EOF, which never comes
+                              -- because the server never accepted the connection
+    error $ printf "port %s in use by a program other than hawk" $ show portNumber
 
 
 isADDRINUSE :: IOError -> Maybe ()

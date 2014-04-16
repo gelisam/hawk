@@ -118,13 +118,13 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 
 
 
--- | A Row is something that can be expressed as a line. 
+-- | A Row is something that can be expressed as a line.
 -- The output of repr' should be formatted such that
 -- it can be read and processed from the command line.
 --
 -- For example:
 --
--- >>> IO.putStrLn $ show [1,2,3,4]
+-- >>> putStrLn $ show [1,2,3,4]
 -- [1,2,3,4]
 --
 -- >>> Data.ByteString.Lazy.Char8.putStrLn $ repr' (Data.ByteString.Lazy.Char8.pack " ") [1,2,3,4]
@@ -163,7 +163,7 @@ instance (Row a) => Row (Maybe a) where
 
 instance (Row a,Row b) => Row (a,b) where
     repr' d (a,b) = repr' d a `C8.append` (d `C8.append` repr' d b)
-    --repr' d (a,b) = repr' d [repr' d a,repr' d b] 
+    --repr' d (a,b) = repr' d [repr' d a,repr' d b]
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
     repr' d (a,b,c) =  repr' d a `C8.append` (d `C8.append`
