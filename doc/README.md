@@ -96,7 +96,7 @@ for easy conversion from ByteString.
 
 ## Modes
 
-Without any flag, Hawk simply evaluates the given Haskell expressions.
+Without any flag, Hawk simply evaluates the given Haskell expression.
 
 ```bash
 > hawk '2 ^ 100'
@@ -307,3 +307,15 @@ The `prelude.hs` file can be seen as a regular Haskell file with some limitation
 importing them totally: there is no way to import only a part of a module, so
 something like `import Prelude (try)` won't import only try from the `Prelude`
 module. The support is planned for future releases
+
+
+## Contribute
+
+Here is a quick tour of the codebase, as of [af2345](https://github.com/gelisam/hawk/tree/af2345972f570a86a219b09636d832213a488d10).
+
+First, [`parseArgs`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/src/System/Console/Hawk/Args/Parse.hs#L194) converts the command-line arguments into a [`HawkSpec`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/runtime/System/Console/Hawk/Args/Spec.hs#L8), a precise type describing the valid commands which can be passed to the `hawk` executable.
+
+Then, [`processSpec`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/src/System/Console/Hawk.hs#L44) executes this `HawkSpec`, most commonly by [caching the user prelude](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/src/System/Console/Hawk/Context/Base.hs#L36), and by asking the [hint](http://hackage.haskell.org/package/hint) library to interpret the user expression.
+
+At this point it is [the Hawk runtime](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/haskell-awk.cabal#L52) which takes over, using [`processTable`](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/runtime/System/Console/Hawk/Runtime/Base.hs#L26) to interpret standard input as a delimiter-separated table and to manipulate it via the user expression. Depending on the type of the user expression, [an appropriate output format](https://github.com/gelisam/hawk/blob/af2345972f570a86a219b09636d832213a488d10/runtime/System/Console/Hawk/Representable.hs) is then chosen and sent to standard output.
+

@@ -110,8 +110,14 @@ sandboxSpecificGhcArgs sandbox = do
 extraGhcArgs :: IO [String]
 extraGhcArgs = concat <$> mapM sandboxSpecificGhcArgs sandboxes
 
--- a version of runInterpreter which can load libraries
--- installed along hawk's sandbox folder, if applicable.
+-- | a version of runInterpreter which can load libraries
+--   installed along hawk's sandbox folder, if applicable.
+-- 
+-- Must be called inside a `withLock` block, otherwise hint will generate
+-- conflicting temporary files.
+-- 
+-- TODO: Didn't we write a patch for hint about this?
+--       Do we still need the lock?
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)
 runHawkInterpreter mx = do
     args <- extraGhcArgs
