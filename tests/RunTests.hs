@@ -34,6 +34,7 @@ main = do
     doctest' "tests/Data/HaskellModule/Parse/Test.hs"
     doctest' "src/System/Console/Hawk/Args/Option.hs"
     doctest' "src/System/Console/Hawk/Args/Parse.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Cache.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Compatibility/Extend.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Parse.hs"
