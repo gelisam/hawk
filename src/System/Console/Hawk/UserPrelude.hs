@@ -6,6 +6,7 @@ import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule
+import System.Console.Hawk.UserPrelude.Extend
 
 
 type UserPrelude = HaskellModule
@@ -23,8 +24,14 @@ testC f = do
 -- import Prelude
 -- import qualified Data.ByteString.Lazy.Char8 as B
 -- import qualified Data.List as L
+-- 
+-- >>> testC "moduleName"
+-- module MyPrelude where
+-- import Prelude
+-- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
+-- t = take
 canonicalUserPrelude :: HaskellModule -> UserPrelude
-canonicalUserPrelude = id
+canonicalUserPrelude = extendModules
 
 compileUserPrelude :: FilePath -> IO ()
 compileUserPrelude = undefined
