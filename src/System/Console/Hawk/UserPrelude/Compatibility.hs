@@ -29,7 +29,7 @@ import System.EasyFile
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
 import System.Console.Hawk.UserPrelude.Compile
-import System.Console.Hawk.UserPrelude.Extend
+import System.Console.Hawk.UserPrelude.Compatibility.Extend
 import System.Console.Hawk.UserPrelude.Parse
 
 

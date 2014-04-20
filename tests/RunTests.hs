@@ -35,7 +35,7 @@ main = do
     doctest' "src/System/Console/Hawk/Args/Option.hs"
     doctest' "src/System/Console/Hawk/Args/Parse.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Cache.hs"
-    doctest' "src/System/Console/Hawk/UserPrelude/Extend.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude/Compatibility/Extend.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Parse.hs"
     doctest' "src/Control/Monad/Trans/Uncertain.hs"
     doctest' "src/Control/Monad/Trans/OptionParser.hs"

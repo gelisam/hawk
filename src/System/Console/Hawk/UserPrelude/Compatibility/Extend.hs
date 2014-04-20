@@ -14,7 +14,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 -- | In which the implicit defaults are explicitly added.
-module System.Console.Hawk.UserPrelude.Extend
+module System.Console.Hawk.UserPrelude.Compatibility.Extend
     ( extendModules
     , extendSource
     , getModuleName
