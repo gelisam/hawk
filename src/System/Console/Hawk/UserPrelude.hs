@@ -31,7 +31,7 @@ testC f = do
 -- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
 -- t = take
 canonicalUserPrelude :: HaskellModule -> UserPrelude
-canonicalUserPrelude = extendModules
+canonicalUserPrelude = extendImports
 
 compileUserPrelude :: FilePath -> IO ()
 compileUserPrelude = undefined

@@ -1,6 +1,6 @@
 -- | In which the implicit defaults are explicitly added.
 module System.Console.Hawk.UserPrelude.Extend
-  ( extendModules
+  ( extendImports
   ) where
 
 import Control.Applicative
@@ -19,7 +19,7 @@ moduleNames = map fst . importedModules
 --       m0  = emptyModule
 --       m1  = foldr addExtension m0 exts
 --       m2  = foldr addImport m1 modules
---       m' = extendModules m2
+--       m' = extendImports m2
 -- :}
 -- 
 -- >>> testM [] []
@@ -44,8 +44,8 @@ moduleNames = map fst . importedModules
 --       [m "Data.Maybe"]
 -- :}
 -- ["Data.Maybe"]
-extendModules :: HaskellModule -> HaskellModule
-extendModules = until preludeOk
+extendImports :: HaskellModule -> HaskellModule
+extendImports = until preludeOk
                     $ addImport unqualified_prelude
   where
     prelude = "Prelude"
