@@ -2,6 +2,7 @@
 -- | A version of HaskellSource with slightly more semantics.
 module Data.HaskellModule.Base where
 
+import Control.Applicative
 import Text.Printf
 
 import Data.HaskellSource
@@ -39,6 +40,17 @@ addExtension e m = m
     extraSource = return . return . languagePragma
     
     languagePragma = printf "{-# LANGUAGE %s #-}"
+
+addDefaultModuleName :: String -> HaskellModule -> HaskellModule
+addDefaultModuleName s m = m
+    { moduleName   = moduleName m <|> defaultName s
+    , moduleSource = extraSource s ++ moduleSource m
+    }
+  where
+    defaultName = return
+    extraSource = return . return . moduleDeclaration
+    
+    moduleDeclaration = printf "module %s where"
 
 addImport :: QualifiedModule -> HaskellModule -> HaskellModule
 addImport qm m = m

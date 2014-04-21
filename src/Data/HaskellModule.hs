@@ -5,7 +5,7 @@
 -- bytes or a raw HaskellSource.
 module Data.HaskellModule
   ( HaskellModule(..)
-  , emptyModule, addExtension, addImport
+  , emptyModule, addExtension, addDefaultModuleName, addImport
   , readModule
   , showModule, writeModule
   ) where
