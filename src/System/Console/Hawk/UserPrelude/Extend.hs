@@ -1,10 +1,23 @@
 -- | In which the implicit defaults are explicitly added.
 module System.Console.Hawk.UserPrelude.Extend
-  ( extendImports
+  ( extendModuleName
+  , extendImports
   ) where
 
 import Control.Applicative
+import Data.Maybe
+
 import Data.HaskellModule
+
+
+-- | We cannot import a module unless it has a name.
+extendModuleName :: HaskellModule -> HaskellModule
+extendModuleName = until hasModuleName
+                       $ addDefaultModuleName defaultModuleName
+  where
+    defaultModuleName = "System.Console.Hawk.CachedPrelude"
+    
+    hasModuleName = isJust . moduleName
 
 
 moduleNames :: HaskellModule -> [String]

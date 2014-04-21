@@ -21,6 +21,8 @@ testC f = do
 -- |
 -- >>> testC "default"
 -- {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
+-- module System.Console.Hawk.CachedPrelude where
+-- {-# LINE 2 "tests/preludes/default/prelude.hs" #-}
 -- import Prelude
 -- import qualified Data.ByteString.Lazy.Char8 as B
 -- import qualified Data.List as L
@@ -31,7 +33,7 @@ testC f = do
 -- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
 -- t = take
 canonicalUserPrelude :: HaskellModule -> UserPrelude
-canonicalUserPrelude = extendImports
+canonicalUserPrelude = extendModuleName . extendImports
 
 compileUserPrelude :: FilePath -> IO ()
 compileUserPrelude = undefined
