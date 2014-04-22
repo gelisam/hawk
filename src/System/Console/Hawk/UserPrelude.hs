@@ -16,7 +16,7 @@ testC :: FilePath -> IO ()
 testC f = do
     let orig = printf "tests/preludes/%s/prelude.hs" f
     m <- runUncertainIO $ readModule orig
-    B.putStr $ showModule orig (canonicalUserPrelude m)
+    B.putStr $ showModule orig (canonicalizeUserPrelude m)
 
 -- |
 -- >>> testC "default"
@@ -32,8 +32,8 @@ testC f = do
 -- import Prelude
 -- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
 -- t = take
-canonicalUserPrelude :: HaskellModule -> UserPrelude
-canonicalUserPrelude = extendModuleName . extendImports
+canonicalizeUserPrelude :: HaskellModule -> UserPrelude
+canonicalizeUserPrelude = extendModuleName . extendImports
 
 compileUserPrelude :: FilePath -> IO ()
 compileUserPrelude = undefined
