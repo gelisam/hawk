@@ -55,11 +55,13 @@ getContext confDir = do
 newContext :: FilePath -> UncertainT IO Context
 newContext confDir = do
     let originalPreludePath' = getUserPreludeFile confDir
-    let canonicalPreludePath' = getSourceFile confDir
     userPrelude <- readUserPrelude originalPreludePath'
+    
+    let cacheDir = getCacheDir confDir
+    lift $ createDirectory cacheDir
+    
+    let canonicalPreludePath' = getSourceFile confDir
     compileUserPrelude originalPreludePath' canonicalPreludePath' userPrelude
-    -- extensions' <- readExtensions userPrelude'
-    -- modules' <- readModules extensions' userPrelude'
     
     -- I think it hint will automatically use the version we have just
     -- compiled if we give it the path to the .hs file.
