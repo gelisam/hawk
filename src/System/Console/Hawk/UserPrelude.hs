@@ -1,6 +1,7 @@
 -- | In which the user prelude is massaged into the form hint needs.
 module System.Console.Hawk.UserPrelude where
 
+import Control.Applicative
 import Control.Monad.Trans.Class
 import Data.ByteString as B
 import Text.Printf
@@ -36,6 +37,10 @@ testC f = do
 -- t = take
 canonicalizeUserPrelude :: HaskellModule -> UserPrelude
 canonicalizeUserPrelude = extendModuleName . extendImports
+
+readUserPrelude :: FilePath -> UncertainT IO UserPrelude
+readUserPrelude f = canonicalizeUserPrelude <$> readModule f
+
 
 compileUserPrelude :: FilePath -- ^ the original's filename,
                                --   used for fixing up line numbers

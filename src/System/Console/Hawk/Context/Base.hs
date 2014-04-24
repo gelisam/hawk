@@ -7,17 +7,18 @@ module System.Console.Hawk.Context.Base
   ) where
 
 import "mtl" Control.Monad.Trans
+import Data.Maybe
 import System.Directory
 import System.IO
 
 import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
+import qualified Data.HaskellModule as M
 import System.Console.Hawk.Context.Dir
-import System.Console.Hawk.UserPrelude.Compatibility
+import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
-import System.Console.Hawk.UserPrelude.Parse
 
 
 data Context = Context
@@ -33,13 +34,13 @@ data Context = Context
 -- 
 -- Must be called inside a `withLock` block, otherwise the cache file
 -- might get accessed by two instances of Hawk at once.
-getContext :: FilePath -> IO Context
+getContext :: FilePath -> UncertainT IO Context
 getContext confDir = do
-    runUncertainIO $ createDefaultContextDir confDir
+    createDefaultContextDir confDir
     -- skip `newContext` if the cached copy is still good.
     let preludeFile = getUserPreludeFile confDir
     let cacheFile   = getContextFile confDir
-    key <- getKey preludeFile
+    key <- lift $ getKey preludeFile
     let cache = singletonCache assocCache
     withPersistentStateT cacheFile [] $ cached cache key
                                       $ lift
@@ -51,26 +52,27 @@ getContext confDir = do
         return (f, modifiedTime, fileSize)
 
 -- | Construct a Context by parsing the user prelude.
-newContext :: FilePath -> IO Context
+newContext :: FilePath -> UncertainT IO Context
 newContext confDir = do
     let originalPreludePath' = getUserPreludeFile confDir
-    
-    (canonicalPrelude', moduleName') <- recompileUserPrelude confDir
-    extensions' <- readExtensions canonicalPrelude'
-    modules' <- readModules extensions' canonicalPrelude'
+    let canonicalPreludePath' = getSourceFile confDir
+    userPrelude <- readUserPrelude originalPreludePath'
+    compileUserPrelude originalPreludePath' canonicalPreludePath' userPrelude
+    -- extensions' <- readExtensions userPrelude'
+    -- modules' <- readModules extensions' userPrelude'
     
     -- I think it hint will automatically use the version we have just
     -- compiled if we give it the path to the .hs file.
     -- 
     -- TODO: check whether using .o or .hi instead works
     -- and whether it makes any difference.
-    let compiledPrelude' = canonicalPrelude'
+    let compiledPreludePath' = canonicalPreludePath'
     
     return $ Context
            { originalPreludePath = originalPreludePath'
-           , canonicalPrelude = canonicalPrelude'
-           , compiledPrelude = compiledPrelude'
-           , moduleName = moduleName'
-           , extensions = extensions'
-           , modules = modules'
+           , canonicalPrelude = canonicalPreludePath'
+           , compiledPrelude = compiledPreludePath'
+           , moduleName = fromJust (M.moduleName userPrelude)
+           , extensions = M.languageExtensions userPrelude
+           , modules = M.importedModules userPrelude
            }

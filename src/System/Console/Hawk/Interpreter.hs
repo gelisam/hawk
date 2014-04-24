@@ -26,7 +26,7 @@ import System.Console.Hawk.Runtime.Base
 applyContext :: FilePath -- ^ context directory
              -> InterpreterT IO ()
 applyContext contextDir = do
-    context <- lift $ Context.getContext contextDir
+    context <- lift $ runUncertainIO $ Context.getContext contextDir
     
     let extensions = map read $ Context.extensions context
     let preludeFile = Context.canonicalPrelude context
