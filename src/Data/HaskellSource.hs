@@ -4,8 +4,16 @@
 -- but to preserve original line numbers (if applicable).
 module Data.HaskellSource where
 
+import Control.Monad.Trans.Class
 import Data.ByteString.Char8 as B
+import Data.List
+import System.Directory
+import System.Exit
+import System.FilePath
+import System.Process
 import Text.Printf
+
+import Control.Monad.Trans.Uncertain
 
 
 -- | The ByteStrings are original lines, which we never delete in order to
@@ -60,3 +68,45 @@ writeSource :: FilePath -- ^ the original's filename,
             -> HaskellSource
             -> IO ()
 writeSource orig f = B.writeFile f . showSource orig
+
+
+compileSource :: FilePath -- ^ the original's filename,
+                          --   used for fixing up line numbers
+              -> FilePath -- ^ new filename, because ghc compiles from disk.
+                          --   the compiled output will be in the same folder.
+              -> HaskellSource
+              -> UncertainT IO ()
+compileSource = compileSourceWithArgs []
+
+compileSourceWithArgs :: [String] -- ^ extra ghc args
+                      -> FilePath -- ^ the original's filename,
+                                  --   used for fixing up line numbers
+                      -> FilePath -- ^ new filename, because ghc compiles from disk.
+                                  --   the compiled output will be in the same folder.
+                      -> HaskellSource
+                      -> UncertainT IO ()
+compileSourceWithArgs args orig f s = do
+    lift $ writeSource orig f s
+    compileFileWithArgs args f
+
+
+compileFile :: FilePath -> UncertainT IO ()
+compileFile = compileFileWithArgs []
+
+compileFileWithArgs :: [String] -> FilePath -> UncertainT IO ()
+compileFileWithArgs args f = do
+    absFilePath <- lift $ absPath f
+    let args' = absFilePath : "-v0" : args
+    (exitCode, out, err) <- lift $ readProcessWithExitCode "ghc" args' ""
+    case (exitCode, out ++ err) of
+      (ExitSuccess, [])  -> return ()
+      (ExitSuccess, msg) -> multilineWarn msg
+      (_          , [])  -> fail $ printf "could not compile %s" (show f)
+      (_          , msg) -> multilineFail msg
+  where
+    -- A version of `canonicalizePath` which works even if the file
+    -- doesn't exist.
+    absPath :: FilePath -> IO FilePath
+    absPath f = do
+        pwd <- getCurrentDirectory
+        return (pwd </> f)

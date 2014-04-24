@@ -1,11 +1,13 @@
 -- | In which the user prelude is massaged into the form hint needs.
 module System.Console.Hawk.UserPrelude where
 
+import Control.Monad.Trans.Class
 import Data.ByteString as B
 import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule
+import System.Console.Hawk.Sandbox
 import System.Console.Hawk.UserPrelude.Extend
 
 
@@ -35,5 +37,22 @@ testC f = do
 canonicalizeUserPrelude :: HaskellModule -> UserPrelude
 canonicalizeUserPrelude = extendModuleName . extendImports
 
-compileUserPrelude :: FilePath -> IO ()
-compileUserPrelude = undefined
+compileUserPrelude :: FilePath -- ^ the original's filename,
+                               --   used for fixing up line numbers
+                   -> FilePath -- ^ new filename, because ghc compiles from disk.
+                               --   the compiled output will be in the same folder.
+                   -> UserPrelude
+                   -> UncertainT IO ()
+compileUserPrelude = compileUserPreludeWithArgs []
+
+compileUserPreludeWithArgs :: [String] -- ^ extra ghc args
+                           -> FilePath -- ^ the original's filename,
+                                       --   used for fixing up line numbers
+                           -> FilePath -- ^ new filename, because ghc compiles from disk.
+                                       --   the compiled output will be in the same folder.
+                           -> UserPrelude
+                           -> UncertainT IO ()
+compileUserPreludeWithArgs args orig f m = do
+    extraArgs <- lift $ extraGhcArgs
+    let args' = (extraArgs ++ args)
+    compileModuleWithArgs args' orig f m

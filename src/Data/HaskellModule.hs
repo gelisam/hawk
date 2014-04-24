@@ -8,11 +8,14 @@ module Data.HaskellModule
   , emptyModule, addExtension, addDefaultModuleName, addImport
   , readModule
   , showModule, writeModule
+  , compileModule, compileModuleWithArgs
   ) where
 
+import Control.Monad.Trans.Class
 import qualified Data.ByteString.Char8 as B
 
 import Data.HaskellSource
+import Control.Monad.Trans.Uncertain
 
 -- Most of the API is re-exported from those submodules
 import Data.HaskellModule.Base
@@ -38,10 +41,29 @@ showModule orig (HaskellModule {..}) = showSource orig fullSource
                         , codeSource
                         ]
 
-
 writeModule :: FilePath -- ^ the original's filename,
                         --   used for fixing up line numbers
             -> FilePath
             -> HaskellModule
             -> IO ()
 writeModule orig f = B.writeFile f . showModule orig
+
+
+compileModule :: FilePath -- ^ the original's filename,
+                          --   used for fixing up line numbers
+              -> FilePath -- ^ new filename, because ghc compiles from disk.
+                          --   the compiled output will be in the same folder.
+              -> HaskellModule
+              -> UncertainT IO ()
+compileModule = compileModuleWithArgs []
+
+compileModuleWithArgs :: [String] -- ^ extra ghc args
+                      -> FilePath -- ^ the original's filename,
+                                  --   used for fixing up line numbers
+                      -> FilePath -- ^ new filename, because ghc compiles from disk.
+                                  --   the compiled output will be in the same folder.
+                      -> HaskellModule
+                      -> UncertainT IO ()
+compileModuleWithArgs args orig f m = do
+    lift $ writeModule orig f m
+    compileFileWithArgs args f
