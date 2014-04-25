@@ -62,6 +62,7 @@ before_install:
 
 install:
  - cabal-1.16 update
+ - cabal-1.16 install --only-dependencies --enable-tests --enable-benchmarks happy
  - cabal-1.16 install --only-dependencies --enable-tests --enable-benchmarks haskell-src-exts
  - cabal-1.16 install --only-dependencies --enable-tests --enable-benchmarks
 
