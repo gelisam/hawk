@@ -19,7 +19,6 @@ import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
-import System.EasyFile (createDirectoryIfMissing)
 
 
 data Context = Context

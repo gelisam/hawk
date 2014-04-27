@@ -6,7 +6,6 @@ module Data.HaskellSource where
 
 import Control.Monad.Trans.Class
 import Data.ByteString.Char8 as B
-import Data.List
 import System.Directory
 import System.Exit
 import System.FilePath
