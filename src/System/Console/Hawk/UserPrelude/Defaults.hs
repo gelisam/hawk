@@ -27,3 +27,6 @@ defaultPrelude = unlines
     , "import qualified Data.ByteString.Lazy.Char8 as B"
     , "import qualified Data.List as L"
     ]
+
+defaultModuleName :: String
+defaultModuleName = "System.Console.Hawk.CachedPrelude"

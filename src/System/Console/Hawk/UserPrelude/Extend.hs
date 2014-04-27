@@ -8,6 +8,7 @@ import Control.Applicative
 import Data.Maybe
 
 import Data.HaskellModule
+import System.Console.Hawk.UserPrelude.Defaults
 
 
 -- | We cannot import a module unless it has a name.
@@ -15,8 +16,6 @@ extendModuleName :: HaskellModule -> HaskellModule
 extendModuleName = until hasModuleName
                        $ addDefaultModuleName defaultModuleName
   where
-    defaultModuleName = "System.Console.Hawk.CachedPrelude"
-    
     hasModuleName = isJust . moduleName
 
 
