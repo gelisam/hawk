@@ -36,16 +36,18 @@ data Context = Context
 getContext :: FilePath -> UncertainT IO Context
 getContext confDir = do
     createDefaultContextDir confDir
-    -- skip `newContext` if the cached copy is still good.
-    let paths = mkContextPaths confDir
-    let preludeFile = originalPreludePath paths
-    let cacheFile   = cachedPreludePath paths
     key <- lift $ getKey preludeFile
-    let cache = singletonCache assocCache
+    
+    -- skip `newContext` if the cached copy is still good.
     withPersistentStateT cacheFile [] $ cached cache key
                                       $ lift
                                       $ newContext paths
   where
+    paths = mkContextPaths confDir
+    preludeFile = originalPreludePath paths
+    cacheFile   = cachedPreludePath paths
+    cache = singletonCache assocCache
+    
     getKey f = do
         modifiedTime <- getModificationTime f
         fileSize <- withFile f ReadMode hFileSize
@@ -54,10 +56,6 @@ getContext confDir = do
 -- | Construct a Context by parsing the user prelude.
 newContext :: ContextPaths -> UncertainT IO Context
 newContext paths = do
-    let originalFile  = originalPreludePath paths
-    let cacheDir      = cacheDirPath paths
-    let canonicalFile = canonicalPreludePath paths
-    
     userPrelude <- readUserPrelude originalFile
     lift $ createDirectoryIfMissing True cacheDir
     compileUserPrelude originalFile canonicalFile userPrelude
@@ -68,3 +66,7 @@ newContext paths = do
            , extensions = M.languageExtensions userPrelude
            , modules = M.importedModules userPrelude
            }
+  where
+    originalFile  = originalPreludePath paths
+    cacheDir      = cacheDirPath paths
+    canonicalFile = canonicalPreludePath paths
