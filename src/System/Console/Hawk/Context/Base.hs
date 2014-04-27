@@ -34,7 +34,7 @@ data Context = Context
 -- might get accessed by two instances of Hawk at once.
 getContext :: FilePath -> UncertainT IO Context
 getContext contextDir = do
-    createDefaultContextDir contextDir
+    createDefaultContextDir paths
     key <- lift $ getKey preludeFile
     
     -- skip `newContext` if the cached copy is still good.

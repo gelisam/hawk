@@ -1,8 +1,8 @@
 -- | The names of the important files inside the context directory.
 module System.Console.Hawk.Context.Paths
   ( ContextPaths  -- the type, not the constructor
-  , originalPreludePath, cacheDirPath
-  , canonicalPreludePath, compiledPreludePath, cachedPreludePath
+  , contextDirPath, originalPreludePath
+  , cacheDirPath, canonicalPreludePath, compiledPreludePath, cachedPreludePath
   , mkContextPaths
   ) where
 
@@ -10,7 +10,8 @@ import System.FilePath
 
 
 data ContextPaths = ContextPaths
-  { originalPreludePath :: FilePath
+  { contextDirPath :: FilePath
+  , originalPreludePath :: FilePath
   , cacheDirPath :: FilePath
   , canonicalPreludePath :: FilePath
   , compiledPreludePath :: FilePath
@@ -19,7 +20,8 @@ data ContextPaths = ContextPaths
 
 mkContextPaths :: FilePath -> ContextPaths
 mkContextPaths contextDir = ContextPaths
-    { originalPreludePath  = contextDir </> "prelude.hs"
+    { contextDirPath       = contextDir
+    , originalPreludePath  = contextDir </> "prelude.hs"
     , cacheDirPath         = cacheDir
     , canonicalPreludePath = cacheDir </> "cached_prelude.hs"
     , compiledPreludePath  = cacheDir </> "cached_prelude.o"
