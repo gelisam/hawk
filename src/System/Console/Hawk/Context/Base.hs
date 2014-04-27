@@ -18,14 +18,13 @@ import qualified Data.HaskellModule as M
 import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.UserPrelude.Base
 
 
 data Context = Context
   { contextPaths :: ContextPaths
   , moduleName :: String
-  , extensions :: [ExtensionName]
-  , modules :: [QualifiedModule]
+  , extensions :: [M.ExtensionName]
+  , modules :: [M.QualifiedModule]
   } deriving (Eq, Read, Show)
 
 -- | Obtains a Context, either from the cache or from the user prelude.
