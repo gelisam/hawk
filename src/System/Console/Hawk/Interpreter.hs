@@ -29,7 +29,7 @@ applyContext contextDir = do
     context <- lift $ runUncertainIO $ Context.getContext contextDir
     
     let extensions = map read $ Context.extensions context
-    let preludeFile = Context.canonicalPrelude context
+    let preludeFile = Context.canonicalPreludePath (Context.contextPaths context)
     let preludeModule = Context.moduleName context
     let userModules = Context.modules context
     

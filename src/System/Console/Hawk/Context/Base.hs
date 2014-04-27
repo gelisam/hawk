@@ -16,16 +16,14 @@ import Control.Monad.Trans.State.Persistent
 import Data.Cache
 import qualified Data.HaskellModule as M
 import System.Console.Hawk.Context.Dir
+import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
-import System.Console.Hawk.UserPrelude.Cache
 import System.EasyFile (createDirectoryIfMissing)
 
 
 data Context = Context
-  { originalPreludePath :: FilePath
-  , canonicalPrelude :: FilePath
-  , compiledPrelude :: FilePath
+  { contextPaths :: ContextPaths
   , moduleName :: String
   , extensions :: [ExtensionName]
   , modules :: [QualifiedModule]
@@ -39,13 +37,14 @@ getContext :: FilePath -> UncertainT IO Context
 getContext confDir = do
     createDefaultContextDir confDir
     -- skip `newContext` if the cached copy is still good.
-    let preludeFile = getUserPreludeFile confDir
-    let cacheFile   = getContextFile confDir
+    let paths = mkContextPaths confDir
+    let preludeFile = originalPreludePath paths
+    let cacheFile   = cachedPreludePath paths
     key <- lift $ getKey preludeFile
     let cache = singletonCache assocCache
     withPersistentStateT cacheFile [] $ cached cache key
                                       $ lift
-                                      $ newContext confDir
+                                      $ newContext paths
   where
     getKey f = do
         modifiedTime <- getModificationTime f
@@ -53,28 +52,18 @@ getContext confDir = do
         return (f, modifiedTime, fileSize)
 
 -- | Construct a Context by parsing the user prelude.
-newContext :: FilePath -> UncertainT IO Context
-newContext confDir = do
-    let originalPreludePath' = getUserPreludeFile confDir
-    userPrelude <- readUserPrelude originalPreludePath'
+newContext :: ContextPaths -> UncertainT IO Context
+newContext paths = do
+    let originalFile  = originalPreludePath paths
+    let cacheDir      = cacheDirPath paths
+    let canonicalFile = canonicalPreludePath paths
     
-    let cacheDir = getCacheDir confDir
+    userPrelude <- readUserPrelude originalFile
     lift $ createDirectoryIfMissing True cacheDir
-    
-    let canonicalPreludePath' = getSourceFile confDir
-    compileUserPrelude originalPreludePath' canonicalPreludePath' userPrelude
-    
-    -- I think it hint will automatically use the version we have just
-    -- compiled if we give it the path to the .hs file.
-    -- 
-    -- TODO: check whether using .o or .hi instead works
-    -- and whether it makes any difference.
-    let compiledPreludePath' = canonicalPreludePath'
+    compileUserPrelude originalFile canonicalFile userPrelude
     
     return $ Context
-           { originalPreludePath = originalPreludePath'
-           , canonicalPrelude = canonicalPreludePath'
-           , compiledPrelude = compiledPreludePath'
+           { contextPaths = paths
            , moduleName = fromJust (M.moduleName userPrelude)
            , extensions = M.languageExtensions userPrelude
            , modules = M.importedModules userPrelude
