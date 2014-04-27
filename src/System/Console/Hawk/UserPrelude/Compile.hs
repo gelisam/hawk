@@ -21,21 +21,12 @@ module System.Console.Hawk.UserPrelude.Compile
 
 import Control.Monad (when)
 
-import System.Directory
 import System.Exit
-import System.FilePath
 import System.IO
 import System.Process
 
+import System.Directory.Extra
 import System.Console.Hawk.Sandbox (extraGhcArgs)
-
-
--- A version of `canonicalizePath` which works even if the file
--- doesn't exist.
-absPath :: FilePath -> IO FilePath
-absPath f = do
-    pwd <- getCurrentDirectory
-    return (pwd </> f)
 
 
 -- compile a haskell file

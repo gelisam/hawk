@@ -6,12 +6,11 @@ module Data.HaskellSource where
 
 import Control.Monad.Trans.Class
 import Data.ByteString.Char8 as B
-import System.Directory
 import System.Exit
-import System.FilePath
 import System.Process
 import Text.Printf
 
+import System.Directory.Extra
 import Control.Monad.Trans.Uncertain
 
 
@@ -102,10 +101,3 @@ compileFileWithArgs args f = do
       (ExitSuccess, msg) -> multilineWarn msg
       (_          , [])  -> fail $ printf "could not compile %s" (show f)
       (_          , msg) -> multilineFail msg
-  where
-    -- A version of `canonicalizePath` which works even if the file
-    -- doesn't exist.
-    absPath :: FilePath -> IO FilePath
-    absPath f = do
-        pwd <- getCurrentDirectory
-        return (pwd </> f)
