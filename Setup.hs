@@ -1,16 +1,41 @@
---   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
---
---   Licensed under the Apache License, Version 2.0 (the "License");
---   you may not use this file except in compliance with the License.
---   You may obtain a copy of the License at
---
---       http://www.apache.org/licenses/LICENSE-2.0
---
---   Unless required by applicable law or agreed to in writing, software
---   distributed under the License is distributed on an "AS IS" BASIS,
---   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
---   See the License for the specific language governing permissions and
---   limitations under the License.
-
+import Control.Monad
 import Distribution.Simple
-main = defaultMain
+import System.Environment
+import System.IO
+
+
+-- Surprisingly, if the user types "cabal install --enable-tests",
+-- `args` will *not* be ["install", "--enable-tests"]. Instead, cabal will
+-- run Setup.hs repeatedly with different arguments:
+-- 
+--     ["configure","--verbose=1","--builddir=dist/dist-sandbox-28d8356a","--ghc","--prefix=...",...]
+--     ["build","--verbose=1","--builddir=dist/dist-sandbox-28d8356a"]
+--     ["test","--builddir=dist/dist-sandbox-28d8356a"]
+--     ["install","--verbose=1","--builddir=dist/dist-sandbox-28d8356a"]
+-- 
+-- We need to manipulate `args` via `substitute` in order to preserve those
+-- extra arguments.
+substitute :: Eq a => [(a, [a])] -> [a] -> [a]
+substitute substitutions = (>>= go)
+  where
+    go x = case lookup x substitutions of
+             Just xs -> xs
+             Nothing -> return x
+
+main = do
+    args <- getArgs
+    
+    withFile "Setup.log" AppendMode $ \h -> do
+      hPutStrLn h (show args)
+    
+    when ("test" `elem` args) $ do
+      -- unlike most packages, this one needs to be installed before it can be tested.
+      defaultMainArgs (substitute [ ("test", ["install","--verbose=1"])
+                                  
+                                  -- remove test-specific arguments
+                                  , ("--log=$pkgid-$test-suite.log", [])
+                                  , ("--machine-log=$pkgid.log", [])
+                                  , ("--show-details=failures", [])
+                                  ] args)
+    
+    defaultMainArgs args

@@ -10,7 +10,7 @@ Description:    Hawk is a command line utility to process streams of text
 Category:       Console
 License:        Apache-2.0
 License-File:   LICENSE
-Build-Type:     Simple
+Build-Type:     Custom
 Cabal-version:  >=1.10
 Extra-Source-Files: src/System/Console/*.hs
                   , src/System/Console/Hawk/*.hs
