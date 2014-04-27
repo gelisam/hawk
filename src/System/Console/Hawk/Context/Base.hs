@@ -19,6 +19,7 @@ import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
+import System.EasyFile (createDirectoryIfMissing)
 
 
 data Context = Context
@@ -58,7 +59,7 @@ newContext confDir = do
     userPrelude <- readUserPrelude originalPreludePath'
     
     let cacheDir = getCacheDir confDir
-    lift $ createDirectory cacheDir
+    lift $ createDirectoryIfMissing True cacheDir
     
     let canonicalPreludePath' = getSourceFile confDir
     compileUserPrelude originalPreludePath' canonicalPreludePath' userPrelude
