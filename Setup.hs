@@ -25,11 +25,17 @@ substitute substitutions = (>>= go)
 main = do
     args <- getArgs
     
-    -- withFile "Setup.log" AppendMode $ \h -> do
-    --   hPutStrLn h (show args)
+    withFile "Setup.log" AppendMode $ \h -> do
+      hPutStrLn h (show args)
     
     when ("test" `elem` args) $ do
       -- unlike most packages, this one needs to be installed before it can be tested.
-      defaultMainArgs (substitute [("test", ["install","--verbose=1"])] args)
+      defaultMainArgs (substitute [ ("test", ["install","--verbose=1"])
+                                  
+                                  -- remove test-specific arguments
+                                  , ("--log=$pkgid-$test-suite.log", [])
+                                  , ("--machine-log=$pkgid.log", [])
+                                  , ("--show-details=failures", [])
+                                  ] args)
     
     defaultMainArgs args
