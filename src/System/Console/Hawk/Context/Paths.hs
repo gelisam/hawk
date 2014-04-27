@@ -18,12 +18,12 @@ data ContextPaths = ContextPaths
   } deriving (Eq, Read, Show)
 
 mkContextPaths :: FilePath -> ContextPaths
-mkContextPaths confDir = ContextPaths
-    { originalPreludePath  = confDir </> "prelude.hs"
+mkContextPaths contextDir = ContextPaths
+    { originalPreludePath  = contextDir </> "prelude.hs"
     , cacheDirPath         = cacheDir
     , canonicalPreludePath = cacheDir </> "cached_prelude.hs"
     , compiledPreludePath  = cacheDir </> "cached_prelude.o"
     , cachedPreludePath    = cacheDir </> "cached_prelude.dat"
     }
   where
-    cacheDir = confDir </> "cache"
+    cacheDir = contextDir </> "cache"

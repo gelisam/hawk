@@ -62,11 +62,11 @@ defaultPrelude = unlines
 -- 
 -- TODO: error handling
 recompileUserPrelude :: FilePath -> IO (String,String)
-recompileUserPrelude confDir
-  = recompileUserPrelude' (getUserPreludeFile confDir)
-                          (getCacheDir        confDir)
-                          (getSourceFile      confDir)
-                          (getCompiledFile    confDir)
+recompileUserPrelude contextDir
+  = recompileUserPrelude' (getUserPreludeFile contextDir)
+                          (getCacheDir        contextDir)
+                          (getSourceFile      contextDir)
+                          (getCompiledFile    contextDir)
 
 recompileUserPrelude' :: FilePath -- ^ prelude file
                       -> FilePath -- ^ cache dir

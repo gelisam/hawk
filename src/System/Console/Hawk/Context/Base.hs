@@ -33,8 +33,8 @@ data Context = Context
 -- Must be called inside a `withLock` block, otherwise the cache file
 -- might get accessed by two instances of Hawk at once.
 getContext :: FilePath -> UncertainT IO Context
-getContext confDir = do
-    createDefaultContextDir confDir
+getContext contextDir = do
+    createDefaultContextDir contextDir
     key <- lift $ getKey preludeFile
     
     -- skip `newContext` if the cached copy is still good.
@@ -42,7 +42,7 @@ getContext confDir = do
                                       $ lift
                                       $ newContext paths
   where
-    paths = mkContextPaths confDir
+    paths = mkContextPaths contextDir
     preludeFile = originalPreludePath paths
     cacheFile   = cachedPreludePath paths
     cache = singletonCache assocCache
