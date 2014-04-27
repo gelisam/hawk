@@ -49,6 +49,36 @@ fromRightM (Left e)  = fail e
 fromRightM (Right x) = return x
 
 
+multilineMsg :: String -> String
+multilineMsg = concat . map (printf "\n  %s") . lines
+
+-- | Indent a multiline warning message.
+-- >>> :{
+-- runUncertainIO $ do
+--   multilineWarn "foo\nbar\n"
+--   return 42
+-- :}
+-- warning: 
+--   foo
+--   bar
+-- 42
+multilineWarn :: Monad m => String -> UncertainT m ()
+multilineWarn = warn . multilineMsg
+
+-- | Indent a multiline error message.
+-- >>> :{
+-- runUncertainIO $ do
+--   multilineFail "foo\nbar\n"
+--   return 42
+-- :}
+-- error: 
+--   foo
+--   bar
+-- *** Exception: ExitFailure 1
+multilineFail :: Monad m => String -> UncertainT m ()
+multilineFail = fail . multilineMsg
+
+
 mapUncertainT :: (forall a. m a -> m' a) -> UncertainT m b -> UncertainT m' b
 mapUncertainT f = UncertainT . (mapErrorT . mapWriterT) f . unUncertainT
 

@@ -13,7 +13,7 @@ import Language.Haskell.Interpreter
 import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Context as Context
 import qualified System.Console.Hawk.Sandbox as Sandbox
-import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.UserPrelude.Defaults
 import System.Console.Hawk.Lock
 import System.Console.Hawk.Runtime.Base
 
@@ -26,10 +26,10 @@ import System.Console.Hawk.Runtime.Base
 applyContext :: FilePath -- ^ context directory
              -> InterpreterT IO ()
 applyContext contextDir = do
-    context <- lift $ Context.getContext contextDir
+    context <- lift $ runUncertainIO $ Context.getContext contextDir
     
     let extensions = map read $ Context.extensions context
-    let preludeFile = Context.canonicalPrelude context
+    let preludeFile = Context.canonicalPreludePath (Context.contextPaths context)
     let preludeModule = Context.moduleName context
     let userModules = Context.modules context
     

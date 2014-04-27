@@ -13,7 +13,6 @@
 --   limitations under the License.
 
 import qualified System.Console.Hawk.Representable.Test as ReprTest
-import qualified System.Console.Hawk.UserPrelude.Test as PreludeTest
 import qualified System.Console.Hawk.Test as HawkTest
 
 import Test.DocTest (doctest)
@@ -26,17 +25,19 @@ main :: IO ()
 main = do
     doctest' "tests/System/Console/Hawk/Lock/Test.hs"
     doctest' "src/Data/Cache.hs"
+    doctest' "src/Data/HaskellSource.hs"
+    doctest' "src/Data/HaskellModule.hs"
+    doctest' "src/Data/HaskellModule/Parse.hs"
     doctest' "src/System/Console/Hawk.hs"
     doctest' "tests/System/Console/Hawk/PreludeTests.hs"
+    doctest' "tests/Data/HaskellModule/Parse/Test.hs"
     doctest' "src/System/Console/Hawk/Args/Option.hs"
     doctest' "src/System/Console/Hawk/Args/Parse.hs"
-    doctest' "src/System/Console/Hawk/UserPrelude/Cache.hs"
+    doctest' "src/System/Console/Hawk/UserPrelude.hs"
     doctest' "src/System/Console/Hawk/UserPrelude/Extend.hs"
-    doctest' "src/System/Console/Hawk/UserPrelude/Parse.hs"
     doctest' "src/Control/Monad/Trans/Uncertain.hs"
     doctest' "src/Control/Monad/Trans/OptionParser.hs"
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec
-        PreludeTest.spec
     HawkTest.run
