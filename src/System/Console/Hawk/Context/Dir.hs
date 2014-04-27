@@ -14,7 +14,7 @@ import System.FilePath
 
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Context.Paths
-import System.Console.Hawk.UserPrelude.Compatibility
+import System.Console.Hawk.UserPrelude.Defaults
 
 
 -- | Create a default context

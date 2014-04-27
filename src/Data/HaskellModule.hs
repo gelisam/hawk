@@ -4,9 +4,8 @@
 -- The few parts which can be modified are easier to modify than using raw
 -- bytes or a raw HaskellSource.
 module Data.HaskellModule
-  ( HaskellModule(..)
-  , emptyModule, addExtension, addDefaultModuleName, addImport
-  , readModule
+  ( module Data.HaskellModule.Base
+  , module Data.HaskellModule.Parse
   , showModule, writeModule
   , compileModule, compileModuleWithArgs
   ) where

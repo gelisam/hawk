@@ -30,29 +30,9 @@ import System.Console.Hawk.UserPrelude.Base
 import System.Console.Hawk.UserPrelude.Cache
 import System.Console.Hawk.UserPrelude.Compile
 import System.Console.Hawk.UserPrelude.Compatibility.Extend
+import System.Console.Hawk.UserPrelude.Defaults
 import System.Console.Hawk.UserPrelude.Parse
 
-
--- | Imported at runtime even if missing from the user prelude.
---   Since they are fully qualified, they should not conflict with any
---   user-imported module.
-defaultModules :: [QualifiedModule]
-defaultModules = map fullyQualified [ "Prelude"
-                                     , "System.Console.Hawk.Representable"
-                                     , "System.Console.Hawk.Runtime.Base"
-                                     , "System.IO.Unsafe"
-                                     , "Data.ByteString.Lazy.Char8"
-                                     ]
-  where
-    fullyQualified = (id &&& Just)
-
-defaultPrelude :: String
-defaultPrelude = unlines
-               [ "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
-               , "import Prelude"
-               , "import qualified Data.ByteString.Lazy.Char8 as B"
-               , "import qualified Data.List as L"
-               ]
 
 -- --
 -- From now the code is heavy, it needs a refactoring (renaming)
