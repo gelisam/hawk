@@ -1,100 +1,63 @@
---   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
---
---   Licensed under the Apache License, Version 2.0 (the "License");
---   you may not use this file except in compliance with the License.
---   You may obtain a copy of the License at
---
---       http://www.apache.org/licenses/LICENSE-2.0
---
---   Unless required by applicable law or agreed to in writing, software
---   distributed under the License is distributed on an "AS IS" BASIS,
---   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
---   See the License for the specific language governing permissions and
---   limitations under the License.
+-- | In which the user prelude is massaged into the form hint needs.
+module System.Console.Hawk.UserPrelude where
 
-{-# LANGUAGE OverloadedStrings #-}
--- | An essential part of Hawk's configuration is the user prelude.
-module System.Console.Hawk.UserPrelude (
-      defaultModules
-    , defaultPrelude
-    , recompileUserPrelude
-    , recompileUserPrelude'
-) where
+import Control.Applicative
+import Control.Monad.Trans.Class
+import Data.ByteString as B
+import Text.Printf
 
-import Control.Arrow ((&&&))
-import Control.Monad (when)
-
-import System.EasyFile
-
-import System.Console.Hawk.UserPrelude.Base
-import System.Console.Hawk.UserPrelude.Cache
-import System.Console.Hawk.UserPrelude.Compile
+import Control.Monad.Trans.Uncertain
+import Data.HaskellModule
+import System.Console.Hawk.Sandbox
 import System.Console.Hawk.UserPrelude.Extend
-import System.Console.Hawk.UserPrelude.Parse
 
 
--- | Imported at runtime even if missing from the user prelude.
---   Since they are fully qualified, they should not conflict with any
---   user-imported module.
-defaultModules :: [QualifiedModule]
-defaultModules = map fullyQualified [ "Prelude"
-                                     , "System.Console.Hawk.Representable"
-                                     , "System.Console.Hawk.Runtime.Base"
-                                     , "System.IO.Unsafe"
-                                     , "Data.ByteString.Lazy.Char8"
-                                     ]
-  where
-    fullyQualified = (id &&& Just)
+type UserPrelude = HaskellModule
 
-defaultPrelude :: String
-defaultPrelude = unlines
-               [ "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
-               , "import Prelude"
-               , "import qualified Data.ByteString.Lazy.Char8 as B"
-               , "import qualified Data.List as L"
-               ]
 
--- --
--- From now the code is heavy, it needs a refactoring (renaming)
+testC :: FilePath -> IO ()
+testC f = do
+    let orig = printf "tests/preludes/%s/prelude.hs" f
+    m <- runUncertainIO $ readModule orig
+    B.putStr $ showModule orig (canonicalizeUserPrelude m)
 
--- | The path to the (cleaned-up) prelude file, and its module name.
---   We need both in order for hint to import its contents.
+-- |
+-- >>> testC "default"
+-- {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
+-- module System.Console.Hawk.CachedPrelude where
+-- {-# LINE 2 "tests/preludes/default/prelude.hs" #-}
+-- import Prelude
+-- import qualified Data.ByteString.Lazy.Char8 as B
+-- import qualified Data.List as L
 -- 
--- TODO: error handling
-recompileUserPrelude :: FilePath -> IO (String,String)
-recompileUserPrelude confDir
-  = recompileUserPrelude' (getUserPreludeFile confDir)
-                          (getCacheDir        confDir)
-                          (getSourceFile      confDir)
-                          (getCompiledFile    confDir)
+-- >>> testC "moduleName"
+-- module MyPrelude where
+-- import Prelude
+-- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
+-- t = take
+canonicalizeUserPrelude :: HaskellModule -> UserPrelude
+canonicalizeUserPrelude = extendModuleName . extendImports
 
-recompileUserPrelude' :: FilePath -- ^ prelude file
-                      -> FilePath -- ^ cache dir
-                      -> FilePath -- ^ source file
-                      -> FilePath -- ^ output compiled file
-                      -> IO (String,String)
-recompileUserPrelude' preludeFile
-                      cacheDir
-                      sourceFile
-                      compiledFile = do
-    clean
-    createDirectoryIfMissing True cacheDir
-    
-    extensions <- readExtensions preludeFile
-    orig_modules <- readModules extensions preludeFile
-    orig_source <- readSource preludeFile
-    
-    let source = extendSource preludeFile extensions orig_modules orig_source
-    
-    cacheSource sourceFile source
-    
-    compile sourceFile compiledFile cacheDir
-    
-    let moduleName = getModuleName source
-    
-    return (sourceFile, moduleName)
-  where
-    clean :: IO ()
-    clean = do
-        dirExists <- doesDirectoryExist cacheDir
-        when (dirExists) (removeDirectoryRecursive cacheDir)
+readUserPrelude :: FilePath -> UncertainT IO UserPrelude
+readUserPrelude f = canonicalizeUserPrelude <$> readModule f
+
+
+compileUserPrelude :: FilePath -- ^ the original's filename,
+                               --   used for fixing up line numbers
+                   -> FilePath -- ^ new filename, because ghc compiles from disk.
+                               --   the compiled output will be in the same folder.
+                   -> UserPrelude
+                   -> UncertainT IO ()
+compileUserPrelude = compileUserPreludeWithArgs []
+
+compileUserPreludeWithArgs :: [String] -- ^ extra ghc args
+                           -> FilePath -- ^ the original's filename,
+                                       --   used for fixing up line numbers
+                           -> FilePath -- ^ new filename, because ghc compiles from disk.
+                                       --   the compiled output will be in the same folder.
+                           -> UserPrelude
+                           -> UncertainT IO ()
+compileUserPreludeWithArgs args orig f m = do
+    extraArgs <- lift $ extraGhcArgs
+    let args' = (extraArgs ++ args)
+    compileModuleWithArgs args' orig f m

@@ -9,22 +9,25 @@ module System.Console.Hawk.Context.Dir
 import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
-import System.EasyFile hiding (getCurrentDirectory,getModificationTime)
+import System.EasyFile (readable)
+import System.FilePath
 
 import Control.Monad.Trans.Uncertain
-import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.UserPrelude.Cache
+import System.Console.Hawk.Context.Paths
+import System.Console.Hawk.UserPrelude.Defaults
 
 
 -- | Create a default context
-createDefaultContextDir :: FilePath -> UncertainT IO ()
-createDefaultContextDir dir = do
-    _ <- checkContextDir dir
+createDefaultContextDir :: ContextPaths -> UncertainT IO ()
+createDefaultContextDir paths = do
+    _ <- checkContextDir contextDir
     liftIO $ do
-      createDirectoryIfMissing True dir
-      let preludeFile = getUserPreludeFile dir
+      createDirectoryIfMissing True contextDir
       preludeExists <- doesFileExist preludeFile
       unless preludeExists $ writeFile preludeFile defaultPrelude
+  where
+    contextDir = contextDirPath paths
+    preludeFile = originalPreludePath paths
 
 -- | Find a project context
 findContext :: FilePath -> IO (Maybe FilePath)
@@ -97,3 +100,8 @@ checkContextDir dir = do
         warn $ concat ["directory '",dir,"' doesn't exist, creating a "
                       ,"default one"]
         return True
+
+getDefaultContextDir :: IO FilePath
+getDefaultContextDir = do
+    home <- getHomeDirectory
+    return $ home </> ".hawk"
