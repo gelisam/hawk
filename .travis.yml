@@ -25,6 +25,7 @@ env:
  - HPVER=2012.4.0.0
 # - HPVER=2012.2.0.0
 # - HPVER=2011.4.0.0
+ - GHCVER=head
 
 # Note: the distinction between `before_install` and `install` is not
 #       important.
