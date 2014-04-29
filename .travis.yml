@@ -84,14 +84,15 @@ script:
  - cabal-1.16 sdist
 
  # check that the generated source-distribution can be built & installed
- - export SRC_TGZ=$(cabal-1.16 info . | awk '{print $2 ".tar.gz";exit}') ;
-   cd dist/;
-   if [ -f "$SRC_TGZ" ]; then
-      tar tf "$SRC_TGZ";
-      cabal-1.16 install "$SRC_TGZ";
-   else
-      echo "expected '$SRC_TGZ' not found";
-      exit 1;
-   fi
+ # TODO(checheeo) uncomment this stanza
+# - export SRC_TGZ=$(cabal-1.16 info . | awk '{print $2 ".tar.gz";exit}') ;
+#   cd dist/;
+#   if [ -f "$SRC_TGZ" ]; then
+#      tar tf "$SRC_TGZ";
+#      cabal-1.16 install "$SRC_TGZ";
+#   else
+#      echo "expected '$SRC_TGZ' not found";
+#      exit 1;
+#   fi
 
 # EOF
