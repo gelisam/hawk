@@ -14,7 +14,7 @@ Build-Type:     Custom
 Cabal-version:  >=1.10
 Extra-Source-Files: src/System/Console/*.hs
                   , src/System/Console/Hawk/*.hs
-                  , src/System/Console/Hawk/Config/*.hs
+                  , src/System/Console/Hawk/UserPrelude/*.hs
                   , README.md
                   , tests/System/Console/Hawk/Representable/Test.hs
 
