@@ -7,7 +7,6 @@
 # release of a major GHC version. Setting HPVER implictly sets
 # GHCVER. Omit lines with versions you don't need/want testing for.
 env:
-#TODO (cheecheeo) try and support < 7.6
 # - GHCVER=6.12.3
 # - GHCVER=7.0.1
 # - GHCVER=7.0.2
@@ -20,6 +19,7 @@ env:
 # - GHCVER=7.6.1
  - GHCVER=7.6.2
  - GHCVER=7.6.3
+# TODO #102
 # - GHCVER=7.8.1
  - HPVER=2013.2.0.0
  - HPVER=2012.4.0.0
@@ -84,7 +84,7 @@ script:
  - cabal-1.16 sdist
 
  # check that the generated source-distribution can be built & installed
- # TODO(checheeo) uncomment this stanza
+ # TODO(checheeo) uncomment this stanza #112
 # - export SRC_TGZ=$(cabal-1.16 info . | awk '{print $2 ".tar.gz";exit}') ;
 #   cd dist/;
 #   if [ -f "$SRC_TGZ" ]; then
