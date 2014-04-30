@@ -32,13 +32,10 @@ Extra-Source-Files: README.md
                   , tests/System/Console/Hawk/Lock/*.hs
                   , tests/System/Console/Hawk/Representable/*.hs
                   , tests/preludes/default/*.hs
-                  , tests/preludes/default/cache/*.hs
                   , tests/preludes/moduleName/*.hs
                   , tests/preludes/moduleNamedMain/*.hs
                   , tests/preludes/readme/*.hs
-                  , tests/preludes/readme/cache/*.hs
                   , tests/preludes/set/*.hs
-                  , tests/preludes/set/cache/*.hs
 
 Source-Repository head
     type: git
