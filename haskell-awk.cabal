@@ -12,50 +12,33 @@ License:        Apache-2.0
 License-File:   LICENSE
 Build-Type:     Custom
 Cabal-version:  >=1.10
-Extra-Source-Files: src/Control/Monad/Trans/OptionParser.hs
-                  , src/Control/Monad/Trans/State/Persistent.hs
-                  , src/Control/Monad/Trans/Uncertain.hs
-                  , src/Data/Cache.hs
-                  , src/Data/HaskellModule/Base.hs
-                  , src/Data/HaskellModule/Parse.hs
-                  , src/Data/HaskellModule.hs
-                  , src/Data/HaskellSource.hs
-                  , src/Data/Monoid/Ord.hs
-                  , src/Language/Haskell/Exts/Location.hs
-                  , src/Main.hs
-                  , src/System/Console/Hawk/Args/Option.hs
-                  , src/System/Console/Hawk/Args/Parse.hs
-                  , src/System/Console/Hawk/Args.hs
-                  , src/System/Console/Hawk/Context/Base.hs
-                  , src/System/Console/Hawk/Context/Dir.hs
-                  , src/System/Console/Hawk/Context/Paths.hs
-                  , src/System/Console/Hawk/Context.hs
-                  , src/System/Console/Hawk/Help.hs
-                  , src/System/Console/Hawk/Interpreter.hs
-                  , src/System/Console/Hawk/Lock.hs
-                  , src/System/Console/Hawk/Sandbox.hs
-                  , src/System/Console/Hawk/UserPrelude/Defaults.hs
-                  , src/System/Console/Hawk/UserPrelude/Extend.hs
-                  , src/System/Console/Hawk/UserPrelude.hs
-                  , src/System/Console/Hawk/Version.hs
-                  , src/System/Console/Hawk.hs
-                  , src/System/Directory/Extra.hs
-                  , README.md
-                  , tests/Data/HaskellModule/Parse/Test.hs
-                  , tests/preludes/default/cache/cached_prelude.hs
-                  , tests/preludes/default/prelude.hs
-                  , tests/preludes/moduleName/prelude.hs
-                  , tests/preludes/moduleNamedMain/prelude.hs
-                  , tests/preludes/readme/cache/cached_prelude.hs
-                  , tests/preludes/readme/prelude.hs
-                  , tests/preludes/set/cache/cached_prelude.hs
-                  , tests/preludes/set/prelude.hs
-                  , tests/RunTests.hs
-                  , tests/System/Console/Hawk/Lock/Test.hs
-                  , tests/System/Console/Hawk/PreludeTests.hs
-                  , tests/System/Console/Hawk/Representable/Test.hs
-                  , tests/System/Console/Hawk/Test.hs
-                  , tests/System/Console/Hawk/TestUtils.hs
+Extra-Source-Files: README.md
+                  , src/*.hs
+                  , src/Control/Monad/Trans/*.hs
+                  , src/Control/Monad/Trans/State/*.hs
+                  , src/Data/*.hs
+                  , src/Data/HaskellModule/*.hs
+                  , src/Data/Monoid/*.hs
+                  , src/Language/Haskell/Exts/*.hs
+                  , src/System/Console/*.hs
+                  , src/System/Console/Hawk/*.hs
+                  , src/System/Console/Hawk/Args/*.hs
+                  , src/System/Console/Hawk/Context/*.hs
+                  , src/System/Console/Hawk/UserPrelude/*.hs
+                  , src/System/Directory/*.hs
+                  , tests/*.hs
+                  , tests/Data/HaskellModule/Parse/*.hs
+                  , tests/System/Console/Hawk/*.hs
+                  , tests/System/Console/Hawk/Lock/*.hs
+                  , tests/System/Console/Hawk/Representable/*.hs
+                  , tests/preludes/default/*.hs
+                  , tests/preludes/default/cache/*.hs
+                  , tests/preludes/moduleName/*.hs
+                  , tests/preludes/moduleNamedMain/*.hs
+                  , tests/preludes/readme/*.hs
+                  , tests/preludes/readme/cache/*.hs
+                  , tests/preludes/set/*.hs
+                  , tests/preludes/set/cache/*.hs
 
 Source-Repository head
     type: git
