@@ -12,13 +12,30 @@ License:        Apache-2.0
 License-File:   LICENSE
 Build-Type:     Custom
 Cabal-version:  >=1.10
-Extra-Source-Files: src/System/Console/*.hs
-                  , src/System/Console/Hawk/*.hs
-                  , src/System/Console/Hawk/UserPrelude/*.hs
+Extra-Source-Files: README.md
+                  , src/*.hs
+                  , src/Control/Monad/Trans/*.hs
+                  , src/Control/Monad/Trans/State/*.hs
                   , src/Data/*.hs
                   , src/Data/HaskellModule/*.hs
-                  , README.md
-                  , tests/System/Console/Hawk/Representable/Test.hs
+                  , src/Data/Monoid/*.hs
+                  , src/Language/Haskell/Exts/*.hs
+                  , src/System/Console/*.hs
+                  , src/System/Console/Hawk/*.hs
+                  , src/System/Console/Hawk/Args/*.hs
+                  , src/System/Console/Hawk/Context/*.hs
+                  , src/System/Console/Hawk/UserPrelude/*.hs
+                  , src/System/Directory/*.hs
+                  , tests/*.hs
+                  , tests/Data/HaskellModule/Parse/*.hs
+                  , tests/System/Console/Hawk/*.hs
+                  , tests/System/Console/Hawk/Lock/*.hs
+                  , tests/System/Console/Hawk/Representable/*.hs
+                  , tests/preludes/default/*.hs
+                  , tests/preludes/moduleName/*.hs
+                  , tests/preludes/moduleNamedMain/*.hs
+                  , tests/preludes/readme/*.hs
+                  , tests/preludes/set/*.hs
 
 Source-Repository head
     type: git
@@ -50,7 +67,7 @@ Library
     exposed-modules: System.Console.Hawk.Args.Spec
                     ,System.Console.Hawk.Representable
                     ,System.Console.Hawk.Runtime.Base
-    ghc-options:    -Wall 
+    ghc-options:    -Wall
     hs-source-dirs: runtime
     build-depends: base >=4.6.0.1
                  , bytestring >=0.10.0.2
