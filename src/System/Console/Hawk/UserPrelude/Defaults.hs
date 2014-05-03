@@ -10,13 +10,17 @@ import Data.HaskellModule
 --   Since they are fully qualified, they should not conflict with any
 --   user-imported module.
 defaultModules :: [QualifiedModule]
-defaultModules = map fullyQualified
-    [ "Prelude"
-    , "System.Console.Hawk.Representable"
-    , "System.Console.Hawk.Runtime.Base"
-    , "System.IO.Unsafe"
-    , "Data.ByteString.Lazy.Char8"
-    ]
+defaultModules =
+    -- types used to describe the expression interpreted by hint
+    -- must be imported unqualified
+    ("System.Console.Hawk.Runtime.Base", Nothing)
+    : map fullyQualified
+      [ "Prelude"
+      , "System.Console.Hawk.Representable"
+      , "System.Console.Hawk.Runtime"
+      , "System.IO.Unsafe"
+      , "Data.ByteString.Lazy.Char8"
+      ]
   where
     fullyQualified = (id &&& Just)
 

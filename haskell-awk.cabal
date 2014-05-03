@@ -66,6 +66,7 @@ Executable hawk
 Library
     exposed-modules: System.Console.Hawk.Args.Spec
                     ,System.Console.Hawk.Representable
+                    ,System.Console.Hawk.Runtime
                     ,System.Console.Hawk.Runtime.Base
     ghc-options:    -Wall
     hs-source-dirs: runtime

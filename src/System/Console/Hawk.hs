@@ -70,10 +70,10 @@ applyExpr e i o = do
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
       interpret' $ processTable' $ tableExpr expr
-    processRuntime (QR hawkRuntime)
+    processRuntime hawkRuntime
   where
     interpret' expr = do
-      interpret expr (as :: QualifiedHawkRuntime -> IO ())
+      interpret expr (as :: HawkRuntime -> IO ())
     
     hawkRuntime = HawkRuntime i o
     
@@ -105,4 +105,4 @@ applyExpr e i o = do
     qualify moduleName = printf "%s.%s" moduleName
     
     prel = qualify "Prelude"
-    runtime = qualify "System.Console.Hawk.Runtime.Base"
+    runtime = qualify "System.Console.Hawk.Runtime"
