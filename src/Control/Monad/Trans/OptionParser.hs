@@ -85,7 +85,7 @@ instance MonadIO m => MonadIO (OptionParserT o m) where
 mapOptionParserT :: (forall a. m a -> m' a)
                  -> OptionParserT o m b -> OptionParserT o m' b
 mapOptionParserT f = OptionParserT
-                   . (mapStateT . mapStateT . mapUncertainT) f
+                   . (mapStateT $ mapStateT $ mapUncertainT f)
                    . unOptionParserT
 
 liftUncertain :: (Monad m) => UncertainT m a -> OptionParserT o m a
