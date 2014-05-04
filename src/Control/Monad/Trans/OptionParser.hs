@@ -369,9 +369,9 @@ filePath = Setting "path"
 -- >>> let inputDir = const filePath
 -- >>> :{
 --   let checkDir f e d = do
---      c <- lift (f d)
---      if c then return d  :: UncertainT IO FilePath
---           else fail (e d)
+--         c <- lift (f d)
+--         if c then return d  :: UncertainT IO FilePath
+--              else fail (e d)
 -- :}
 --
 -- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")

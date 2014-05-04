@@ -27,11 +27,11 @@ moduleNames = map fst . importedModules
 -- >>> let m name = (name, Nothing)
 -- >>> :{
 --   let testM exts modules = moduleNames m'
---     where
---       m0  = emptyModule
---       m1  = foldr addExtension m0 exts
---       m2  = foldr addImport m1 modules
---       m' = extendImports m2
+--         where
+--           m0  = emptyModule
+--           m1  = foldr addExtension m0 exts
+--           m2  = foldr addImport m1 modules
+--           m' = extendImports m2
 -- :}
 -- 
 -- >>> testM [] []
