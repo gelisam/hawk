@@ -19,5 +19,5 @@ data HawkRuntime = HawkRuntime
   deriving (Show, Eq, Typeable)
 
 -- reexport IO under a unique name
-data HawkIO a = HawkIO { runHawkIO :: IO a }
+newtype HawkIO a = HawkIO { runHawkIO :: IO a }
   deriving Typeable
