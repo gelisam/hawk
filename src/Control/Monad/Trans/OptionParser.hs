@@ -85,7 +85,7 @@ instance MonadIO m => MonadIO (OptionParserT o m) where
 mapOptionParserT :: (forall a. m a -> m' a)
                  -> OptionParserT o m b -> OptionParserT o m' b
 mapOptionParserT f = OptionParserT
-                   . (mapStateT . mapStateT . mapUncertainT) f
+                   . (mapStateT $ mapStateT $ mapUncertainT f)
                    . unOptionParserT
 
 liftUncertain :: (Monad m) => UncertainT m a -> OptionParserT o m a
@@ -369,9 +369,9 @@ filePath = Setting "path"
 -- >>> let inputDir = const filePath
 -- >>> :{
 --   let checkDir f e d = do
---      c <- lift (f d)
---      if c then return d  :: UncertainT IO FilePath
---           else fail (e d)
+--         c <- lift (f d)
+--         if c then return d  :: UncertainT IO FilePath
+--              else fail (e d)
 -- :}
 --
 -- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")

@@ -20,12 +20,12 @@ import System.Console.Hawk.Lock
 -- $setup
 -- >>> :{
 --   let par body1 body2 = do
---     done1 <- newEmptyMVar
---     done2 <- newEmptyMVar
---     forkFinally body1 (\_ -> putMVar done1 ())
---     forkFinally body2 (\_ -> putMVar done2 ())
---     takeMVar done1
---     takeMVar done2
+--         done1 <- newEmptyMVar
+--         done2 <- newEmptyMVar
+--         forkFinally body1 (\_ -> putMVar done1 ())
+--         forkFinally body2 (\_ -> putMVar done2 ())
+--         takeMVar done1
+--         takeMVar done2
 -- :}
 
 
