@@ -17,8 +17,8 @@ import System.Console.Hawk.Representable
 import System.Console.Hawk.Runtime.Base
 
 
-processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> IO ()
-processTable runtime f = do
+processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> HawkIO ()
+processTable runtime f = HawkIO $ do
     xss <- getTable (inputSpec runtime)
     outputRows (outputSpec runtime) (f xss)
 

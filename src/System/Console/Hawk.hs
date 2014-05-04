@@ -70,10 +70,10 @@ applyExpr e i o = do
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
       interpret' $ processTable' $ tableExpr expr
-    processRuntime hawkRuntime
+    runHawkIO $ processRuntime hawkRuntime
   where
     interpret' expr = do
-      interpret expr (as :: HawkRuntime -> IO ())
+      interpret expr (as :: HawkRuntime -> HawkIO ())
     
     hawkRuntime = HawkRuntime i o
     
