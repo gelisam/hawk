@@ -67,6 +67,13 @@ testEval flags expr = test flags expr ""
 -- hello
 -- hello
 -- hello
+-- 
+-- Making sure that we can find "map" even with NoImplicitPrelude:
+-- 
+-- >>> testPrelude "noImplicitPrelude" ["-m"] "\\_ -> hello" "1-3"
+-- hello
+-- hello
+-- hello
 testPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
 testPrelude = testBuilder ("tests" </> "preludes")
 
