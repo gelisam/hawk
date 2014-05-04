@@ -54,13 +54,6 @@ wrapExpr f e = e'
     u = userExpression e
     u' = printf "%s (%s)" (prel f) u
     e' = e { userExpression = u' }
-    
-    -- we cannot use any unqualified symbols in the user expression,
-    -- because we don't know which modules the user prelude will import.
-    qualify :: String -> String -> String
-    qualify moduleName = printf "%s.%s" moduleName
-    
-    prel = qualify "Prelude"
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
@@ -98,11 +91,12 @@ applyExpr e i o = do
     
     map' :: String -> String
     map' = printf "(%s) (%s)" (prel "map")
-    
-    -- we cannot use any unqualified symbols in the user expression,
-    -- because we don't know which modules the user prelude will import.
-    qualify :: String -> String -> String
-    qualify moduleName = printf "%s.%s" moduleName
-    
-    prel = qualify "Prelude"
-    runtime = qualify "System.Console.Hawk.Runtime"
+
+-- we cannot use any unqualified symbols in the user expression,
+-- because we don't know which modules the user prelude will import.
+qualify :: String -> String -> String
+qualify moduleName = printf "%s.%s" moduleName
+
+prel, runtime :: String -> String
+prel = qualify "Prelude"
+runtime = qualify "System.Console.Hawk.Runtime"
