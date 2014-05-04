@@ -17,6 +17,17 @@ module System.Console.Hawk.Lock.Test where
 import Control.Concurrent
 import System.Console.Hawk.Lock
 
+-- $setup
+-- >>> :{
+--   let par body1 body2 = do
+--     done1 <- newEmptyMVar
+--     done2 <- newEmptyMVar
+--     forkFinally body1 (\_ -> putMVar done1 ())
+--     forkFinally body2 (\_ -> putMVar done2 ())
+--     takeMVar done1
+--     takeMVar done2
+-- :}
+
 
 printDelayed :: [Int] -> IO ()
 printDelayed [] = return ()
@@ -35,10 +46,10 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 2
 -- 3
 -- 
--- In two instances of hawk are trying to use same resource (here stdout) at
+-- If two instances of hawk are trying to use same resource (here stdout) at
 -- the same time, problems can occur.
 -- 
--- >>> forkIO print3 >> print3'
+-- >>> print3 `par` print3'
 -- 1
 -- 1
 -- 2
@@ -48,7 +59,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 
 -- By using `withLock`, we serialize the execution of the two critical sections.
 -- 
--- >>> forkIO (withLock print3) >> (withLock print3')
+-- >>> withLock print3 `par` withLock print3'
 -- 1
 -- 2
 -- 3
@@ -64,7 +75,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 2
 -- 3
 -- 
--- >>> forkIO (withTestLock print3) >> (withTestLock print3')
+-- >>> withTestLock print3 `par` withTestLock print3'
 -- ** LOCKED **
 -- 1
 -- 2
@@ -84,7 +95,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- moment. If we timed the experiment right, the error message should be "connect"
 -- instead of "hGetContents".
 -- 
--- >>> forkIO (withTestLock print3) >> threadDelay 15000 >> (withTestLock print3)
+-- >>> withTestLock print3 `par` (threadDelay 15000 >> withTestLock print3)
 -- 1
 -- ** LOCKED **
 -- 2
