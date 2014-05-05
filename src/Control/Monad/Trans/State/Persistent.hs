@@ -10,6 +10,7 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.Functor.Identity
 import System.Directory
+import System.IO
 
 
 -- | Read and write the cache to a file. Not atomic.
@@ -72,12 +73,20 @@ withPersistentStateT f default_s sx = do
       liftIO $ writeFile f $ show s'
     return x
   where
-    get_s, get_default_s :: MaybeT m s
+    get_s :: MaybeT m s
     get_s = do
         exists <- liftIO $ doesFileExist f
         guard exists
-        [(s, "")] <- liftM reads $ liftIO $ readFile f
+        
+        -- close the file even if the parsing fails
+        Just s <- liftIO $ withFile f ReadMode $ \h -> do
+          file_contents <- hGetContents h
+          case reads file_contents of
+            [(s, "")] -> return (Just s)
+            _         -> return Nothing
         return s
+    
+    get_default_s :: MaybeT m s
     get_default_s = return default_s
 
 
