@@ -18,6 +18,7 @@ import qualified Data.HaskellModule as M
 import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude
+import System.Console.Hawk.Version
 
 
 data Context = Context
@@ -49,7 +50,7 @@ getContext contextDir = do
     getKey f = do
         modifiedTime <- getModificationTime f
         fileSize <- withFile f ReadMode hFileSize
-        return (f, modifiedTime, fileSize)
+        return (versionString, f, modifiedTime, fileSize)
 
 -- | Construct a Context by parsing the user prelude.
 newContext :: ContextPaths -> UncertainT IO Context
