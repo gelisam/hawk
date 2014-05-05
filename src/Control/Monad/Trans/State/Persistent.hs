@@ -2,12 +2,15 @@
 -- | In which the state of a State monad is persisted to disk.
 module Control.Monad.Trans.State.Persistent where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import "mtl" Control.Monad.Trans
+import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.Functor.Identity
 import System.Directory
+import System.IO
 
 
 -- | Read and write the cache to a file. Not atomic.
@@ -49,18 +52,42 @@ withPersistentState f default_s sx = do
 -- hello
 -- 2
 -- 
+-- 
+-- If the contents of the file has been corrupted, revert to the default value.
+-- 
+-- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
+-- hello
+-- ".."
+-- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
+-- hello
+-- "..."
+-- 
+-- 
 -- >>> removeFile f
-withPersistentStateT :: (MonadIO m, Read s, Show s, Eq s)
+withPersistentStateT :: forall m s a. (Functor m, MonadIO m, Read s, Show s, Eq s)
                      => FilePath -> s -> StateT s m a -> m a
 withPersistentStateT f default_s sx = do
-    exists <- liftIO $ doesFileExist f
-    s <- if exists
-           then liftM read $ liftIO $ readFile f
-           else return default_s
+    Just s <- runMaybeT (get_s <|> get_default_s)
     (x, s') <- runStateT sx s
     when (s' /= s) $ do
       liftIO $ writeFile f $ show s'
     return x
+  where
+    get_s :: MaybeT m s
+    get_s = do
+        exists <- liftIO $ doesFileExist f
+        guard exists
+        
+        -- close the file even if the parsing fails
+        Just s <- liftIO $ withFile f ReadMode $ \h -> do
+          file_contents <- hGetContents h
+          case reads file_contents of
+            [(s, "")] -> return (Just s)
+            _         -> return Nothing
+        return s
+    
+    get_default_s :: MaybeT m s
+    get_default_s = return default_s
 
 
 -- | Combine consecutive StateT transformers into a single StateT, so the state
