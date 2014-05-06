@@ -126,9 +126,10 @@ readModule f = do
     case r of
       ParseOk (Module srcLoc moduleDecl pragmas _ _ imports decls)
         -> return $ go s srcLoc pragmas moduleDecl imports decls
-      ParseFailed loc err -> fail msg
+      ParseFailed loc err -> multilineFail msg
         where
-          msg = printf "%s:%d:%d: %s" (srcFilename loc) (srcLine loc) (srcColumn loc) err
+          -- we start with a newline to match ghc's errors
+          msg = printf "\n%s:%d:%d: %s" (srcFilename loc) (srcLine loc) (srcColumn loc) err
   where
     go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
       where
