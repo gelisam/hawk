@@ -6,6 +6,7 @@ import "mtl" Control.Monad.Trans
 import qualified Data.ByteString.Char8 as B
 import Data.List
 import Language.Haskell.Exts
+import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule.Base
@@ -125,7 +126,9 @@ readModule f = do
     case r of
       ParseOk (Module srcLoc moduleDecl pragmas _ _ imports decls)
         -> return $ go s srcLoc pragmas moduleDecl imports decls
-      ParseFailed _ err -> fail err
+      ParseFailed loc err -> fail msg
+        where
+          msg = printf "%s:%d:%d: %s" (srcFilename loc) (srcLine loc) (srcColumn loc) err
   where
     go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
       where
