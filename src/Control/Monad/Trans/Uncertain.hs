@@ -75,7 +75,7 @@ multilineWarn = warn . multilineMsg
 --   foo
 --   bar
 -- *** Exception: ExitFailure 1
-multilineFail :: Monad m => String -> UncertainT m ()
+multilineFail :: Monad m => String -> UncertainT m a
 multilineFail = fail . multilineMsg
 
 
