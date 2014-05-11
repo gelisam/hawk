@@ -66,7 +66,7 @@ splitIntoLines sep = Search.split sep
 -- [field0, field1, ...]
 splitIntoFields :: LineFormat -> B.ByteString -> [B.ByteString]
 splitIntoFields RawLine = return
-splitIntoFields (Words sep) = Search.split sep
+splitIntoFields (Fields sep) = Search.split sep
 
 
 outputRows :: Rows a => OutputSpec -> a -> IO ()
@@ -76,7 +76,7 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
     hFlush stdout
   where
     join' = join (B.fromStrict $ lineDelimiter spec)
-    toRows = repr (B.fromStrict $ wordDelimiter spec)
+    toRows = repr (B.fromStrict $ fieldDelimiter spec)
     
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines

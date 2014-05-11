@@ -46,14 +46,14 @@ data InputFormat
 
 data LineFormat
     = RawLine
-    | Words Separator
+    | Fields Separator
   deriving (Show, Eq)
 
 -- We can't know ahead of time whether it's going to be a raw stream
--- or raw lines or words, it depends on the type of the user expression.
+-- or raw lines or fields, it depends on the type of the user expression.
 data OutputFormat = OutputFormat
     { lineDelimiter :: Separator
-    , wordDelimiter :: Separator
+    , fieldDelimiter :: Separator
     }
   deriving (Show, Eq)
 
@@ -75,12 +75,12 @@ defaultOutputSpec = OutputSpec UseStdout defaultOutputFormat
 
 
 defaultInputFormat :: InputFormat
-defaultInputFormat = Lines defaultLineSeparator (Words defaultWordSeparator)
+defaultInputFormat = Lines defaultLineSeparator (Fields defaultFieldSeparator)
 
 defaultOutputFormat :: OutputFormat
-defaultOutputFormat = OutputFormat defaultLineSeparator defaultWordSeparator
+defaultOutputFormat = OutputFormat defaultLineSeparator defaultFieldSeparator
 
 
-defaultLineSeparator, defaultWordSeparator :: Separator
+defaultLineSeparator, defaultFieldSeparator :: Separator
 defaultLineSeparator = "\n"
-defaultWordSeparator = " "
+defaultFieldSeparator = " "

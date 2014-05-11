@@ -12,9 +12,9 @@ import Control.Monad.Trans.OptionParser
 data HawkOption
     = Apply
     | Map
-    | WordDelimiter
+    | FieldDelimiter
     | LineDelimiter
-    | OutputWordDelimiter
+    | OutputFieldDelimiter
     | OutputLineDelimiter
     | Version
     | Help
@@ -52,43 +52,43 @@ consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m ByteString
 consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeString
 
 instance Option HawkOption where
-  shortName Apply               = 'a'
-  shortName Map                 = 'm'
-  shortName WordDelimiter       = 'd'
-  shortName LineDelimiter       = 'D'
-  shortName OutputWordDelimiter = 'o'
-  shortName OutputLineDelimiter = 'O'
-  shortName Version             = 'v'
-  shortName Help                = 'h'
-  shortName ContextDirectory    = 'c'
+  shortName Apply                = 'a'
+  shortName Map                  = 'm'
+  shortName FieldDelimiter       = 'd'
+  shortName LineDelimiter        = 'D'
+  shortName OutputFieldDelimiter = 'o'
+  shortName OutputLineDelimiter  = 'O'
+  shortName Version              = 'v'
+  shortName Help                 = 'h'
+  shortName ContextDirectory     = 'c'
   
-  longName Apply               = "apply"
-  longName Map                 = "map"
-  longName WordDelimiter       = "word-delimiter"
-  longName LineDelimiter       = "line-delimiter"
-  longName OutputWordDelimiter = "output-word-delim"
-  longName OutputLineDelimiter = "output-line-delim"
-  longName Version             = "version"
-  longName Help                = "help"
-  longName ContextDirectory    = "context-directory"
+  longName Apply                = "apply"
+  longName Map                  = "map"
+  longName FieldDelimiter       = "field-delimiter"
+  longName LineDelimiter        = "line-delimiter"
+  longName OutputFieldDelimiter = "output-field-delim"
+  longName OutputLineDelimiter  = "output-line-delim"
+  longName Version              = "version"
+  longName Help                 = "help"
+  longName ContextDirectory     = "context-directory"
   
   helpMsg Apply                      = ["apply <expr> to the entire table"]
   helpMsg Map                        = ["apply <expr> to each row"]
-  helpMsg WordDelimiter              = ["default ' '"]
+  helpMsg FieldDelimiter             = ["default ' '"]
   helpMsg LineDelimiter              = ["default '\\n'"]
-  helpMsg OutputWordDelimiter        = ["default <word-delim>"]
+  helpMsg OutputFieldDelimiter       = ["default <field-delim>"]
   helpMsg OutputLineDelimiter        = ["default <line-delim>"]
   helpMsg Version                    = ["print version and exit"]
   helpMsg Help                       = ["this help"]
   helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
                                        ,"'~/.hawk'"]
   
-  optionType Apply               = flag
-  optionType Map                 = flag
-  optionType WordDelimiter       = delimiter
-  optionType LineDelimiter       = delimiter
-  optionType OutputWordDelimiter = delimiter
-  optionType OutputLineDelimiter = delimiter
-  optionType Version             = flag
-  optionType Help                = flag
-  optionType ContextDirectory    = filePath
+  optionType Apply                = flag
+  optionType Map                  = flag
+  optionType FieldDelimiter       = delimiter
+  optionType LineDelimiter        = delimiter
+  optionType OutputFieldDelimiter = delimiter
+  optionType OutputLineDelimiter  = delimiter
+  optionType Version              = flag
+  optionType Help                 = flag
+  optionType ContextDirectory     = filePath

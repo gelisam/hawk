@@ -79,9 +79,9 @@ applyExpr e i o = do
     tableExpr = (`compose` fromTable)
       where
         fromTable = case inputFormat i of
-            RawStream         -> head' `compose` head'
-            Lines _ RawLine   -> map' head'
-            Lines _ (Words _) -> prel "id"
+            RawStream          -> head' `compose` head'
+            Lines _ RawLine    -> map' head'
+            Lines _ (Fields _) -> prel "id"
     
     compose :: String -> String -> String
     compose f g = printf "(%s) %s (%s)" f (prel ".") g
