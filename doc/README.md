@@ -145,7 +145,7 @@ of ByteString. The function that the user provides works on that datatype.
 7 8 9
 ```
 
-It is possible to change the `--words-delimiter` for tables using `-d`.
+It is possible to change the `--field-delimiter` for tables using `-d`.
 
 ```bash
 > printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'id'
@@ -161,7 +161,7 @@ It is possible to change the `--words-delimiter` for tables using `-d`.
 7,8,9
 ```
 
-It is also possible to change the `--lines-delimiter` using `-D`.
+It is also possible to change the `--line-delimiter` using `-D`.
 
 ```bash
 > printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
@@ -169,14 +169,14 @@ x1*x2 + y1*y2 + z1*z2
 ```
 
 Of course, tables are not the only common command-line format. If you don't
-need lines to be separated into words, simply pass an empty `--words-delimiter`.
+need lines to be separated into fields, simply pass an empty `--field-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
-Finally, to work directly on the ByteString just pass an empty `--lines-delimiter`.
+Finally, to work directly on the ByteString just pass an empty `--line-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -D -a 'show :: B.ByteString -> String'
@@ -190,14 +190,14 @@ Hawk writes text in a tabular format typical of the command-line.
 
 The type of the user function must be compatible with this tabular format.
 Recall that, in Hawk, tabular means list of lists of ByteString where the first
-list is the list of lines, the second list is the list of words for each line
+list is the list of lines, the second list is the list of fields for each line
 and the ByteString is the content of a single cell.
 
 For the cell content type, any type that is instance of
 [Show](http://hackage.haskell.org/package/base-4.6.0.1/docs/Prelude.html#t:Show)
 is valid.
 
-For the list of words, any type that is instance of
+For the list of fields, any type that is instance of
 [Row](https://raw.github.com/gelisam/hawk/master/src/System/Console/Hawk/Representable.hs) can be used. All standard data types are instance of this class.
 
 For the list of lines, any type that is instance of
@@ -212,10 +212,10 @@ Let's do some examples to better understand how this works.
 ```
 
 The given expression creates a list of lists of ByteString, that is exactly the
-type that Hawk uses. The output is created using the default delimiter for words,
+type that Hawk uses. The output is created using the default delimiter for fields,
 that is space, and lines, that is newline. Note that the whole expression is
 what we called list of lines, while the expressions `[B.pack "1",B.pack "2"]`
-and `[B.pack "3",B.pack "4"]` are list of words and `B.pack "1"`, `B.pack "2"`
+and `[B.pack "3",B.pack "4"]` are list of fields and `B.pack "1"`, `B.pack "2"`
 , `B.pack "3"` and `B.pack "4"` are the cell values.
 
 Changing the type of the cell values is still valid if the given type is instance
@@ -233,10 +233,10 @@ of `Show`. For examples, we can use String or Float instead of ByteString.
 3.0 4.0
 ```
 
-In the examples above we used list as type for the list of words and for the
+In the examples above we used list as type for the list of fields and for the
 list of lines but what happens when we use other types? Each type has its own
 representation but usually if the type is a container then it is represented
-like a list (of words or lines) else it is represented as itself.
+like a list (of fields or lines) else it is represented as itself.
 
 ```bash
 > hawk '1 :: Double'
@@ -255,9 +255,9 @@ False
 3 4.0
 ```
 
-The output delimiters for words and lines are by default the same delimiters
-used for the input. They can be changed using `--output-words-delim` and
-`--output-lines-delim`.
+The output delimiters for fields and lines are by default the same delimiters
+used for the input. They can be changed using `--output-field-delim` and
+`--output-line-delim`.
 
 ```bash
 > hawk -O' or ' '(True,False)'
