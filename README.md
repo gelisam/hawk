@@ -20,8 +20,8 @@ The first field is the username. We can use Hawk to list all usernames as follow
 root
 ```
 
-The `-d` option tells Hawk to use `:` as word delimiters, causing the first line to be interpreted as `["root", "x", "0", "0", "root", "/root", "/bin/bash"]`.
-The `-m` tells Hawk to map a function over each line of the input. In this case, the function `head` extracts the first word of the line, which happens to be the username.
+The `-d` option tells Hawk to use `:` as field delimiters, causing the first line to be interpreted as `["root", "x", "0", "0", "root", "/root", "/bin/bash"]`.
+The `-m` tells Hawk to map a function over each line of the input. In this case, the function `head` extracts the first field of the line, which happens to be the username.
 
 We could of course have achieved identical results by using awk instead of Hawk:
 
