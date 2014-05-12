@@ -1,7 +1,7 @@
 import Control.Monad
 import Distribution.Simple
 import System.Environment
-import System.IO
+--import System.IO
 
 
 -- Surprisingly, if the user types "cabal install --enable-tests",
@@ -25,8 +25,8 @@ substitute substitutions = (>>= go)
 main = do
     args <- getArgs
     
-    withFile "Setup.log" AppendMode $ \h -> do
-      hPutStrLn h (show args)
+    --withFile "Setup.log" AppendMode $ \h -> do
+    --  hPutStrLn h (show args)
     
     when ("test" `elem` args) $ do
       -- unlike most packages, this one needs to be installed before it can be tested.
