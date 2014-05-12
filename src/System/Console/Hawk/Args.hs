@@ -4,7 +4,8 @@ module System.Console.Hawk.Args
   , InputSpec(..), OutputSpec(..)
   , InputSource(..), OutputSink(..)
   , InputFormat(..), LineFormat(..)
-  , OutputFormat(..), Separator
+  , OutputFormat(..)
+  , Separator(..), Delimiter
   , ExprSpec(..)
   , parseArgs
   ) where

@@ -52,12 +52,21 @@ data LineFormat
 -- We can't know ahead of time whether it's going to be a raw stream
 -- or raw lines or fields, it depends on the type of the user expression.
 data OutputFormat = OutputFormat
-    { lineDelimiter :: Separator
-    , fieldDelimiter :: Separator
+    { lineDelimiter :: Delimiter
+    , fieldDelimiter :: Delimiter
     }
   deriving (Show, Eq)
 
-type Separator = ByteString
+
+-- A separator is a strategy for separating a string into substrings.
+-- One such strategy is to split the string on every occurrence of a
+-- particular delimiter.
+type Delimiter = ByteString
+data Separator = Delimiter Delimiter
+  deriving (Show, Eq)
+
+fromSeparator :: Separator -> Delimiter
+fromSeparator (Delimiter d) = d
 
 
 data ExprSpec = ExprSpec
@@ -75,12 +84,17 @@ defaultOutputSpec = OutputSpec UseStdout defaultOutputFormat
 
 
 defaultInputFormat :: InputFormat
-defaultInputFormat = Lines defaultLineSeparator (Fields defaultFieldSeparator)
+defaultInputFormat = Lines defaultLineSeparator
+                   $ Fields defaultFieldSeparator
 
 defaultOutputFormat :: OutputFormat
-defaultOutputFormat = OutputFormat defaultLineSeparator defaultFieldSeparator
+defaultOutputFormat = OutputFormat defaultLineDelimiter defaultFieldDelimiter
 
 
 defaultLineSeparator, defaultFieldSeparator :: Separator
-defaultLineSeparator = "\n"
-defaultFieldSeparator = " "
+defaultLineSeparator = Delimiter defaultLineDelimiter
+defaultFieldSeparator = Delimiter defaultFieldDelimiter
+
+defaultLineDelimiter, defaultFieldDelimiter :: Delimiter
+defaultLineDelimiter = "\n"
+defaultFieldDelimiter = " "
