@@ -126,7 +126,7 @@ In a future version of Hawk, type inference will be used to infer the appropriat
 ## Input Formats
 
 By default, Hawk reads and writes text in a tabular format typical of the
-command-line: each line is seen as whitespace-separated columns. The lines
+command-line: each line is seen as whitespace-separated columns. The record
 separator is the newline character. To better understand how Hawk sees the
 input, just call the [show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show) function:
 
@@ -161,7 +161,7 @@ It is possible to change the `--field-delimiter` for tables using `-d`.
 7,8,9
 ```
 
-It is also possible to change the `--line-delimiter` using `-D`.
+It is also possible to change the `--record-delimiter` using `-D`.
 
 ```bash
 > printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
@@ -169,14 +169,14 @@ x1*x2 + y1*y2 + z1*z2
 ```
 
 Of course, tables are not the only common command-line format. If you don't
-need lines to be separated into fields, simply pass an empty `--field-delimiter`.
+need records to be separated into fields, simply pass an empty `--field-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
-Finally, to work directly on the ByteString just pass an empty `--line-delimiter`.
+Finally, to work directly on the ByteString just pass an empty `--record-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -D -a 'show :: B.ByteString -> String'
@@ -190,7 +190,7 @@ Hawk writes text in a tabular format typical of the command-line.
 
 The type of the user function must be compatible with this tabular format.
 Recall that, in Hawk, tabular means list of lists of ByteString where the first
-list is the list of lines, the second list is the list of fields for each line
+list is the list of records, the second list is the list of fields for each record
 and the ByteString is the content of a single cell.
 
 For the cell content type, any type that is instance of
@@ -200,7 +200,7 @@ is valid.
 For the list of fields, any type that is instance of
 [Row](https://raw.github.com/gelisam/hawk/master/src/System/Console/Hawk/Representable.hs) can be used. All standard data types are instance of this class.
 
-For the list of lines, any type that is instance of
+For the list of records, any type that is instance of
 [Rows](https://raw.github.com/gelisam/hawk/master/src/System/Console/Hawk/Representable.hs) can be used. All standard data types are instance of this class.
 
 Let's do some examples to better understand how this works.
@@ -213,8 +213,8 @@ Let's do some examples to better understand how this works.
 
 The given expression creates a list of lists of ByteString, that is exactly the
 type that Hawk uses. The output is created using the default delimiter for fields,
-that is space, and lines, that is newline. Note that the whole expression is
-what we called list of lines, while the expressions `[B.pack "1",B.pack "2"]`
+that is space, and records, that is newline. Note that the whole expression is
+what we called list of records, while the expressions `[B.pack "1",B.pack "2"]`
 and `[B.pack "3",B.pack "4"]` are list of fields and `B.pack "1"`, `B.pack "2"`
 , `B.pack "3"` and `B.pack "4"` are the cell values.
 
@@ -234,9 +234,9 @@ of `Show`. For examples, we can use String or Float instead of ByteString.
 ```
 
 In the examples above we used list as type for the list of fields and for the
-list of lines but what happens when we use other types? Each type has its own
+list of records but what happens when we use other types? Each type has its own
 representation but usually if the type is a container then it is represented
-like a list (of fields or lines) else it is represented as itself.
+like a list (of fields or records) else it is represented as itself.
 
 ```bash
 > hawk '1 :: Double'
@@ -255,9 +255,9 @@ False
 3 4.0
 ```
 
-The output delimiters for fields and lines are by default the same delimiters
+The output delimiters for fields and records are by default the same delimiters
 used for the input. They can be changed using `--output-field-delim` and
-`--output-line-delim`.
+`--output-record-delim`.
 
 ```bash
 > hawk -O' or ' '(True,False)'

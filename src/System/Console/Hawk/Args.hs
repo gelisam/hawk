@@ -3,7 +3,7 @@ module System.Console.Hawk.Args
   ( HawkSpec(..)
   , InputSpec(..), OutputSpec(..)
   , InputSource(..), OutputSink(..)
-  , InputFormat(..), LineFormat(..)
+  , InputFormat(..), RecordFormat(..)
   , OutputFormat(..)
   , Separator(..), Delimiter
   , ExprSpec(..)

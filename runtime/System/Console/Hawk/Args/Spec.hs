@@ -41,18 +41,18 @@ data OutputSink
 
 data InputFormat
     = RawStream
-    | Lines Separator LineFormat
+    | Records Separator RecordFormat
   deriving (Show, Eq)
 
-data LineFormat
-    = RawLine
+data RecordFormat
+    = RawRecord
     | Fields Separator
   deriving (Show, Eq)
 
 -- We can't know ahead of time whether it's going to be a raw stream
--- or raw lines or fields, it depends on the type of the user expression.
+-- or raw records or fields, it depends on the type of the user expression.
 data OutputFormat = OutputFormat
-    { lineDelimiter :: Delimiter
+    { recordDelimiter :: Delimiter
     , fieldDelimiter :: Delimiter
     }
   deriving (Show, Eq)
@@ -85,17 +85,17 @@ defaultOutputSpec = OutputSpec UseStdout defaultOutputFormat
 
 
 defaultInputFormat :: InputFormat
-defaultInputFormat = Lines defaultLineSeparator
+defaultInputFormat = Records defaultRecordSeparator
                    $ Fields defaultFieldSeparator
 
 defaultOutputFormat :: OutputFormat
-defaultOutputFormat = OutputFormat defaultLineDelimiter defaultFieldDelimiter
+defaultOutputFormat = OutputFormat defaultRecordDelimiter defaultFieldDelimiter
 
 
-defaultLineSeparator, defaultFieldSeparator :: Separator
-defaultLineSeparator = Delimiter defaultLineDelimiter
+defaultRecordSeparator, defaultFieldSeparator :: Separator
+defaultRecordSeparator = Delimiter defaultRecordDelimiter
 defaultFieldSeparator = Whitespace
 
-defaultLineDelimiter, defaultFieldDelimiter :: Delimiter
-defaultLineDelimiter = "\n"
+defaultRecordDelimiter, defaultFieldDelimiter :: Delimiter
+defaultRecordDelimiter = "\n"
 defaultFieldDelimiter = " "
