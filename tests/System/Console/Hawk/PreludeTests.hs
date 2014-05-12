@@ -78,7 +78,7 @@ testEval flags expr = test flags expr ""
 -- Making sure sequences of whitespace count as one delimiter:
 -- 
 -- >>> testPrelude "default" ["-a"] "L.transpose" "1-12"
--- 1 4 7 10 
+-- 1 4 7 10
 -- 2 5 8 11
 -- 3 6 9 12
 testPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
