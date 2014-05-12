@@ -62,10 +62,11 @@ data OutputFormat = OutputFormat
 -- One such strategy is to split the string on every occurrence of a
 -- particular delimiter.
 type Delimiter = ByteString
-data Separator = Delimiter Delimiter
+data Separator = Whitespace | Delimiter Delimiter
   deriving (Show, Eq)
 
 fromSeparator :: Separator -> Delimiter
+fromSeparator Whitespace    = " "
 fromSeparator (Delimiter d) = d
 
 
@@ -93,7 +94,7 @@ defaultOutputFormat = OutputFormat defaultLineDelimiter defaultFieldDelimiter
 
 defaultLineSeparator, defaultFieldSeparator :: Separator
 defaultLineSeparator = Delimiter defaultLineDelimiter
-defaultFieldSeparator = Delimiter defaultFieldDelimiter
+defaultFieldSeparator = Whitespace
 
 defaultLineDelimiter, defaultFieldDelimiter :: Delimiter
 defaultLineDelimiter = "\n"

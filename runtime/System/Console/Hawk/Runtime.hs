@@ -54,6 +54,7 @@ splitIntoFields RawLine = return
 splitIntoFields (Fields sep) = splitAtSeparator sep
 
 splitAtSeparator :: Separator -> B.ByteString -> [B.ByteString]
+splitAtSeparator Whitespace = B.words
 splitAtSeparator (Delimiter "\n") = fmap dropWindowsNewline . B.lines
   where
     dropWindowsNewline :: B.ByteString -> B.ByteString

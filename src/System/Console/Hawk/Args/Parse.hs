@@ -26,7 +26,7 @@ type CommonSeparators = (Separator, Separator)
 -- >>> let test = testP commonSeparators
 -- 
 -- >>> test []
--- (Delimiter "\n",Delimiter " ")
+-- (Delimiter "\n",Whitespace)
 -- 
 -- >>> test ["-D\\n", "-d\\t"]
 -- (Delimiter "\n",Delimiter "\t")
@@ -58,7 +58,7 @@ commonSeparators = do
 -- 
 -- >>> test []
 -- UseStdin
--- Lines (Delimiter "\n") (Fields (Delimiter " "))
+-- Lines (Delimiter "\n") (Fields Whitespace)
 -- 
 -- >>> test ["-d", "-a", "L.reverse"]
 -- UseStdin

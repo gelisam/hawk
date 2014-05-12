@@ -74,7 +74,7 @@ instance Option HawkOption where
   
   helpMsg Apply                      = ["apply <expr> to the entire table"]
   helpMsg Map                        = ["apply <expr> to each row"]
-  helpMsg FieldDelimiter             = ["default ' '"]
+  helpMsg FieldDelimiter             = ["default whitespace"]
   helpMsg LineDelimiter              = ["default '\\n'"]
   helpMsg OutputFieldDelimiter       = ["default <field-delim>"]
   helpMsg OutputLineDelimiter        = ["default <line-delim>"]
