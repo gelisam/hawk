@@ -48,18 +48,19 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 
 -- If two instances of hawk are trying to use same resource (here stdout) at
 -- the same time, problems can occur.
+-- (test disabled because the unlocked behaviour isn't deterministic)
 -- 
--- >>> print3 `par` print3'
--- 1
--- 1
--- 2
--- 2
--- 3
--- 3
+-- -- >>> print3 `par` print3
+-- -- 1
+-- -- 1
+-- -- 2
+-- -- 2
+-- -- 3
+-- -- 3
 -- 
 -- By using `withLock`, we serialize the execution of the two critical sections.
 -- 
--- >>> withLock print3 `par` withLock print3'
+-- >>> withLock print3 `par` withLock print3
 -- 1
 -- 2
 -- 3
@@ -75,7 +76,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 2
 -- 3
 -- 
--- >>> withTestLock print3 `par` withTestLock print3'
+-- >>> withTestLock print3 `par` withTestLock print3
 -- ** LOCKED **
 -- 1
 -- 2
@@ -104,6 +105,5 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 1
 -- 2
 -- 3
-print3, print3' :: IO ()
+print3 :: IO ()
 print3 = printDelayed [1..3]
-print3' = threadDelay 5000 >> print3
