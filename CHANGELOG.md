@@ -27,6 +27,7 @@ In a nutshell, custom context directories and GHC 7.8 compatibility.
 
 ### Minor improvements
 
+* The nomenclature for "lines" and "words" is now "records" and "fields", because the delimiters don't need to be newline and space.
 * Usage is shown when `hawk` is called with no arguments.
 * A warning message is displayed when `~/.hawk` is first created.
 * More succinct `--help` output.
