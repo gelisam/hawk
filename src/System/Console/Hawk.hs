@@ -19,10 +19,13 @@ module System.Console.Hawk
   ) where
 
 
+import qualified Data.ByteString.Lazy.Char8 as B
 import Language.Haskell.Interpreter
-import Text.Printf (printf)
 
 import Control.Monad.Trans.Uncertain
+import Data.HaskellExpr
+import Data.HaskellExpr.Base
+import Data.HaskellExpr.Runtime
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
@@ -44,59 +47,44 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
+processSpec (Eval  e   o) = applyExpr (wrapExpr eConst e) noInput o
 processSpec (Apply e i o) = applyExpr e                    i       o
-processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+processSpec (Map   e i o) = applyExpr (wrapExpr eMap   e) i       o
 
-wrapExpr :: String -> ExprSpec -> ExprSpec
-wrapExpr f e = e'
+-- We cannot give `eTransform` a precise phantom type because the type of
+-- the user expression is still unknown.
+wrapExpr :: HaskellExpr (a -> b -> c) -> ExprSpec -> ExprSpec
+wrapExpr eTransform e = e'
   where
-    u = userExpression e
-    u' = printf "%s (%s)" (prel f) u
-    e' = e { userExpression = u' }
+    eExpr = HaskellExpr (userExpression e)
+    eExpr' = eTransform $$ eExpr
+    e' = e { userExpression = code eExpr' }
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let contextDir = userContextDirectory e
-    let expr = userExpression e
     
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
-      interpret' $ processTable' $ tableExpr expr
+      interpret' $ code $ eProcessInput
     runHawkIO $ processRuntime hawkRuntime
   where
-    interpret' expr = do
-      interpret expr (as :: HawkRuntime -> HawkIO ())
+    interpret' expr = interpret expr (as :: HawkRuntime -> HawkIO ())
     
     hawkRuntime = HawkRuntime i o
     
-    processTable' :: String -> String
-    processTable' = printf "(%s) (%s) (%s)" (prel "flip")
-                                            (runtime "processTable")
+    eProcessInput :: HaskellExpr (HawkRuntime -> HawkIO ())
+    eProcessInput = eFlip $$ eProcessTable $$ eTableExpr
     
     -- turn the user expr into an expression manipulating [[B.ByteString]]
-    tableExpr :: String -> String
-    tableExpr = (`compose` fromTable)
+    eTableExpr :: HaskellExpr ([[B.ByteString]] -> ())
+    eTableExpr = go (inputFormat i)
       where
-        fromTable = case inputFormat i of
-            RawStream            -> head' `compose` head'
-            Records _ RawRecord  -> map' head'
-            Records _ (Fields _) -> prel "id"
+        go RawStream              = eExpr `eComp` eHead `eComp` eHead
+        go (Records _ RawRecord)  = eExpr `eComp` (eMap $$ eHead)
+        go (Records _ (Fields _)) = eExpr
     
-    compose :: String -> String -> String
-    compose f g = printf "(%s) %s (%s)" f (prel ".") g
-    
-    head' :: String
-    head' = prel "head"
-    
-    map' :: String -> String
-    map' = printf "(%s) (%s)" (prel "map")
-
--- we cannot use any unqualified symbols in the user expression,
--- because we don't know which modules the user prelude will import.
-qualify :: String -> String -> String
-qualify moduleName = printf "%s.%s" moduleName
-
-prel, runtime :: String -> String
-prel = qualify "Prelude"
-runtime = qualify "System.Console.Hawk.Runtime"
+    -- note that the user expression needs to have a different type under each of
+    -- the above modes, so we cannot give it a precise phantom type.
+    eExpr :: HaskellExpr (a -> ())
+    eExpr = HaskellExpr (userExpression e)
