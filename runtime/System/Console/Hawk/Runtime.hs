@@ -36,19 +36,26 @@ getInputString (InputFile f) = B.readFile f
 
 -- [[contents]]
 -- or
--- [[line0], [line1], ...]
+-- [[record0], [record1], ...]
 -- or
 -- [[field0, field1, ...], [field0, field1, ...], ...]
 splitIntoTable :: InputFormat -> B.ByteString -> [[B.ByteString]]
 splitIntoTable RawStream = return . return
-splitIntoTable (Lines sep format) = fmap splitIntoFields' . splitIntoLines'
+splitIntoTable (Records sep format) = fmap splitIntoFields' . splitIntoRecords'
   where
     splitIntoFields' = splitIntoFields format
-    splitIntoLines' = splitIntoLines sep
+    splitIntoRecords' = splitAtSeparator sep
 
--- [line0, line1, ...]
-splitIntoLines :: Separator -> B.ByteString -> [B.ByteString]
-splitIntoLines "\n" = fmap dropWindowsNewline . B.lines
+-- [record]
+-- or
+-- [field0, field1, ...]
+splitIntoFields :: RecordFormat -> B.ByteString -> [B.ByteString]
+splitIntoFields RawRecord = return
+splitIntoFields (Fields sep) = splitAtSeparator sep
+
+splitAtSeparator :: Separator -> B.ByteString -> [B.ByteString]
+splitAtSeparator Whitespace = B.words
+splitAtSeparator (Delimiter "\n") = fmap dropWindowsNewline . B.lines
   where
     dropWindowsNewline :: B.ByteString -> B.ByteString
     dropWindowsNewline "" = ""
@@ -59,14 +66,7 @@ splitIntoLines "\n" = fmap dropWindowsNewline . B.lines
         last_char = B.last s
         n = B.length s
         s' = B.take (n - 1) s
-splitIntoLines sep = Search.split sep
-
--- [line]
--- or
--- [field0, field1, ...]
-splitIntoFields :: LineFormat -> B.ByteString -> [B.ByteString]
-splitIntoFields RawLine = return
-splitIntoFields (Words sep) = Search.split sep
+splitAtSeparator (Delimiter d) = Search.split d
 
 
 outputRows :: Rows a => OutputSpec -> a -> IO ()
@@ -75,8 +75,8 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
     B.putStr s
     hFlush stdout
   where
-    join' = join (B.fromStrict $ lineDelimiter spec)
-    toRows = repr (B.fromStrict $ wordDelimiter spec)
+    join' = join (B.fromStrict $ recordDelimiter spec)
+    toRows = repr (B.fromStrict $ fieldDelimiter spec)
     
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines

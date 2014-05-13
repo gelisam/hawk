@@ -118,7 +118,7 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 
 
 
--- | A Row is something that can be expressed as a line.
+-- | A Row is something that can be expressed as a record.
 -- The output of repr' should be formatted such that
 -- it can be read and processed from the command line.
 --

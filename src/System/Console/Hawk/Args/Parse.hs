@@ -17,37 +17,38 @@ import           System.Console.Hawk.Context.Dir
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
 
 
--- | (line delimiter, word delimiter)
-type CommonDelimiters = (Separator, Separator)
+-- | (record separator, field separator)
+type CommonSeparators = (Separator, Separator)
 
 -- | Extract '-D' and '-d'. We perform this step separately because those two
 --   delimiters are used by both the input and output specs.
 -- 
--- >>> let test = testP commonDelimiters
+-- >>> let test = testP commonSeparators
 -- 
 -- >>> test []
--- ("\n"," ")
+-- (Delimiter "\n",Whitespace)
 -- 
 -- >>> test ["-D\\n", "-d\\t"]
--- ("\n","\t")
+-- (Delimiter "\n",Delimiter "\t")
 -- 
 -- >>> test ["-D|", "-d,"]
--- ("|",",")
-commonDelimiters :: (Functor m, Monad m)
-                 => OptionParserT HawkOption m CommonDelimiters
-commonDelimiters = do
-    l <- lastDelim Option.LineDelimiter defaultLineSeparator
-    w <- lastDelim Option.WordDelimiter defaultWordSeparator
-    return (l, w)
+-- (Delimiter "|",Delimiter ",")
+commonSeparators :: (Functor m, Monad m)
+                 => OptionParserT HawkOption m CommonSeparators
+commonSeparators = do
+    r <- lastSep Option.RecordDelimiter defaultRecordSeparator
+    f <- lastSep Option.FieldDelimiter defaultFieldSeparator
+    return (r, f)
   where
-    lastDelim ctor def = consumeLast ctor def Option.consumeDelimiter
+    lastSep opt def = consumeLast opt def consumeSep
+    consumeSep = fmap Delimiter . Option.consumeDelimiter
 
 
 -- | The input delimiters have already been parsed, but we still need to
 --   interpret them and to determine the input source.
 -- 
 -- >>> :{
--- let test = testP $ do { c <- commonDelimiters
+-- let test = testP $ do { c <- commonSeparators
 --                       ; _ <- consumeExtra consumeString  -- skip expr
 --                       ; i <- inputSpec c
 --                       ; lift $ print $ inputSource i
@@ -57,11 +58,11 @@ commonDelimiters = do
 -- 
 -- >>> test []
 -- UseStdin
--- Lines "\n" (Words " ")
+-- Records (Delimiter "\n") (Fields Whitespace)
 -- 
 -- >>> test ["-d", "-a", "L.reverse"]
 -- UseStdin
--- Lines "\n" RawLine
+-- Records (Delimiter "\n") RawRecord
 -- 
 -- >>> test ["-D", "-a", "B.reverse"]
 -- UseStdin
@@ -69,10 +70,10 @@ commonDelimiters = do
 -- 
 -- >>> test ["-d:", "-m", "L.head", "/etc/passwd"]
 -- InputFile "/etc/passwd"
--- Lines "\n" (Words ":")
+-- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
-          => CommonDelimiters -> OptionParserT HawkOption m InputSpec
-inputSpec (l, w) = InputSpec <$> source <*> format
+          => CommonSeparators -> OptionParserT HawkOption m InputSpec
+inputSpec (r, f) = InputSpec <$> source <*> format
   where
     source = do
         r <- consumeExtra consumeString
@@ -80,20 +81,20 @@ inputSpec (l, w) = InputSpec <$> source <*> format
           Nothing -> UseStdin
           Just f  -> InputFile f
     format = return streamFormat
-    streamFormat | l == ""   = RawStream
-                 | otherwise = Lines l lineFormat
-    lineFormat | w == ""   = RawLine
-               | otherwise = Words w
+    streamFormat | r == Delimiter "" = RawStream
+                 | otherwise         = Records r recordFormat
+    recordFormat | f == Delimiter ""   = RawRecord
+                 | otherwise           = Fields f
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
 -- 
 -- >>> :{
--- let test = testP $ do { c <- commonDelimiters
+-- let test = testP $ do { c <- commonSeparators
 --                       ; o <- outputSpec c
---                       ; let OutputFormat l w = outputFormat o
+--                       ; let OutputFormat r f = outputFormat o
 --                       ; lift $ print $ outputSink o
---                       ; lift $ print (l, w)
+--                       ; lift $ print (r, f)
 --                       }
 -- :}
 -- 
@@ -109,13 +110,15 @@ inputSpec (l, w) = InputSpec <$> source <*> format
 -- UseStdout
 -- ("|","\t")
 outputSpec :: (Functor m, Monad m)
-           => CommonDelimiters -> OptionParserT HawkOption m OutputSpec
-outputSpec (l, w) = OutputSpec <$> sink <*> format
+           => CommonSeparators -> OptionParserT HawkOption m OutputSpec
+outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
     sink = return UseStdout
-    format = OutputFormat <$> line <*> word
-    line = consumeLast Option.OutputLineDelimiter l Option.consumeDelimiter
-    word = consumeLast Option.OutputWordDelimiter w Option.consumeDelimiter
+    format = OutputFormat <$> record <*> field
+    record = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
+    field = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
+    r' = fromSeparator r
+    f' = fromSeparator f
 
 
 -- | The information we need in order to evaluate a user expression:
@@ -167,9 +170,9 @@ exprSpec = ExprSpec <$> contextDir <*> expr
 --                    ; case spec of
 --                        Help        -> putStrLn "Help"
 --                        Version     -> putStrLn "Version"
---                        Eval  e   o -> putStrLn "Eval"  >> print (userExpression e)                                         >> print (lineDelimiter (outputFormat o), wordDelimiter (outputFormat o))
---                        Apply e i o -> putStrLn "Apply" >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (lineDelimiter (outputFormat o), wordDelimiter (outputFormat o))
---                        Map   e i o -> putStrLn "Map"   >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (lineDelimiter (outputFormat o), wordDelimiter (outputFormat o))
+--                        Eval  e   o -> putStrLn "Eval"  >> print (userExpression e)                                         >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Apply e i o -> putStrLn "Apply" >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Map   e i o -> putStrLn "Map"   >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
 --                    }
 -- :}
 -- 
@@ -190,7 +193,7 @@ exprSpec = ExprSpec <$> contextDir <*> expr
 -- >>> test ["-D\r\n", "-d\\t", "-m", "L.head"]
 -- Map
 -- ("L.head",UseStdin)
--- Lines "\r\n" (Words "\t")
+-- Records (Delimiter "\r\n") (Fields (Delimiter "\t"))
 -- ("\r\n","\t")
 -- 
 -- >>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
@@ -205,7 +208,7 @@ parseArgs args = runOptionParserT options parser args
     parser = do
         lift $ return ()  -- silence a warning
         cmd <- consumeExclusive assoc eval
-        c <- commonDelimiters
+        c <- commonSeparators
         cmd c
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
@@ -213,7 +216,7 @@ parseArgs args = runOptionParserT options parser args
             , (Option.Map,     map')
             ]
     
-    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonDelimiters
+    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonSeparators
                                      -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version
