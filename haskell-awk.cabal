@@ -46,22 +46,22 @@ Executable hawk
     Default-Language: Haskell98
     ghc-options:    -Wall
     build-depends:  base >=4.6.0.1 && <5
-                  , bytestring >=0.10.0.2
-                  , containers -any
-                  , directory >=1.2.0.1
-                  , easy-file >=0.1.1
-                  , exceptions <0.6 || >0.6
-                  , filepath >=1.3.0.1
+                  , bytestring
+                  , containers
+                  , directory
+                  , easy-file
+                  , exceptions >=0.1
+                  , filepath
                   , haskell-awk
                   , haskell-src-exts >=1.14.0
                   , hint >=0.3.3.5
-                  , MonadCatchIO-mtl >=0.3.0.0
-                  , mtl
+                  , MonadCatchIO-mtl >=0.2.0.0
+                  , mtl >=2.1.2
                   , network >=2.3.1.0
                   , stringsearch >=0.3.6.4
-                  , process >=1.1.0.2
-                  , time -any
-                  , transformers
+                  , process
+                  , time
+                  , transformers >=0.3.0.0
     hs-source-dirs: src
 
 Library
@@ -72,8 +72,8 @@ Library
     ghc-options:    -Wall
     hs-source-dirs: runtime
     build-depends: base >=4.6.0.1
-                 , bytestring >=0.10.0.2
-                 , containers -any
+                 , bytestring
+                 , containers
                  , stringsearch >=0.3.6.4
     Default-Language: Haskell98
 
@@ -82,26 +82,26 @@ Test-suite reference
   Main-Is:              RunTests.hs
   Type:                 exitcode-stdio-1.0
   Ghc-Options:          -Wall
-  Build-Depends:        base>=4.6.0.1 && <5
-                      , bytestring>=0.10.0.2
-                      , containers -any
-                      , directory >=1.2.0.1
-                      , doctest >= 0.8
-                      , exceptions <0.6 || >0.6
-                      , test-framework
-                      , test-framework-hunit
-                      , temporary
+  Build-Depends:        base >=4.6.0.1 && <5
+                      , bytestring
+                      , containers
+                      , directory
+                      , doctest >=0.3.0
+                      , exceptions >=0.1
+                      , test-framework >=0.1
+                      , test-framework-hunit >=0.2.0
+                      , temporary >=1.0
                       , haskell-awk
-                      , hspec
-                      , HUnit
-                      , easy-file >=0.1.1
-                      , haskell-src-exts >= 1.14.0
+                      , hspec >=0.2.0
+                      , HUnit >=1.1
+                      , easy-file
+                      , haskell-src-exts >=1.14.0
                       , hint >=0.3.3.5
-                      , filepath >=1.3.0.1
-                      , mtl
+                      , filepath
+                      , mtl >=2.1.2
                       , network >=2.3.1.0
-                      , process >=1.1.0.2
+                      , process
                       , stringsearch >=0.3.6.4
-                      , time -any
-                      , transformers
+                      , time
+                      , transformers >=0.3.0.0
   Default-Language: Haskell98
