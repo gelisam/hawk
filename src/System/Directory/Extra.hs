@@ -5,22 +5,6 @@ import System.Directory
 import System.FilePath
 
 
--- | A version of `canonicalizePath` which works even if the file
---   doesn't exist.
--- 
--- >>> setCurrentDirectory "/bin"
--- >>> absPath "foo"
--- "/bin/foo"
--- 
--- Bug: unlike `canonicalizePath`, the resulting path isn't absolute.
--- 
--- -->>> absPath "foo/../bar"
--- --"/bin/bar"
-absPath :: FilePath -> IO FilePath
-absPath f = do
-    pwd <- getCurrentDirectory
-    return (pwd </> f)
-
 -- | Only works with relative paths.
 -- 
 -- >>> parentPath "foo/bar/baz"
