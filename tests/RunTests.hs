@@ -12,9 +12,11 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
+import Control.Applicative
 import Data.List
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Test as HawkTest
+import System.FilePath
 import System.Environment
 import Text.Printf
 
@@ -31,10 +33,12 @@ substSuffix _ _ xs = xs
 -- make sure doctest can the source of Hawk and the generated Paths_haskell_awk.hs
 doctest' :: String -> IO ()
 doctest' file = do
-    exePath <- getExecutablePath
+    exePath <- dropExtension <$> getExecutablePath
     
     let srcPath = "src"
-    let autogenPath = substSuffix "reference/reference" "autogen" exePath
+    let autogenPath = substSuffix ("reference" </> "reference")
+                                  "autogen"
+                                  exePath
     
     let includeSrc      = printf "-i%s" srcPath
     let includeAutogen  = printf "-i%s" autogenPath
