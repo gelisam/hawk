@@ -20,3 +20,14 @@ absPath :: FilePath -> IO FilePath
 absPath f = do
     pwd <- getCurrentDirectory
     return (pwd </> f)
+
+-- | Only works with relative paths.
+-- 
+-- >>> parentPath "foo/bar/baz"
+-- "foo/bar"
+-- >>> parentPath "foo/bar"
+-- "foo"
+-- >>> parentPath "foo"
+-- "."
+parentPath :: FilePath -> FilePath
+parentPath = init . dropFileName
