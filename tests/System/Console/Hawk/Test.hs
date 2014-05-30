@@ -83,5 +83,5 @@ catchOutput f = do
     f
     hDuplicateTo stdout_dup stdout
     str <- readFile tmpf
-    removeFile tmpf
+    length str `seq` removeFile tmpf
     return str

@@ -10,12 +10,16 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.Functor.Identity
 import System.Directory
+import System.FilePath
 import System.IO
+
+-- $setup
+-- >>> tmp <- getTemporaryDirectory
+-- >>> let f = tmp </> "doctest.txt"
 
 
 -- | Read and write the cache to a file. Not atomic.
 -- 
--- >>> let f = "/tmp/doctest.txt"
 -- >>> :{
 -- do { exists <- doesFileExist f
 --    ; when exists $ removeFile f
@@ -38,7 +42,6 @@ withPersistentState f default_s sx = do
 
 -- | A monad-transformer version of `withPersistentState`.
 -- 
--- >>> let f = "/tmp/doctest.txt"
 -- >>> :{
 -- do { exists <- doesFileExist f
 --    ; when exists $ removeFile f

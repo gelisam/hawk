@@ -31,11 +31,17 @@ createDefaultContextDir paths = do
 
 -- | Find a project context
 findContext :: FilePath -> IO (Maybe FilePath)
-findContext startDir = do
-    let validContextDirs = map (</> ".hawk") $ takeWhile (not . null)
-                                             $ iterate (init . dropFileName) startDir
-    foldM (maybe validDirOrNothing (const . return . Just)) Nothing validContextDirs
+findContext startDir =
+    foldM (maybe validDirOrNothing (const . return . Just)) Nothing possibleContextDirs
   where
+    (drive, startPath) = splitDrive startDir
+    mkHawkPath relPath = joinDrive drive (relPath </> ".hawk")
+    
+    parentPath = init . dropFileName
+    parentPaths = takeWhile (/= ".") . iterate parentPath
+    
+    possibleContextDirs = map mkHawkPath (parentPaths startPath)
+    
     validDirOrNothing dir = do
       dirExists <- doesDirectoryExist dir
       if dirExists
