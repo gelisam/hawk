@@ -31,7 +31,7 @@ import System.Console.Hawk.Lock
 
 printDelayed :: [Int] -> IO ()
 printDelayed [] = return ()
-printDelayed (x:xs) = do threadDelay 10000
+printDelayed (x:xs) = do threadDelay 1000000
                          print x
                          printDelayed xs
 
@@ -96,7 +96,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- moment. If we timed the experiment right, the error message should be "connect"
 -- instead of "hGetContents".
 -- 
--- >>> withTestLock print3 `par` (threadDelay 15000 >> withTestLock print3)
+-- >>> withTestLock print3 `par` (threadDelay 1500000 >> withTestLock print3)
 -- 1
 -- ** LOCKED **
 -- 2

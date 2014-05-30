@@ -57,7 +57,7 @@ lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     
     -- used to test an interleaving in which the socket is closed here,
     -- between openSocket and waitForException.
-    when testing $ threadDelay 20000
+    when testing $ threadDelay 2000000
     
     -- wait for the other instance to signal that it is done with the lock.
     catchJust isDisconnected waitForException $ \reason -> do
