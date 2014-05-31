@@ -47,8 +47,9 @@ For instance, we could add a `takeLast` function extracting the last `n` element
 100
 ```
 
-
-For more details, see the [documentation](doc/README.md).
+For more details, see the
+[presentation](http://melrief.github.io/HawkPresentation/#/) and the
+[documentation](doc/README.md).
 
 ## Installation
 
