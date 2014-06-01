@@ -81,27 +81,26 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 1
 -- 2
 -- 3
--- ** UNLOCKED (hGetContents) **
+-- ** UNLOCKED **
 -- 1
 -- 2
 -- 3
 -- 
--- This verbosity allows us to test a special case: a race condition in which
+-- Here is a variant of the previous test which tests a race condition in which
 -- instance 1 releases the lock immediately after instance 2 notices that the
 -- lock is busy, but before instance 2 begins waiting for the lock to be released.
 -- 
 -- We can trigger this special case with a bit of collaboration from `withTestLock`.
 -- It inserts an artificial delay at the point in which we want the lock to be
 -- released, and we time our instances so that instance 1 unlocks just at the right
--- moment. If we timed the experiment right, the error message should be "connect"
--- instead of "hGetContents".
+-- moment.
 -- 
 -- >>> withTestLock print3 `par` (threadDelay 15000 >> withTestLock print3)
 -- 1
 -- ** LOCKED **
 -- 2
 -- 3
--- ** UNLOCKED (connect) **
+-- ** UNLOCKED **
 -- 1
 -- 2
 -- 3

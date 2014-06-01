@@ -60,10 +60,10 @@ lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     when testing $ threadDelay 20000
     
     -- wait for the other instance to signal that it is done with the lock.
-    catchJust isDisconnected waitForException $ \reason -> do
+    catchJust isDisconnected waitForException $ \_ -> do
       -- we were disconnected, the server must have released the lock!
       
-      when testing $ printf "** UNLOCKED (%s) **\n" reason
+      when testing $ printf "** UNLOCKED **\n"
       
       -- try again.
       lock testing
