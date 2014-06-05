@@ -10,6 +10,7 @@ data HawkSpec
     | Version
     | Eval  ExprSpec           OutputSpec
     | Apply ExprSpec InputSpec OutputSpec
+    | Fold  ExprSpec InputSpec OutputSpec
     | Map   ExprSpec InputSpec OutputSpec
   deriving (Show, Eq)
 

@@ -82,10 +82,10 @@ inputSpec :: (Functor m, Monad m)
 inputSpec (r, f) = InputSpec <$> source <*> format
   where
     source = do
-        r <- consumeExtra consumeText
-        return $ case r of
+        r' <- consumeExtra consumeText
+        return $ case r' of
           Nothing -> UseStdin
-          Just f  -> InputFile (T.unpack f)
+          Just f' -> InputFile (T.unpack f')
     format = return streamFormat
     streamFormat | r == Delimiter "" = RawStream
                  | otherwise         = Records r recordFormat
@@ -219,6 +219,7 @@ parseArgs args = runOptionParserT options parser args
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
             , (Option.Apply,   apply)
+            , (Option.Fold,    fold')
             , (Option.Map,     map')
             ]
     
@@ -228,4 +229,5 @@ parseArgs args = runOptionParserT options parser args
     version _ = return Version
     eval    c = Eval  <$> exprSpec <*>                 outputSpec c
     apply   c = Apply <$> exprSpec <*> inputSpec c <*> outputSpec c
+    fold'   c = Fold  <$> exprSpec <*> inputSpec c <*> outputSpec c
     map'    c = Map   <$> exprSpec <*> inputSpec c <*> outputSpec c

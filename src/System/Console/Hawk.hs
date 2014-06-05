@@ -50,6 +50,7 @@ processSpec Help          = help
 processSpec Version       = putStrLn versionString
 processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
 processSpec (Apply e i o) = applyExpr e                    i       o
+processSpec (Fold  e i o) = applyExpr (wrapFold e)              i  o
 processSpec (Map   e i o) = applyExpr (wrapExpr "Prelude.map"   e) i       o
 
 wrapExpr :: T.Text -> ExprSpec -> ExprSpec
@@ -58,6 +59,14 @@ wrapExpr f e = e'
     u = userExpression e
     u' = T.unwords [f, T.concat ["(", u, ")"]]
     e' = e { userExpression = u' }
+
+wrapFold :: ExprSpec -> ExprSpec
+wrapFold e = e'
+  where
+    u  = userExpression e
+    u' = TF.format "(Monoid.getSum . F.fold . map (Monoid.Sum . {}))" [u]
+    e' = e { userExpression = u' }
+
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do

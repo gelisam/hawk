@@ -27,7 +27,9 @@ testC f = do
 -- module System.Console.Hawk.CachedPrelude where
 -- {-# LINE 2 "tests/preludes/default/prelude.hs" #-}
 -- import Prelude
+-- import qualified Data.Foldable as F
 -- import qualified Data.List as L
+-- import qualified Data.Monoid as Monoid
 -- import qualified Data.Text.Lazy as T
 -- 
 -- >>> testC "moduleName"

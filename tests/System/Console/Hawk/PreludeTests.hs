@@ -37,7 +37,12 @@ testEval flags expr = test flags expr ""
 
 
 -- | A version of `testBuilder` using the preludes from "tests/preludes".
--- 
+--
+-- Try Folds out
+--
+-- >>> test ["--fold"] "read . T.unpack . (!!1)" "sumfields"
+-- 45
+--
 -- The first example from the README:
 -- 
 -- >>> test ["-d:", "-m"] "head" "passwd"

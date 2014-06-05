@@ -14,6 +14,7 @@ import Control.Monad.Trans.OptionParser
 
 data HawkOption
     = Apply
+    | Fold
     | Map
     | FieldDelimiter
     | RecordDelimiter
@@ -55,38 +56,42 @@ consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m T.Text
 consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeText
 
 instance Option HawkOption where
-  shortName Apply                 = 'a'
-  shortName Map                   = 'm'
-  shortName FieldDelimiter        = 'd'
-  shortName RecordDelimiter       = 'D'
-  shortName OutputFieldDelimiter  = 'o'
-  shortName OutputRecordDelimiter = 'O'
-  shortName Version               = 'v'
-  shortName Help                  = 'h'
-  shortName ContextDirectory      = 'c'
-  
-  longName Apply                 = "apply"
-  longName Map                   = "map"
-  longName FieldDelimiter        = "field-delimiter"
-  longName RecordDelimiter       = "record-delimiter"
-  longName OutputFieldDelimiter  = "output-field-delim"
-  longName OutputRecordDelimiter = "output-record-delim"
-  longName Version               = "version"
-  longName Help                  = "help"
-  longName ContextDirectory      = "context-directory"
-  
-  helpMsg Apply                      = ["apply <expr> to the entire table"]
-  helpMsg Map                        = ["apply <expr> to each row"]
-  helpMsg FieldDelimiter             = ["default whitespace"]
-  helpMsg RecordDelimiter            = ["default '\\n'"]
-  helpMsg OutputFieldDelimiter       = ["default <field-delim>"]
-  helpMsg OutputRecordDelimiter      = ["default <record-delim>"]
-  helpMsg Version                    = ["print version and exit"]
-  helpMsg Help                       = ["this help"]
-  helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
-                                       ,"'~/.hawk'"]
-  
+  shortName Apply                  = 'a'
+  shortName Fold                   = 'l'
+  shortName Map                    = 'm'
+  shortName FieldDelimiter         = 'd'
+  shortName RecordDelimiter        = 'D'
+  shortName OutputFieldDelimiter   = 'o'
+  shortName OutputRecordDelimiter  = 'O'
+  shortName Version                = 'v'
+  shortName Help                   = 'h'
+  shortName ContextDirectory       = 'c'
+
+  longName Apply                   = "apply"
+  longName Fold                    = "fold"
+  longName Map                     = "map"
+  longName FieldDelimiter          = "field-delimiter"
+  longName RecordDelimiter         = "record-delimiter"
+  longName OutputFieldDelimiter    = "output-field-delim"
+  longName OutputRecordDelimiter   = "output-record-delim"
+  longName Version                 = "version"
+  longName Help                    = "help"
+  longName ContextDirectory        = "context-directory"
+
+  helpMsg Apply                    = ["apply <expr> to the entire table"]
+  helpMsg Fold                     = ["fold <expr> for each row, then output result"]
+  helpMsg Map                      = ["apply <expr> to each row"]
+  helpMsg FieldDelimiter           = ["default whitespace"]
+  helpMsg RecordDelimiter          = ["default '\\n'"]
+  helpMsg OutputFieldDelimiter     = ["default <field-delim>"]
+  helpMsg OutputRecordDelimiter    = ["default <record-delim>"]
+  helpMsg Version                  = ["print version and exit"]
+  helpMsg Help                     = ["this help"]
+  helpMsg ContextDirectory         = ["<ctx-dir> directory, default is"
+                                     ,"'~/.hawk'"]
+
   optionType Apply                 = flag
+  optionType Fold                  = flag
   optionType Map                   = flag
   optionType FieldDelimiter        = delimiter
   optionType RecordDelimiter       = delimiter

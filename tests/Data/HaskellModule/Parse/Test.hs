@@ -15,9 +15,11 @@ import Data.HaskellModule.Parse
 -- Nothing
 -- ===
 -- "import Prelude"
+-- "import qualified Data.Foldable as F"
 -- "import qualified Data.List as L"
+-- "import qualified Data.Monoid as Monoid"
 -- "import qualified Data.Text.Lazy as T"
--- [("Prelude",Nothing),("Data.List",Just "L"),("Data.Text.Lazy",Just "T")]
+-- [("Prelude",Nothing),("Data.Foldable",Just "F"),("Data.List",Just "L"),("Data.Monoid",Just "Monoid"),("Data.Text.Lazy",Just "T")]
 -- ===
 -- 
 -- >>> testM "tests/preludes/readme/prelude.hs"
@@ -27,9 +29,11 @@ import Data.HaskellModule.Parse
 -- Nothing
 -- ===
 -- "import Prelude"
+-- "import qualified Data.Foldable as F"
 -- "import qualified Data.List as L"
+-- "import qualified Data.Monoid as Monoid"
 -- "import qualified Data.Text.Lazy as T"
--- [("Prelude",Nothing),("Data.List",Just "L"),("Data.Text.Lazy",Just "T")]
+-- [("Prelude",Nothing),("Data.Foldable",Just "F"),("Data.List",Just "L"),("Data.Monoid",Just "Monoid"),("Data.Text.Lazy",Just "T")]
 -- ===
 -- "takeLast n = reverse . take n . reverse"
 -- 
