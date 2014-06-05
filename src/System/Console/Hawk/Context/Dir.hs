@@ -8,6 +8,7 @@ module System.Console.Hawk.Context.Dir
 
 import Control.Monad
 import "mtl" Control.Monad.Trans
+import qualified Data.Text.Lazy.IO as TextIO
 import System.Directory
 import System.EasyFile (readable)
 import System.FilePath
@@ -24,7 +25,7 @@ createDefaultContextDir paths = do
     liftIO $ do
       createDirectoryIfMissing True contextDir
       preludeExists <- doesFileExist preludeFile
-      unless preludeExists $ writeFile preludeFile defaultPrelude
+      unless preludeExists $ TextIO.writeFile preludeFile defaultPrelude
   where
     contextDir = contextDirPath paths
     preludeFile = originalPreludePath paths

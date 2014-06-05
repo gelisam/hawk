@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports, RankNTypes #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, RankNTypes #-}
 -- | A typeclass- and monad-based interface for GetOpt,
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
@@ -10,13 +10,19 @@ import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.List
 import Data.Maybe
+import qualified Data.Text.Lazy as T
 import qualified System.Console.GetOpt as GetOpt
 import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 
 -- $setup
--- 
+--
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
+--
 -- >>> :{
 -- let testH tp = do { putStrLn "Usage: more [option]... <song.mp3>"
 --                   ; putStr $ optionsHelpWith head
@@ -46,8 +52,10 @@ class Eq a => Option a where
 -- such as `nullable int` instead.
 data OptionType
     = Flag                   -- Bool, no argument
-    | Setting String         -- mandatory String argument
-    | NullableSetting String -- optional String argument
+    | Setting String         -- mandatory string argument
+    | NullableSetting String -- optional string argument
+    | TextSetting T.Text       -- mandatory text argument
+    | NullableTextSetting T.Text -- optional text argument
   deriving (Show, Eq)
 
 
@@ -111,6 +119,8 @@ optDescrWith shortName' longName' helpMsg' optionType'
         Flag               -> GetOpt.NoArg (o, Just "")
         Setting tp         -> GetOpt.ReqArg (\s -> (o, Just s)) tp
         NullableSetting tp -> GetOpt.OptArg (\ms -> (o, ms)) tp
+        TextSetting tp     -> GetOpt.ReqArg (\t -> (o, Just t)) (T.unpack tp)
+        NullableTextSetting tp -> GetOpt.OptArg (\mt -> (o, mt)) (T.unpack tp)
 
 
 -- | The part of your --help which describes each possible option.
@@ -241,6 +251,18 @@ consumeFlag _ = return True
 string :: OptionType
 string = Setting "str"
 
+-- | Specifies that the option must be assigned a Text value.
+-- 
+-- >>> let tp = const text
+-- >>> testH tp
+-- Usage: more [option]... <song.mp3>
+-- Options:
+--   -c str  --cowbell=str    adds more cowbell.
+--   -g str  --guitar=str     adds more guitar.
+--   -s str  --saxophone=str  adds more saxophone.
+text :: OptionType
+text = TextSetting "str"
+
 -- | The value assigned to the option, interpreted as a string.
 -- 
 -- >>> let tp = const string
@@ -262,6 +284,26 @@ consumeString :: Monad m => OptionConsumer m String
 consumeString (Just s) = return s
 consumeString Nothing = error "please use consumeNullable to consume nullable options"
 
+-- | The value assigned to the option, interpreted as text.
+--
+-- >>> let tp = const text
+-- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeText
+--
+-- >>> testP ["--cowbell", "extra"] tp consumeCowbell
+-- "extra"
+--
+-- >>> testP ["-cs"] tp consumeCowbell
+-- "s"
+--
+-- >>> testP [] tp consumeCowbell
+-- "<none>"
+--
+-- >>> testP ["-c"] tp consumeCowbell
+-- error: option `-c' requires an argument str
+-- *** Exception: ExitFailure 1
+consumeText :: Monad m => OptionConsumer m T.Text
+consumeText (Just s) = return (T.pack s)
+consumeText Nothing = error "please use consumeNullable to consume nullable options"
 
 -- | Specifies that the value of the option may be omitted.
 -- 
@@ -272,9 +314,19 @@ consumeString Nothing = error "please use consumeNullable to consume nullable op
 --   -c[str]  --cowbell[=str]    adds more cowbell.
 --   -g[str]  --guitar[=str]     adds more guitar.
 --   -s[str]  --saxophone[=str]  adds more saxophone.
+--
+-- >>> let tp = const (nullable text)
+-- >>> testH tp
+-- Usage: more [option]... <song.mp3>
+-- Options:
+--   -c[str]  --cowbell[=str]    adds more cowbell.
+--   -g[str]  --guitar[=str]     adds more guitar.
+--   -s[str]  --saxophone[=str]  adds more saxophone.
 nullable :: OptionType -> OptionType
 nullable (Setting tp) = NullableSetting tp
+nullable (TextSetting tp) = NullableTextSetting tp
 nullable (NullableSetting _) = error "double nullable"
+nullable (NullableTextSetting _) = error "double text nullable"
 nullable Flag = error "nullable flag doesn't make sense"
 
 -- | The value assigned to an option, or a default value if no value was
@@ -356,7 +408,7 @@ consumeInt :: Monad m => OptionConsumer m Int
 consumeInt = consumeReadable
 
 
--- | The value assigned to the option, interpreted as a path (String)
+-- | The value assigned to the option, interpreted as a path (FilePath)
 filePath :: OptionType
 filePath = Setting "path"
 

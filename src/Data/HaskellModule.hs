@@ -11,7 +11,8 @@ module Data.HaskellModule
   ) where
 
 import Control.Monad.Trans.Class
-import qualified Data.ByteString.Char8 as B
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as TextIO
 
 import Data.HaskellSource
 import Control.Monad.Trans.Uncertain
@@ -21,17 +22,22 @@ import Data.HaskellModule.Base
 import Data.HaskellModule.Parse
 
 
+-- $setup
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
+
 -- |
--- >>> B.putStr $ showModule "orig.hs" $ emptyModule
--- 
--- >>> B.putStr $ showModule "orig.hs" $ addExtension "OverloadedStrings" $ addImport ("Data.ByteString.Char8", Just "B") $ addExtension "RecordWildCards" $ addImport ("Prelude", Nothing) $ emptyModule
+-- >>> TextIO.putStr $ showModule "orig.hs" $ emptyModule
+--
+-- >>> TextIO.putStr $ showModule "orig.hs" $ addExtension "OverloadedStrings" $ addExtension "RecordWildCards" $ addImport ("Prelude", Nothing) $ emptyModule
 -- {-# LANGUAGE OverloadedStrings #-}
 -- {-# LANGUAGE RecordWildCards #-}
--- import qualified Data.ByteString.Char8 as B
 -- import Prelude
 showModule :: FilePath -- ^ the original's filename,
                        --   used for fixing up line numbers
-           -> HaskellModule -> B.ByteString
+           -> HaskellModule -> T.Text
 showModule orig (HaskellModule {..}) = showSource orig fullSource
   where
     fullSource = concat [ pragmaSource
@@ -45,7 +51,7 @@ writeModule :: FilePath -- ^ the original's filename,
             -> FilePath
             -> HaskellModule
             -> IO ()
-writeModule orig f = B.writeFile f . showModule orig
+writeModule orig f = TextIO.writeFile f . showModule orig
 
 
 compileModule :: FilePath -- ^ the original's filename,

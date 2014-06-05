@@ -1,3 +1,4 @@
+{-# Language OverloadedStrings #-}
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +20,12 @@ module System.Console.Hawk
   ) where
 
 
-import Language.Haskell.Interpreter
-import Text.Printf (printf)
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Format as TF
+import qualified Data.Text.Lazy.IO as TextIO
+import Language.Haskell.Interpreter (as, interpret)
 
+import Control.Monad.Trans (lift, liftIO)
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
@@ -46,57 +50,57 @@ processSpec Help          = help
 processSpec Version       = putStrLn versionString
 processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
 processSpec (Apply e i o) = applyExpr e                    i       o
-processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+processSpec (Map   e i o) = applyExpr (wrapExpr "Prelude.map"   e) i       o
 
-wrapExpr :: String -> ExprSpec -> ExprSpec
+wrapExpr :: T.Text -> ExprSpec -> ExprSpec
 wrapExpr f e = e'
   where
     u = userExpression e
-    u' = printf "%s (%s)" (prel f) u
+    u' = T.unwords [f, T.concat ["(", u, ")"]]
     e' = e { userExpression = u' }
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
 applyExpr e i o = do
     let contextDir = userContextDirectory e
     let expr = userExpression e
-    
+
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
       interpret' $ processTable' $ tableExpr expr
     runHawkIO $ processRuntime hawkRuntime
   where
     interpret' expr = do
-      interpret expr (as :: HawkRuntime -> HawkIO ())
-    
+      -- lift $ TextIO.putStrLn $ T.concat ["Interpret: ", expr]
+      interpret (T.unpack expr) (as :: HawkRuntime -> HawkIO ())
+
     hawkRuntime = HawkRuntime i o
-    
-    processTable' :: String -> String
-    processTable' = printf "(%s) (%s) (%s)" (prel "flip")
-                                            (runtime "processTable")
-    
-    -- turn the user expr into an expression manipulating [[B.ByteString]]
-    tableExpr :: String -> String
+
+    processTable' :: T.Text -> T.Text
+    processTable' te = TF.format "({}) ({}) ({})" ((prel "flip"), (runtime "processTable"), te)
+
+    -- turn the user expr into an expression manipulating [[Text]]
+    tableExpr :: T.Text -> T.Text
     tableExpr = (`compose` fromTable)
       where
         fromTable = case inputFormat i of
             RawStream            -> head' `compose` head'
             Records _ RawRecord  -> map' head'
             Records _ (Fields _) -> prel "id"
-    
-    compose :: String -> String -> String
-    compose f g = printf "(%s) %s (%s)" f (prel ".") g
-    
-    head' :: String
+
+    compose :: T.Text -> T.Text -> T.Text
+    compose f g = TF.format "({}) {} ({})" (f, (prel "."), g)
+
+    head' :: T.Text
     head' = prel "head"
-    
-    map' :: String -> String
-    map' = printf "(%s) (%s)" (prel "map")
+
+    map' :: T.Text -> T.Text
+    map' rest = TF.format "({}) ({})" ((prel "map"), rest)
 
 -- we cannot use any unqualified symbols in the user expression,
 -- because we don't know which modules the user prelude will import.
-qualify :: String -> String -> String
-qualify moduleName = printf "%s.%s" moduleName
+qualify :: T.Text -> T.Text -> T.Text
+qualify moduleName qualified = T.concat [moduleName, ".", qualified]
 
-prel, runtime :: String -> String
+prel, runtime :: T.Text -> T.Text
 prel = qualify "Prelude"
 runtime = qualify "System.Console.Hawk.Runtime"

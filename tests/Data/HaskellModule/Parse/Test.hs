@@ -1,6 +1,6 @@
 module Data.HaskellModule.Parse.Test where
 
-import qualified Data.ByteString.Char8 as B
+import qualified Data.Text.Lazy as T
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule.Base
@@ -15,9 +15,8 @@ import Data.HaskellModule.Parse
 -- Nothing
 -- ===
 -- "import Prelude"
--- "import qualified Data.ByteString.Lazy.Char8 as B"
 -- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
+-- [("Prelude",Nothing),("Data.List",Just "L")]
 -- ===
 -- 
 -- >>> testM "tests/preludes/readme/prelude.hs"
@@ -27,9 +26,8 @@ import Data.HaskellModule.Parse
 -- Nothing
 -- ===
 -- "import Prelude"
--- "import qualified Data.ByteString.Lazy.Char8 as B"
 -- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.ByteString.Lazy.Char8",Just "B"),("Data.List",Just "L")]
+-- [("Prelude",Nothing),("Data.List",Just "L")]
 -- ===
 -- "takeLast n = reverse . take n . reverse"
 -- 
@@ -66,4 +64,4 @@ testM f = do
     putStrLn "==="
     putSource (codeSource m)
   where
-    putSource = mapM_ (print . either id B.pack)
+    putSource = mapM_ (print . either id T.pack)

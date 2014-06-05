@@ -1,3 +1,4 @@
+{-# Language OverloadedStrings #-}
 -- | In which the implicit defaults are explicitly added.
 module System.Console.Hawk.UserPrelude.Extend
   ( extendModuleName
@@ -6,20 +7,26 @@ module System.Console.Hawk.UserPrelude.Extend
 
 import Control.Applicative
 import Data.Maybe
+import qualified Data.Text.Lazy as T
 
 import Data.HaskellModule
 import System.Console.Hawk.UserPrelude.Defaults
 
 
+-- $setup
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
+
 -- | We cannot import a module unless it has a name.
 extendModuleName :: HaskellModule -> HaskellModule
-extendModuleName = until hasModuleName
-                       $ addDefaultModuleName defaultModuleName
+extendModuleName = until hasModuleName $ addDefaultModuleName defaultModuleName
   where
     hasModuleName = isJust . moduleName
 
 
-moduleNames :: HaskellModule -> [String]
+moduleNames :: HaskellModule -> [T.Text]
 moduleNames = map fst . importedModules
 
 -- | GHC imports the Haskell Prelude by default, but hint doesn't.

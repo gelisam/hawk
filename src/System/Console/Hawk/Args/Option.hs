@@ -2,9 +2,7 @@
 -- | The string-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Option where
 
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (pack)
-import Text.Printf
+import qualified Data.Text.Lazy as T
 
 import Control.Monad.Trans.OptionParser
 
@@ -42,14 +40,14 @@ delimiter = nullable (Setting "delim")
 -- 
 -- >>> parseDelimiter "\\"
 -- "\\"
-parseDelimiter :: String -> ByteString
-parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
-    [(s', "")] -> s'
+parseDelimiter :: T.Text -> T.Text
+parseDelimiter s = case reads ("\"" ++ (T.unpack s) ++ "\"") of
+    [(s', "")] -> T.pack s'
     _          -> s
 
 -- | Almost like a string, except escape sequences are interpreted.
-consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m ByteString
-consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeString
+consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m T.Text
+consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeText
 
 instance Option HawkOption where
   shortName Apply                 = 'a'

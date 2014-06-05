@@ -1,3 +1,4 @@
+{-# Language OverloadedStrings #-}
 -- | A representation of Haskell source code.
 -- 
 -- Unlike haskell-src-exts, our goal is not to reconstruct detailed semantics,
@@ -5,67 +6,73 @@
 module Data.HaskellSource where
 
 import Control.Monad.Trans.Class
-import Data.ByteString.Char8 as B
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as TextIO
 import System.Exit
 import System.Process
-import Text.Printf
 
 import System.Directory.Extra
 import Control.Monad.Trans.Uncertain
 
 
--- | The ByteStrings are original lines, which we never delete in order to
+-- $setup
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
+
+-- | The Left original lines, which we never delete in order to
 --   infer line numbers, while the Strings were inserted into the original.
-type HaskellSource = [Either B.ByteString String]
+type HaskellSource = [Either T.Text T.Text]
 
 
-parseSource :: B.ByteString -> HaskellSource
-parseSource = fmap Left . B.lines
+parseSource :: T.Text -> HaskellSource
+parseSource = fmap Left . T.lines
 
 -- | A string representation containing line pragmas so that compiler errors
 --   are reported about the original file instead of the modified one.
 -- 
--- >>> let (x:xs) = parseSource $ B.pack "import Data.ByteString\nmain = print 42\n"
--- >>> B.putStr $ showSource "orig.hs" (x:xs)
--- import Data.ByteString
+-- >>> let (x:xs) = parseSource $ T.pack "bar = something\nmain = print 42\n"
+-- >>> TextIO.putStr $ showSource "orig.hs" (x:xs)
+-- bar = something
 -- main = print 42
 -- 
--- >>> B.putStr $ showSource "orig.hs" (x:Right "import Prelude":xs)
--- import Data.ByteString
--- import Prelude
+-- >>> TextIO.putStr $ showSource "orig.hs" (x:Right "foo = otherthing":xs)
+-- bar = something
+-- foo = otherthing
 -- {-# LINE 2 "orig.hs" #-}
 -- main = print 42
 showSource :: FilePath -- ^ the original's filename,
                        --   used for fixing up line numbers
-           -> HaskellSource -> B.ByteString
-showSource orig = B.unlines . go True 1
+           -> HaskellSource -> T.Text
+showSource orig = T.unlines . go True 1
   where
     go :: Bool -- ^ are line numbers already ok?
        -> Int  -- ^ the original number of the next original line
        -> HaskellSource
-       -> [B.ByteString]
+       -> [T.Text]
     go _     _ []           = []
     go True  i (Left x:xs)  = x
                             : go True (i + 1) xs
-    go False i (Left x:xs)  = B.pack (line_marker i)
+    go False i (Left x:xs)  = line_marker i
                             : x
                             : go True (i + 1) xs
-    go _     i (Right x:xs) = B.pack x
+    go _     i (Right x:xs) = x
                             : go False i xs
-    
-    line_marker :: Int -> String
-    line_marker i = printf "{-# LINE %s %s #-}" (show i) (show orig)
+
+    line_marker :: Int -> T.Text
+    line_marker i = T.unwords ["{-#", "LINE", T.pack $ show i, T.pack $ ("\"" ++ orig ++ "\""), "#-}"]
 
 
 readSource :: FilePath -> IO HaskellSource
-readSource = fmap parseSource . B.readFile
+readSource = fmap parseSource . TextIO.readFile
 
 writeSource :: FilePath -- ^ the original's filename,
                         --   used for fixing up line numbers
             -> FilePath
             -> HaskellSource
             -> IO ()
-writeSource orig f = B.writeFile f . showSource orig
+writeSource orig f = TextIO.writeFile f . showSource orig
 
 
 compileSource :: FilePath -- ^ the original's filename,
@@ -99,5 +106,5 @@ compileFileWithArgs args f = do
     case (exitCode, out ++ err) of
       (ExitSuccess, [])  -> return ()
       (ExitSuccess, msg) -> multilineWarn msg
-      (_          , [])  -> fail $ printf "could not compile %s" (show f)
+      (_          , [])  -> fail $ "could not compile " ++ (show f)
       (_          , msg) -> multilineFail msg

@@ -1,11 +1,13 @@
-{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards #-}
+{-# LANGUAGE PackageImports, RecordWildCards #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
 import "mtl" Control.Monad.Trans
-import qualified Data.ByteString.Char8 as B
-import Data.List
-import Language.Haskell.Exts
+import Data.List (findIndex)
+import qualified Data.Text.Lazy as T
+import Language.Haskell.Exts (ImportDecl(..), Module(..), ModuleName(..), ModulePragma(..),
+                              ParseResult(..), SrcLoc(..),
+                              parseFile, prettyPrint)
 import Text.Printf
 
 import Control.Monad.Trans.Uncertain
@@ -21,7 +23,7 @@ locatedExtensions = fmap go . located
     go = concatMap extNames
     
     extNames :: ModulePragma -> [ExtensionName]
-    extNames (LanguagePragma _ exts) = map prettyPrint exts
+    extNames (LanguagePragma _ exts) = map (T.pack . prettyPrint) exts
     extNames (OptionsPragma _ _ _) = []  -- TODO: accept "-XExtName"
     extNames _ = []
 
@@ -34,20 +36,22 @@ locatedImports = fmap go . located
     qualify :: ImportDecl -> QualifiedModule
     qualify decl = (fullName decl, qualifiedName decl)
     
-    fullName :: ImportDecl -> String
-    fullName = prettyPrint . importModule
+    fullName :: ImportDecl -> T.Text
+    fullName = T.pack . prettyPrint . importModule
     
-    qualifiedName :: ImportDecl -> Maybe String
-    qualifiedName = fmap prettyPrint . importAs
+    qualifiedName :: ImportDecl -> Maybe T.Text
+    qualifiedName = fmap (T.pack . prettyPrint) . importAs
 
-locatedModule :: SrcLoc -> HaskellSource -> ModuleName -> Located (Maybe String)
+locatedModule :: SrcLoc -> HaskellSource -> ModuleName -> Located (Maybe T.Text)
 locatedModule srcLoc source (ModuleName mName) = case moduleLine of
     Nothing -> return Nothing
-    Just line -> located (srcLoc {srcLine = line}) >> return (Just mName)
+    Just line -> located (srcLoc {srcLine = line}) >> return (Just . T.pack $ mName)
   where
-    isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
-    isModuleDecl (Right xs) = "module " `isPrefixOf` xs
-    
+    isModuleDecl (Left xs) = isModuleDecl' xs
+    isModuleDecl (Right xs) = isModuleDecl' xs
+
+    isModuleDecl' = T.isPrefixOf (T.pack "module ")
+
     moduleLine :: Maybe Int
     moduleLine = fmap index2line $ findIndex isModuleDecl source
 
@@ -59,11 +63,12 @@ index2line = (+ 1)
 
 
 -- | A variant of `splitAt` which makes it easy to make `snd` empty.
--- 
--- >>> maybeSplitAt Nothing "abc"
+--
+-- >>> -- be explicit about String type for clarity
+-- >>> maybeSplitAt Nothing ("abc" :: String)
 -- ("abc","")
 -- 
--- >>> maybeSplitAt (Just 0) "abc"
+-- >>> maybeSplitAt (Just 0) ("abc" :: String)
 -- ("","abc")
 maybeSplitAt :: Maybe Int -> [a] -> ([a], [a])
 maybeSplitAt Nothing  ys = (ys, [])
@@ -72,31 +77,31 @@ maybeSplitAt (Just i) ys = splitAt i ys
 -- | Given n ordered indices before which to split, split the list into n+1 pieces.
 --   Omitted indices will produce empty pieces.
 -- 
--- >>> multiSplit [] "foo"
+-- >>> multiSplit [] ("foo" :: String)
 -- ["foo"]
 -- 
--- >>> multiSplit [Just 0, Just 1, Just 2] "foo"
+-- >>> multiSplit [Just 0, Just 1, Just 2] ("foo" :: String)
 -- ["","f","o","o"]
 -- 
--- >>> multiSplit [Just 0, Just 1, Nothing] "foo"
+-- >>> multiSplit [Just 0, Just 1, Nothing] ("foo" :: String)
 -- ["","f","oo",""]
 -- 
--- >>> multiSplit [Just 0, Nothing, Just 2] "foo"
+-- >>> multiSplit [Just 0, Nothing, Just 2] ("foo" :: String)
 -- ["","fo","","o"]
 -- 
--- >>> multiSplit [Just 0, Nothing, Nothing] "foo"
+-- >>> multiSplit [Just 0, Nothing, Nothing] ("foo" :: String)
 -- ["","foo","",""]
 -- 
--- >>> multiSplit [Nothing, Just 1, Just 2] "foo"
+-- >>> multiSplit [Nothing, Just 1, Just 2] ("foo" :: String)
 -- ["f","","o","o"]
 -- 
--- >>> multiSplit [Nothing, Just 1, Nothing] "foo"
+-- >>> multiSplit [Nothing, Just 1, Nothing] ("foo" :: String)
 -- ["f","","oo",""]
 -- 
--- >>> multiSplit [Nothing, Nothing, Just 2] "foo"
+-- >>> multiSplit [Nothing, Nothing, Just 2] ("foo" :: String)
 -- ["fo","","","o"]
 -- 
--- >>> multiSplit [Nothing, Nothing, Nothing] "foo"
+-- >>> multiSplit [Nothing, Nothing, Nothing] ("foo" :: String)
 -- ["foo","","",""]
 multiSplit :: [Maybe Int] -> [a] -> [[a]]
 multiSplit []           xs = [xs]

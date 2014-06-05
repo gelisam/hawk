@@ -3,7 +3,7 @@ module System.Console.Hawk.UserPrelude where
 
 import Control.Applicative
 import Control.Monad.Trans.Class
-import Data.ByteString as B
+import qualified Data.Text.Lazy.IO as TextIO
 import Text.Printf
 
 import Control.Monad.Trans.Uncertain
@@ -19,7 +19,7 @@ testC :: FilePath -> IO ()
 testC f = do
     let orig = printf "tests/preludes/%s/prelude.hs" f
     m <- runUncertainIO $ readModule orig
-    B.putStr $ showModule orig (canonicalizeUserPrelude m)
+    TextIO.putStr $ showModule orig (canonicalizeUserPrelude m)
 
 -- |
 -- >>> testC "default"
@@ -27,8 +27,8 @@ testC f = do
 -- module System.Console.Hawk.CachedPrelude where
 -- {-# LINE 2 "tests/preludes/default/prelude.hs" #-}
 -- import Prelude
--- import qualified Data.ByteString.Lazy.Char8 as B
 -- import qualified Data.List as L
+-- import qualified Data.Text.Lazy as T
 -- 
 -- >>> testC "moduleName"
 -- module MyPrelude where

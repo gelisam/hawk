@@ -46,7 +46,6 @@ Executable hawk
     Default-Language: Haskell98
     ghc-options:    -Wall
     build-depends:  base >=4.6.0.1 && <5
-                  , bytestring
                   , containers
                   , directory
                   , easy-file
@@ -58,8 +57,9 @@ Executable hawk
                   , MonadCatchIO-mtl >=0.2.0.0
                   , mtl >=2.1.2
                   , network >=2.3.1.0
-                  , stringsearch >=0.3.6.4
                   , process
+                  , text
+                  , text-format
                   , time
                   , transformers >=0.3.0.0
     hs-source-dirs: src
@@ -72,9 +72,8 @@ Library
     ghc-options:    -Wall
     hs-source-dirs: runtime
     build-depends: base >=4.6.0.1
-                 , bytestring
                  , containers
-                 , stringsearch >=0.3.6.4
+                 , text
     Default-Language: Haskell98
 
 Test-suite reference
@@ -83,7 +82,6 @@ Test-suite reference
   Type:                 exitcode-stdio-1.0
   Ghc-Options:          -Wall
   Build-Depends:        base >=4.6.0.1 && <5
-                      , bytestring
                       , containers
                       , directory
                       , doctest >=0.3.0
@@ -91,6 +89,8 @@ Test-suite reference
                       , test-framework >=0.1
                       , test-framework-hunit >=0.2.0
                       , temporary >=1.0
+                      , text
+                      , text-format
                       , haskell-awk
                       , hspec >=0.2.0
                       , HUnit >=1.1
@@ -101,7 +101,6 @@ Test-suite reference
                       , mtl >=2.1.2
                       , network >=2.3.1.0
                       , process
-                      , stringsearch >=0.3.6.4
                       , time
                       , transformers >=0.3.0.0
   Default-Language: Haskell98
