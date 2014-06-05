@@ -22,10 +22,10 @@ module System.Console.Hawk
 
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Format as TF
-import qualified Data.Text.Lazy.IO as TextIO
+-- import qualified Data.Text.Lazy.IO as TextIO
 import Language.Haskell.Interpreter (as, interpret)
 
-import Control.Monad.Trans (lift, liftIO)
+-- import Control.Monad.Trans (lift, liftIO)
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec

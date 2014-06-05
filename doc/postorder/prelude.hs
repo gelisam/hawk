@@ -3,7 +3,7 @@
 import           Prelude
 import qualified Data.List as L
 import qualified Data.Text.Lazy as T
-import           Data.Text.Format
+import           Text.Printf
 
 postorder :: (T.Text -> [a] -> a) -> [T.Text] -> [a]
 postorder call [] = []

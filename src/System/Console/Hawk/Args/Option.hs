@@ -6,6 +6,11 @@ import qualified Data.Text.Lazy as T
 
 import Control.Monad.Trans.OptionParser
 
+-- $setup
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
 
 data HawkOption
     = Apply

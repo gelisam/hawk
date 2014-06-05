@@ -16,7 +16,8 @@ import Data.HaskellModule.Parse
 -- ===
 -- "import Prelude"
 -- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.List",Just "L")]
+-- "import qualified Data.Text.Lazy as T"
+-- [("Prelude",Nothing),("Data.List",Just "L"),("Data.Text.Lazy",Just "T")]
 -- ===
 -- 
 -- >>> testM "tests/preludes/readme/prelude.hs"
@@ -27,7 +28,8 @@ import Data.HaskellModule.Parse
 -- ===
 -- "import Prelude"
 -- "import qualified Data.List as L"
--- [("Prelude",Nothing),("Data.List",Just "L")]
+-- "import qualified Data.Text.Lazy as T"
+-- [("Prelude",Nothing),("Data.List",Just "L"),("Data.Text.Lazy",Just "T")]
 -- ===
 -- "takeLast n = reverse . take n . reverse"
 -- 
@@ -64,4 +66,4 @@ testM f = do
     putStrLn "==="
     putSource (codeSource m)
   where
-    putSource = mapM_ (print . either id T.pack)
+    putSource = mapM_ (print . either id id)
