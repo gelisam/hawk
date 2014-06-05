@@ -8,6 +8,7 @@ module System.Console.Hawk.Context.Base
 
 import "mtl" Control.Monad.Trans
 import Data.Maybe
+import qualified Data.Text.Lazy as T
 import System.Directory
 import System.IO
 
@@ -23,7 +24,7 @@ import System.Console.Hawk.Version
 
 data Context = Context
   { contextPaths :: ContextPaths
-  , moduleName :: String
+  , moduleName :: T.Text
   , extensions :: [M.ExtensionName]
   , modules :: [M.QualifiedModule]
   } deriving (Eq, Read, Show)
@@ -61,7 +62,7 @@ newContext paths = do
     
     return $ Context
            { contextPaths = paths
-           , moduleName = fromJust (M.moduleName userPrelude)
+           , moduleName = fromJust $ M.moduleName userPrelude
            , extensions = M.languageExtensions userPrelude
            , modules = M.importedModules userPrelude
            }

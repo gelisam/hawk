@@ -115,10 +115,10 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 6 5 4
 -- 9 8 7
 -- 
--- >>> testDoc "postorder" ["-ad"] "postorder (\\x -> printf \"(%s)\" . L.intercalate \" \" . (unpack x:))" "example.in"
+-- >>> testDoc "postorder" ["-ad"] "postorder (\\x -> printf \"(%s)\" . L.intercalate \" \" . (T.unpack x:))" "example.in"
 -- (foo (bar1) (bar2 (baz)) (bar3))
 -- 
--- >>> test ["-ad"] "sum . L.map (read . B.unpack)" "1-3"
+-- >>> test ["-ad"] "sum . L.map (read . T.unpack)" "1-3"
 -- 6
 -- 
 -- >>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
@@ -139,7 +139,7 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-a"] "show" "1-9"
 -- [["1","2","3"],["4","5","6"],["7","8","9"]]
 -- 
--- >>> test ["-a"] "id :: [[B.ByteString]] -> [[B.ByteString]]" "1-9"
+-- >>> test ["-a"] "id :: [[T.Text]] -> [[T.Text]]" "1-9"
 -- 1 2 3
 -- 4 5 6
 -- 7 8 9
@@ -157,13 +157,13 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-D + ", "-d*", "-a"] "L.transpose" "equation"
 -- x1*x2 + y1*y2 + z1*z2
 -- 
--- >>> test ["-d", "-a"] "show :: [B.ByteString] -> String" "1-3"
+-- >>> test ["-d", "-a"] "show :: [T.Text] -> String" "1-3"
 -- ["1","2","3"]
 -- 
--- >>> test ["-d", "-D", "-a"] "show :: B.ByteString -> String" "1-3"
+-- >>> test ["-d", "-D", "-a"] "show :: T.Text -> String" "1-3"
 -- "1\n2\n3\n"
 -- 
--- >>> testEval [] "[[B.pack \"1\",B.pack \"2\"], [B.pack \"3\",B.pack \"4\"]]"
+-- >>> testEval [] "[[T.pack \"1\",T.pack \"2\"], [T.pack \"3\",T.pack \"4\"]]"
 -- 1 2
 -- 3 4
 -- 

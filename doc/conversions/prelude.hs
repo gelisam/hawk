@@ -1,17 +1,17 @@
-import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.Text as T
 import qualified Data.List as L
 
-to :: (Read a) => B.ByteString -> a
-to = read . B.unpack
+to :: (Read a) => T.Text -> a
+to = read . T.unpack
 
-toBool :: B.ByteString -> Bool
+toBool :: T.Text -> Bool
 toBool = to
 
-toInt :: B.ByteString -> Int
+toInt :: T.Text -> Int
 toInt = to
 
-toFloat :: B.ByteString -> Float
+toFloat :: T.Text -> Float
 toFloat = to
 
-toDouble :: B.ByteString -> Double
+toDouble :: T.Text -> Double
 toDouble = to

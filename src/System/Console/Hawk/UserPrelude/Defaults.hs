@@ -1,7 +1,9 @@
+{-# Language OverloadedStrings #-}
 -- | The user prelude you get if the user doesn't have a prelude.
 module System.Console.Hawk.UserPrelude.Defaults where
 
 import Control.Arrow ((&&&))
+import qualified Data.Text.Lazy as T
 
 import Data.HaskellModule
 
@@ -19,18 +21,16 @@ defaultModules =
       , "System.Console.Hawk.Representable"
       , "System.Console.Hawk.Runtime"
       , "System.IO.Unsafe"
-      , "Data.ByteString.Lazy.Char8"
       ]
   where
     fullyQualified = (id &&& Just)
 
-defaultPrelude :: String
-defaultPrelude = unlines
+defaultPrelude :: T.Text
+defaultPrelude = T.unlines
     [ "{-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}"
     , "import Prelude"
-    , "import qualified Data.ByteString.Lazy.Char8 as B"
     , "import qualified Data.List as L"
     ]
 
-defaultModuleName :: String
+defaultModuleName :: T.Text
 defaultModuleName = "System.Console.Hawk.CachedPrelude"

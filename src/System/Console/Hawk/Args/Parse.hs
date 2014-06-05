@@ -4,6 +4,7 @@ module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
 import Data.Char                                 (isSpace)
+import qualified Data.Text.Lazy as T
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser
@@ -15,6 +16,11 @@ import           System.Console.Hawk.Context.Dir
 
 -- $setup
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
+--
+-- The code examples in this module assume the use of GHC's `OverloadedStrings`
+-- extension:
+--
+-- >>> :set -XOverloadedStrings
 
 
 -- | (record separator, field separator)
@@ -76,15 +82,15 @@ inputSpec :: (Functor m, Monad m)
 inputSpec (r, f) = InputSpec <$> source <*> format
   where
     source = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra consumeText
         return $ case r of
           Nothing -> UseStdin
-          Just f  -> InputFile f
+          Just f  -> InputFile (T.unpack f)
     format = return streamFormat
     streamFormat | r == Delimiter "" = RawStream
                  | otherwise         = Records r recordFormat
-    recordFormat | f == Delimiter ""   = RawRecord
-                 | otherwise           = Fields f
+    recordFormat | f == Delimiter "" = RawRecord
+                 | otherwise         = Fields f
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
@@ -153,9 +159,9 @@ exprSpec = ExprSpec <$> contextDir <*> expr
         then liftIO findContextFromCurrDirOrDefault
         else return dir
     expr = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra consumeText
         case r of
-          Just e  -> if all isSpace e
+          Just e  -> if T.all isSpace e
                       then fail "user expression cannot be empty"
                       else return e
           Nothing -> fail "missing user expression"

@@ -6,6 +6,7 @@ module System.Console.Hawk.Interpreter
 
 import Control.Monad
 import Data.List
+import qualified Data.Text.Lazy as T
 import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
@@ -24,21 +25,23 @@ applyContext :: FilePath -- ^ context directory
              -> InterpreterT IO ()
 applyContext contextDir = do
     context <- lift $ runUncertainIO $ Context.getContext contextDir
-    
-    let extensions = map read $ Context.extensions context
+
+    let extensions = map (read . T.unpack) $ Context.extensions context
     let preludeFile = Context.canonicalPreludePath (Context.contextPaths context)
     let preludeModule = Context.moduleName context
     let userModules = Context.modules context
-    
+
     set [languageExtensions := extensions]
-    
+
     -- load the prelude file
     loadModules [preludeFile]
-    
-    -- load the prelude module plus representable etc.
-    setImportsQ $ (preludeModule,Nothing):defaultModules
-                                       ++ userModules
 
+    -- load the prelude module plus representable etc.
+    setImportsQ $ map moduleNamesAsStrings $ ((preludeModule,Nothing):defaultModules) ++ userModules
+
+moduleNamesAsStrings :: (T.Text, Maybe T.Text) -> (ModuleName, Maybe String)
+moduleNamesAsStrings (t, Nothing) = (T.unpack t, Nothing)
+moduleNamesAsStrings (t, Just mt) = (T.unpack t, Just $ T.unpack mt)
 
 errorString :: InterpreterError -> String
 errorString (WontCompile es) = intercalate "\n" (header : map indent es)

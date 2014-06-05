@@ -1,3 +1,4 @@
+{-# Language OverloadedStrings #-}
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +31,12 @@ substSuffix oldSuffix newSuffix xs | oldSuffix `isSuffixOf` xs = prefix ++ newSu
     prefix = take (length xs - length oldSuffix) xs
 substSuffix _ _ xs = xs
 
--- make sure doctest can the source of Hawk and the generated Paths_haskell_awk.hs
-doctest' :: String -> IO ()
+-- make sure doctest can find the source of Hawk and the generated Paths_haskell_awk.hs
+doctest' :: FilePath -> IO ()
 doctest' file = do
     exePath <- dropExtension <$> getExecutablePath
     
-    let srcPath = "src"
+    let srcPath = "src" :: FilePath
     let autogenPath = substSuffix ("reference" </> "reference")
                                   "autogen"
                                   exePath

@@ -1,20 +1,19 @@
 {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
 
 import           Prelude
-import qualified Data.ByteString.Lazy.Char8 as B
-import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.List as L
-import           Text.Printf
+import qualified Data.Text.Lazy as T
+import           Data.Text.Format
 
-postorder :: (ByteString -> [a] -> a) -> [ByteString] -> [a]
+postorder :: (T.Text -> [a] -> a) -> [T.Text] -> [a]
 postorder call [] = []
 postorder call (f:xs) = call f' ys
                       : postorder call xs'
   where
     n = indent f
-    f' = B.drop n f
+    f' = T.drop n f
     ys = postorder call block
-    
-    indent = B.length . B.takeWhile (==' ')
+
+    indent = T.length . T.takeWhile (==' ')
     not_indented x = indent x <= n
     (block, xs') = break not_indented xs

@@ -3,16 +3,16 @@
 module Data.HaskellModule.Base where
 
 import Control.Applicative
-import Text.Printf
+import qualified Data.Text.Lazy as T
 
 import Data.HaskellSource
 
 
 -- | hint has `Interpreter.Extension`, but strings are simpler.
-type ExtensionName = String
+type ExtensionName = T.Text
 
 -- | import [qualified] <module-name> [as <qualified-name>]
-type QualifiedModule = (String, Maybe String)
+type QualifiedModule = (T.Text, Maybe T.Text)
 
 -- | Three key pieces of information about a Haskell Module:
 --   the language extensions it enables,
@@ -20,7 +20,7 @@ type QualifiedModule = (String, Maybe String)
 --   the modules it imports.
 data HaskellModule = HaskellModule
   { languageExtensions :: [ExtensionName]   , pragmaSource :: HaskellSource
-  , moduleName         :: Maybe String      , moduleSource :: HaskellSource
+  , moduleName         :: Maybe T.Text      , moduleSource :: HaskellSource
   , importedModules    :: [QualifiedModule] , importSource :: HaskellSource
                                             , codeSource   :: HaskellSource
   } deriving (Show, Eq)
@@ -38,10 +38,10 @@ addExtension e m = m
   where
     extraExtensions = return
     extraSource = return . return . languagePragma
-    
-    languagePragma = printf "{-# LANGUAGE %s #-}"
 
-addDefaultModuleName :: String -> HaskellModule -> HaskellModule
+    languagePragma p = T.unwords ["{-#", "LANGUAGE", p, "#-}"]
+
+addDefaultModuleName :: T.Text -> HaskellModule -> HaskellModule
 addDefaultModuleName s m = m
     { moduleName   = moduleName m <|> defaultName s
     , moduleSource = extraSource s ++ moduleSource m
@@ -49,8 +49,8 @@ addDefaultModuleName s m = m
   where
     defaultName = return
     extraSource = return . return . moduleDeclaration
-    
-    moduleDeclaration = printf "module %s where"
+
+    moduleDeclaration m' = T.unwords ["module", m', "where"]
 
 addImport :: QualifiedModule -> HaskellModule -> HaskellModule
 addImport qm m = m
@@ -60,8 +60,7 @@ addImport qm m = m
   where
     extraModules = return
     extraSource = return . return . importStatement
-    
-    importStatement (fullName, Nothing) =
-        printf "import %s" fullName
+
+    importStatement (fullName, Nothing) = T.unwords ["import", fullName]
     importStatement (fullName, Just qualifiedName) =
-        printf "import qualified %s as %s" fullName qualifiedName
+        T.unwords ["import", "qualified", fullName, "as", qualifiedName]

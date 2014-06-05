@@ -7,8 +7,8 @@ module System.Console.Hawk.Runtime
 
 import Control.Applicative
 import Control.Exception
-import Data.ByteString.Lazy.Char8 as B
-import Data.ByteString.Lazy.Search as Search
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as TextIO
 import GHC.IO.Exception
 import System.IO
 
@@ -17,29 +17,29 @@ import System.Console.Hawk.Representable
 import System.Console.Hawk.Runtime.Base
 
 
-processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> HawkIO ()
+processTable :: Rows a => HawkRuntime -> ([[T.Text]] -> a) -> HawkIO ()
 processTable runtime f = HawkIO $ do
     xss <- getTable (inputSpec runtime)
     outputRows (outputSpec runtime) (f xss)
 
 
-getTable :: InputSpec -> IO [[B.ByteString]]
+getTable :: InputSpec -> IO [[T.Text]]
 getTable spec = splitIntoTable' <$> getInputString'
   where
     splitIntoTable' = splitIntoTable (inputFormat spec)
     getInputString' = getInputString (inputSource spec)
 
-getInputString :: InputSource -> IO B.ByteString
-getInputString NoInput = return B.empty
-getInputString UseStdin = B.getContents
-getInputString (InputFile f) = B.readFile f
+getInputString :: InputSource -> IO T.Text
+getInputString NoInput = return ""
+getInputString UseStdin = TextIO.getContents
+getInputString (InputFile f) = TextIO.readFile f
 
 -- [[contents]]
 -- or
 -- [[record0], [record1], ...]
 -- or
 -- [[field0, field1, ...], [field0, field1, ...], ...]
-splitIntoTable :: InputFormat -> B.ByteString -> [[B.ByteString]]
+splitIntoTable :: InputFormat -> T.Text -> [[T.Text]]
 splitIntoTable RawStream = return . return
 splitIntoTable (Records sep format) = fmap splitIntoFields' . splitIntoRecords'
   where
@@ -49,38 +49,38 @@ splitIntoTable (Records sep format) = fmap splitIntoFields' . splitIntoRecords'
 -- [record]
 -- or
 -- [field0, field1, ...]
-splitIntoFields :: RecordFormat -> B.ByteString -> [B.ByteString]
+splitIntoFields :: RecordFormat -> T.Text -> [T.Text]
 splitIntoFields RawRecord = return
 splitIntoFields (Fields sep) = splitAtSeparator sep
 
-splitAtSeparator :: Separator -> B.ByteString -> [B.ByteString]
-splitAtSeparator Whitespace = B.words
-splitAtSeparator (Delimiter "\n") = fmap dropWindowsNewline . B.lines
+splitAtSeparator :: Separator -> T.Text -> [T.Text]
+splitAtSeparator Whitespace = T.words
+splitAtSeparator (Delimiter "\n") = fmap dropWindowsNewline . T.lines
   where
-    dropWindowsNewline :: B.ByteString -> B.ByteString
+    dropWindowsNewline :: T.Text -> T.Text
     dropWindowsNewline "" = ""
     dropWindowsNewline s
         | last_char == '\r' = s'
         | otherwise = s
       where
-        last_char = B.last s
-        n = B.length s
-        s' = B.take (n - 1) s
-splitAtSeparator (Delimiter d) = Search.split d
+        last_char = T.last s
+        n = T.length s
+        s' = T.take (n - 1) s
+splitAtSeparator (Delimiter d) = T.splitOn d
 
 
 outputRows :: Rows a => OutputSpec -> a -> IO ()
 outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
-    B.putStr s
+    TextIO.putStr s
     hFlush stdout
   where
-    join' = join (B.fromStrict $ recordDelimiter spec)
-    toRows = repr (B.fromStrict $ fieldDelimiter spec)
-    
-    join :: B.ByteString -> [B.ByteString] -> B.ByteString
-    join "\n" = B.unlines
-    join sep  = B.intercalate sep
+    join' = join (recordDelimiter spec)
+    toRows = repr (fieldDelimiter spec)
+
+    join :: T.Text -> [T.Text] -> T.Text
+    join "\n" = T.unlines
+    join sep  = T.intercalate sep
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
 ignoringBrokenPipe :: IO () -> IO ()

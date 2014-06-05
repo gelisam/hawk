@@ -57,11 +57,12 @@ withPersistentState f default_s sx = do
 -- 
 -- 
 -- If the contents of the file has been corrupted, revert to the default value.
--- 
--- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
+--
+-- >>> let dot = "." :: String
+-- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++ dot) >> get
 -- hello
 -- ".."
--- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
+-- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++ dot) >> get
 -- hello
 -- "..."
 -- 

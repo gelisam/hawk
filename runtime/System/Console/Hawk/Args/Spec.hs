@@ -2,7 +2,7 @@
 -- | The precisely-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Spec where
 
-import Data.ByteString (ByteString)
+import qualified Data.Text.Lazy as T
 
 
 data HawkSpec
@@ -61,7 +61,7 @@ data OutputFormat = OutputFormat
 -- A separator is a strategy for separating a string into substrings.
 -- One such strategy is to split the string on every occurrence of a
 -- particular delimiter.
-type Delimiter = ByteString
+type Delimiter = T.Text
 data Separator = Whitespace | Delimiter Delimiter
   deriving (Show, Eq)
 
@@ -72,7 +72,7 @@ fromSeparator (Delimiter d) = d
 
 data ExprSpec = ExprSpec
     { userContextDirectory :: FilePath
-    , userExpression :: String
+    , userExpression :: T.Text
     }
   deriving (Show, Eq)
 
