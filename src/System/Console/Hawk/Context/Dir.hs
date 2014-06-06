@@ -35,12 +35,8 @@ findContext :: FilePath -> IO (Maybe FilePath)
 findContext startDir =
     foldM (maybe validDirOrNothing (const . return . Just)) Nothing possibleContextDirs
   where
-    (drive, startPath) = splitDrive startDir
-    mkHawkPath relPath = joinDrive drive (relPath </> ".hawk")
-    
-    parentPaths = takeWhile (/= ".") . iterate parentPath
-    
-    possibleContextDirs = map mkHawkPath (parentPaths startPath)
+    mkHawkPath = (</> ".hawk")
+    possibleContextDirs = map mkHawkPath (ancestors startDir)
     
     validDirOrNothing dir = do
       dirExists <- doesDirectoryExist dir
