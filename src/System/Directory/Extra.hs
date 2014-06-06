@@ -6,17 +6,6 @@ import System.Directory
 import System.FilePath
 
 
--- | Only works with relative paths.
--- 
--- >>> parentPath "foo/bar/baz"
--- "foo/bar"
--- >>> parentPath "foo/bar"
--- "foo"
--- >>> parentPath "foo"
--- "."
-parentPath :: FilePath -> FilePath
-parentPath = init . dropFileName
-
 -- | Only works with absolute paths.
 -- 
 -- >>> ancestors "/bin"
