@@ -1,13 +1,24 @@
 -- | For functions which should have been System.Directory
 module System.Directory.Extra where
 
+import Data.List
 import System.Directory
 import System.FilePath
 
 
--- A version of `canonicalizePath` which works even if the file
--- doesn't exist.
-absPath :: FilePath -> IO FilePath
-absPath f = do
-    pwd <- getCurrentDirectory
-    return (pwd </> f)
+-- | Only works with absolute paths.
+-- 
+-- >>> ancestors "/bin"
+-- ["/","/bin"]
+-- 
+-- >>> ancestors "/bin/foo/bar"
+-- ["/","/bin","/bin/foo","/bin/foo/bar"]
+ancestors :: FilePath -> [FilePath]
+ancestors absPath = absPaths
+  where
+    (drive, fullRelPath) = splitDrive absPath 
+    reconstruct relPath = joinDrive drive relPath
+    
+    components = splitDirectories fullRelPath
+    relPaths = map joinPath (inits components)
+    absPaths = map reconstruct relPaths

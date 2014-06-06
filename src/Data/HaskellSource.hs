@@ -6,11 +6,11 @@ module Data.HaskellSource where
 
 import Control.Monad.Trans.Class
 import Data.ByteString.Char8 as B
+import System.Directory
 import System.Exit
 import System.Process
 import Text.Printf
 
-import System.Directory.Extra
 import Control.Monad.Trans.Uncertain
 
 
@@ -93,7 +93,7 @@ compileFile = compileFileWithArgs []
 
 compileFileWithArgs :: [String] -> FilePath -> UncertainT IO ()
 compileFileWithArgs args f = do
-    absFilePath <- lift $ absPath f
+    absFilePath <- lift $ canonicalizePath f
     let args' = absFilePath : "-v0" : args
     (exitCode, out, err) <- lift $ readProcessWithExitCode "ghc" args' ""
     case (exitCode, out ++ err) of

@@ -15,6 +15,7 @@ import System.FilePath
 import Control.Monad.Trans.Uncertain
 import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude.Defaults
+import System.Directory.Extra
 
 
 -- | Create a default context
@@ -34,13 +35,8 @@ findContext :: FilePath -> IO (Maybe FilePath)
 findContext startDir =
     foldM (maybe validDirOrNothing (const . return . Just)) Nothing possibleContextDirs
   where
-    (drive, startPath) = splitDrive startDir
-    mkHawkPath relPath = joinDrive drive (relPath </> ".hawk")
-    
-    parentPath = init . dropFileName
-    parentPaths = takeWhile (/= ".") . iterate parentPath
-    
-    possibleContextDirs = map mkHawkPath (parentPaths startPath)
+    mkHawkPath = (</> ".hawk")
+    possibleContextDirs = map mkHawkPath (ancestors startDir)
     
     validDirOrNothing dir = do
       dirExists <- doesDirectoryExist dir
