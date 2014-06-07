@@ -18,15 +18,15 @@ Issues with no difficulty markers might be off limits, or maybe we simply haven'
 
 If you already wrote the patch, you can simply send it to us by email of via a pull request. If you haven't written it yet, please read on.
 
-## Bugfixes
+### Bugfixes
 
 Please send us a pull request! We like to add tests to prevent regressions, but don't worry about it. Just explain how you encountered the bug in your pull request and we'll take care of the rest.
 
-## New features
+### New features
 
 While you could certainly send a pull request, it's better to begin by opening an issue so we can discuss the feature with you first. Very often, feature requests coincide with features that are already planned, or could easily be implemented in terms of them.
 
-## Planned features
+### Planned features
 
 Instead of implementing one feature at a time, we like to come up with generic systems under which many features arise as user customizations. For example, there are many issues requesting new input formats such as json and yaml. We do plan to support those, but instead of adding `--json` and `--yaml` flags, we want to allow Hawk to support arbitrary input formats via a configuration file explaining how to parse each.
 
