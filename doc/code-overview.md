@@ -77,3 +77,11 @@ To determine which mode and input format to use, we must of course parse the com
 ### UncertainT
 
 In fact, most of the codebase has to worry about error handling, for which we use the [Control.Monad.Trans.Uncertain](https://github.com/gelisam/hawk/blob/master/src/Control/Monad/Trans/Uncertain.hs) monad transformer. It allows any monadic code to display a warning or fail with an error message.
+
+## Future development
+
+In terms of features, we like to give the user the choice about everything, but to pick good defaults. In terms of implementation, we like to implement many small generic libraries, allowing the Hawk-specific code to be as short and declarative as possible. We also write a lot of tests: low-level tests as a form of documentation and high-level tests to prevent regressions.
+
+We currently plan to add more modes and input formats, not by adding more cases to the existing logic, but by implementing a more generic system which would give the users the freedom to define their own modes and their own formats. We also plan to add an extra configuration file, which would allow Hawk's behaviour to be changed more significantly and more permanently than by using command-line arguments for everything.
+
+For more up-to-date plans, see our [list of issues](https://github.com/gelisam/hawk/issues) on GitHub.
