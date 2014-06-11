@@ -2,8 +2,6 @@
 
 Here is a tour of the codebase, as of June 2014.
 
-{:toc}
-
 ## Overall structure
 
 Hawk's codebase is divided into three folders: [`src`](https://github.com/gelisam/hawk/blob/master/src), [`runtime`](https://github.com/gelisam/hawk/blob/master/runtime), and [`tests`](https://github.com/gelisam/hawk/blob/master/tests).
