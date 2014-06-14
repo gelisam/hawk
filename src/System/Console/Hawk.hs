@@ -57,7 +57,7 @@ wrapExpr :: HaskellExpr (a -> b -> c) -> ExprSpec -> ExprSpec
 wrapExpr eTransform e = e'
   where
     eExpr = eUserExpression (userExpression e)
-    eExpr' = eTransform $$ eExpr
+    eExpr' = eTransform `eAp` eExpr
     e' = e { userExpression = code eExpr' }
 
 applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
@@ -74,14 +74,14 @@ applyExpr e i o = do
     hawkRuntime = HawkRuntime i o
     
     eProcessInput :: HaskellExpr (HawkRuntime -> HawkIO ())
-    eProcessInput = eFlip $$ eProcessTable $$ eTableExpr
+    eProcessInput = eFlip `eAp` eProcessTable `eAp` eTableExpr
     
     -- turn the user expr into an expression manipulating [[B.ByteString]]
     eTableExpr :: HaskellExpr ([[B.ByteString]] -> ())
     eTableExpr = go (inputFormat i)
       where
         go RawStream              = eExpr `eComp` eHead `eComp` eHead
-        go (Records _ RawRecord)  = eExpr `eComp` (eMap $$ eHead)
+        go (Records _ RawRecord)  = eExpr `eComp` (eMap `eAp` eHead)
         go (Records _ (Fields _)) = eExpr
     
     -- note that the user expression needs to have a different type under each of

@@ -7,8 +7,8 @@ import Text.Printf
 newtype HaskellExpr a = HaskellExpr { code :: String }
   deriving (Show, Eq)
 
-($$) :: HaskellExpr (a -> b) -> HaskellExpr a -> HaskellExpr b
-HaskellExpr f $$ HaskellExpr x = HaskellExpr $ printf "(%s) (%s)" f x
+eAp :: HaskellExpr (a -> b) -> HaskellExpr a -> HaskellExpr b
+HaskellExpr f `eAp` HaskellExpr x = HaskellExpr $ printf "(%s) (%s)" f x
 
 eLambda :: String -> (HaskellExpr a -> HaskellExpr b) -> HaskellExpr (a -> b)
 eLambda var body = HaskellExpr $ printf "\\%s -> %s" var (code eBody)
@@ -28,6 +28,6 @@ qualified moduleName unqualifiedName = HaskellExpr qualifiedName
 {-# INLINE qualifiedInfix #-}
 qualifiedInfix :: String -> String
                -> HaskellExpr a -> HaskellExpr b -> HaskellExpr c
-qualifiedInfix moduleName unqualifiedName x y = HaskellExpr qualifiedName $$ x $$ y
+qualifiedInfix moduleName unqualifiedName x y = HaskellExpr qualifiedName `eAp` x `eAp` y
   where
     qualifiedName = printf "(%s.%s)" moduleName unqualifiedName
