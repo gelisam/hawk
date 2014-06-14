@@ -25,12 +25,12 @@ import Language.Haskell.Interpreter
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr
 import Data.HaskellExpr.Base
-import Data.HaskellExpr.Runtime
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
+import System.Console.Hawk.Runtime.HaskellExpr
 import System.Console.Hawk.Version
 
 
@@ -56,7 +56,7 @@ processSpec (Map   e i o) = applyExpr (wrapExpr eMap   e) i       o
 wrapExpr :: HaskellExpr (a -> b -> c) -> ExprSpec -> ExprSpec
 wrapExpr eTransform e = e'
   where
-    eExpr = HaskellExpr (userExpression e)
+    eExpr = eUserExpression (userExpression e)
     eExpr' = eTransform $$ eExpr
     e' = e { userExpression = code eExpr' }
 
@@ -87,4 +87,4 @@ applyExpr e i o = do
     -- note that the user expression needs to have a different type under each of
     -- the above modes, so we cannot give it a precise phantom type.
     eExpr :: HaskellExpr (a -> ())
-    eExpr = HaskellExpr (userExpression e)
+    eExpr = eUserExpression (userExpression e)
