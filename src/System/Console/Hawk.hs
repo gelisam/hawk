@@ -48,7 +48,7 @@ processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
 processSpec (Eval  e   o) = applyExpr (wrapExpr eConst e) noInput o
-processSpec (Apply e i o) = applyExpr e                    i       o
+processSpec (Apply e i o) = applyExpr e                   i       o
 processSpec (Map   e i o) = applyExpr (wrapExpr eMap   e) i       o
 
 -- We cannot give `eTransform` a precise phantom type because the type of
