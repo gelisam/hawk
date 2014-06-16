@@ -17,6 +17,7 @@ Extra-Source-Files: README.md
                   , src/Control/Monad/Trans/*.hs
                   , src/Control/Monad/Trans/State/*.hs
                   , src/Data/*.hs
+                  , src/Data/HaskellExpr/*.hs
                   , src/Data/HaskellModule/*.hs
                   , src/Data/Monoid/*.hs
                   , src/Language/Haskell/Exts/*.hs

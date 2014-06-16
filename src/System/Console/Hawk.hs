@@ -20,11 +20,11 @@ module System.Console.Hawk
 
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr
 import Data.HaskellExpr.Base
+import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
@@ -66,11 +66,10 @@ applyExpr e i o = do
     
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
-      interpret' $ code $ eProcessInput
+      interpretExpr eProcessInput
     runHawkIO $ processRuntime hawkRuntime
   where
-    interpret' expr = interpret expr (as :: HawkRuntime -> HawkIO ())
-    
+    hawkRuntime :: HawkRuntime
     hawkRuntime = HawkRuntime i o
     
     eProcessInput :: HaskellExpr (HawkRuntime -> HawkIO ())
