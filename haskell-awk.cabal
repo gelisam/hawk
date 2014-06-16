@@ -29,6 +29,7 @@ Extra-Source-Files: README.md
                   , tests/*.hs
                   , tests/Data/HaskellModule/Parse/*.hs
                   , tests/System/Console/Hawk/*.hs
+                  , tests/System/Console/Hawk/Runtime/*.hs
                   , tests/System/Console/Hawk/Lock/*.hs
                   , tests/System/Console/Hawk/Representable/*.hs
                   , tests/preludes/default/*.hs
