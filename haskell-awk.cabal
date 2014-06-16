@@ -25,12 +25,12 @@ Extra-Source-Files: README.md
                   , src/System/Console/Hawk/*.hs
                   , src/System/Console/Hawk/Args/*.hs
                   , src/System/Console/Hawk/Context/*.hs
+                  , src/System/Console/Hawk/Runtime/*.hs
                   , src/System/Console/Hawk/UserPrelude/*.hs
                   , src/System/Directory/*.hs
                   , tests/*.hs
                   , tests/Data/HaskellModule/Parse/*.hs
                   , tests/System/Console/Hawk/*.hs
-                  , tests/System/Console/Hawk/Runtime/*.hs
                   , tests/System/Console/Hawk/Lock/*.hs
                   , tests/System/Console/Hawk/Representable/*.hs
                   , tests/preludes/default/*.hs
