@@ -66,9 +66,8 @@ be ready to use Hawk:
 ```
 
 To install the development version, clone this repository and use `cabal
-install` or `cabal-dev install` to compile Hawk and its dependencies. Cabal
-installs the binary to `~/.cabal/bin/hawk`, while cabal-dev installs it to
-`./cabal-dev/bin/hawk`. The first run will create a default configuration into
+install` to compile Hawk and its dependencies.
+The first run will create a default configuration file into
 `~/.hawk/prelude.hs` if it doesn't exist.
 
 [![Build Status](https://secure.travis-ci.org/gelisam/hawk.png)](http://travis-ci.org/gelisam/hawk)
