@@ -49,7 +49,6 @@ Executable hawk
                   , bytestring
                   , containers
                   , directory
-                  , easy-file
                   , exceptions >=0.1
                   , filepath
                   , haskell-awk
