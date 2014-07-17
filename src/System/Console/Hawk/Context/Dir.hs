@@ -9,7 +9,6 @@ module System.Console.Hawk.Context.Dir
 import Control.Monad
 import "mtl" Control.Monad.Trans
 import System.Directory
-import System.EasyFile (readable)
 import System.FilePath
 
 import Control.Monad.Trans.Uncertain
@@ -50,7 +49,7 @@ findContext startDir =
                Nothing -> return Nothing
                Just f -> do
                  preludePermissions <- getPermissions f
-                 if System.EasyFile.readable preludePermissions
+                 if readable preludePermissions
                    then return $ Just dir
                    else return Nothing
            else return Nothing
