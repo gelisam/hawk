@@ -137,7 +137,7 @@ to print the input in an unambiguous way:
 [["1","2","3"],["4","5","6"],["7","8","9"]]
 ```
 
-One slightly-confusing detail is that this `"1"` is a `ByteString`, not a regular `String`.
+One slightly-confusing detail is that this "1" is a ByteString, not a regular String.
 This allows your text transformations to run faster, at the cost of a bit of inconvenience
 when you need to parse a numeric field, as explained above.
 
@@ -188,7 +188,7 @@ need records to be separated into fields, you can use an empty `--field-delimite
 ["1","2","3"]
 ```
 
-Finally, disabling records gives you direct access to the input `ByteString`. This allows you to manually parse the input from any format, including binary formats such as images.
+Finally, disabling records gives you direct access to the input ByteString. This allows you to manually parse the input from any format, including binary formats such as images.
 
 ```bash
 > seq 3 | hawk -D -a 'show :: B.ByteString -> String'
