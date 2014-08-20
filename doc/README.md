@@ -126,17 +126,21 @@ In a future version of Hawk, type inference will be used to infer the appropriat
 ## Input Formats
 
 By default, Hawk reads and writes text in a tabular format typical of the
-command-line: each line is seen as whitespace-separated columns. The record
-separator is the newline character. To better understand how Hawk sees the
-input, just call the [show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show) function:
+command-line: each line is a row of whitespace-separated fields.
+
+This table is represented as a list of list of strings, which is what
+the user expression receives in the `--apply` mode. One easy way of
+validating that your input is being parsed the way you expect is to
+[show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show) it:
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'show'
 [["1","2","3"],["4","5","6"],["7","8","9"]]
 ```
 
-So internally Hawk represents the input as a table, that is a list of lists
-of ByteString. The function that the user provides works on that datatype.
+One slightly-confusing detail is that those elements aren't `String`s, they're `ByteString`s.
+This allows your transformations to run faster, at the cost of a bit of inconvenience
+when you need to parse a numeric field.
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[B.ByteString]] -> [[B.ByteString]]'
@@ -145,7 +149,8 @@ of ByteString. The function that the user provides works on that datatype.
 7 8 9
 ```
 
-It is possible to change the `--field-delimiter` for tables using `-d`.
+By default, fields are separated by a sequence of whitespace characters.
+To change the `--field-delimiter`, use the `-d` flag to split on the character of your choice.
 
 ```bash
 > printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'L.transpose'
@@ -161,7 +166,7 @@ It is possible to change the `--field-delimiter` for tables using `-d`.
 3,6,9
 ```
 
-It is also possible to change the `--record-delimiter` using `-D`.
+It is also possible to change the `--record-delimiter` using `-D`. By default, records are separated by newlines. As you can see, delimiters can be longer than a single character.
 
 ```bash
 > printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
@@ -169,14 +174,14 @@ x1*x2 + y1*y2 + z1*z2
 ```
 
 Of course, tables are not the only common command-line format. If you don't
-need records to be separated into fields, simply pass an empty `--field-delimiter`.
+need records to be separated into fields, simply use an empty `--field-delimiter`.
 
 ```bash
 > seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
-Finally, to work directly on the ByteString just pass an empty `--record-delimiter`.
+Finally, to work directly on the ByteString, use an empty `--record-delimiter`.
 
 ```bash
 > seq 3 | hawk -D -a 'show :: B.ByteString -> String'
