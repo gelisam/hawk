@@ -186,12 +186,21 @@ need records to be separated into fields, you can use an empty `--field-delimite
 ["1","2","3"]
 ```
 
-Finally, disabling records gives you direct access to the input ByteString. This allows you to manually parse the input from any format, including binary formats such as images.
+Finally, disabling records gives you direct access to the input ByteString.
 
 ```bash
 > seq 3 | hawk -D -a 'show :: B.ByteString -> String'
 "1\n2\n3\n"
 ```
+
+Starting from a raw ByteString allows you to interpret the input as any format, including binary formats such as images. Hackage has many parsing libraries, supporting many common and less common formats. For example, here we use the [aeson](https://hackage.haskell.org/package/aeson) library to parse some JSON input:
+
+```bash
+> echo '{"code": 200, "message": "OK"}' | hawk -aD 'show . P.parse J.json'
+Done "\n" Object fromList [("message",String "OK"),("code",Number 200.0)]
+```
+
+Another potentially-confusing detail is that we have to use [Data.Attoparsec.ByteString.Lazy.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString-Lazy.html#v:parse), not [Data.Attoparsec.ByteString.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString.html#v:parse), because we the ByteString variant known as lazy ByteStrings. This allows the input to be processed one record at a time.
 
 
 ## Output Formats
