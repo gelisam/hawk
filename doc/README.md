@@ -179,7 +179,7 @@ need records to be separated into fields, simply pass an empty `--field-delimite
 Finally, to work directly on the ByteString just pass an empty `--record-delimiter`.
 
 ```bash
-> seq 3 | hawk -d -D -a 'show :: B.ByteString -> String'
+> seq 3 | hawk -D -a 'show :: B.ByteString -> String'
 "1\n2\n3\n"
 ```
 
