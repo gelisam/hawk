@@ -141,9 +141,8 @@ One slightly-confusing detail is that this "1" is a ByteString, not a regular St
 This allows your text transformations to run faster, at the cost of a bit of inconvenience
 when you need to parse a numeric field, as explained above.
 
-To verify that you and Hawk agree on the type which your user expression can have, we
-recommend using a type annotation, like you would in ghci. As you can see, the input type
-is fixed, but the output type can vary.
+Here, we use a type annotation to demonstrate that input has type `[[B.ByteString]]`.
+As you can see, this input type is fixed, but the output type can vary.
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[B.ByteString]] -> [[B.ByteString]]'
