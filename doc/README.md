@@ -7,7 +7,7 @@
 1
 ```
 
-Hawk is a command-line tool for manipulating text. Like [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), it supports an unbounded number of text transformations, implemented by the user via an expression language. Unlike awk, our expression language is [Haskell](http://www.haskell.org/), whose basics are assumed to be familar to the reader.
+Hawk is a command-line tool for manipulating text. Like [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), we supports an unbounded number of text transformations, implemented by the user via an expression language. Unlike awk, our expression language is [Haskell](http://www.haskell.org/), whose basics are assumed to be familar to the reader.
 
 
 ## Overview: one-liners and beyond
