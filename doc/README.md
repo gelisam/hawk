@@ -125,28 +125,34 @@ In a future version of Hawk, type inference will be used to infer the appropriat
 
 ## Input Formats
 
-By default, Hawk reads and writes text in a tabular format typical of the
-command-line: each line is a row of whitespace-separated fields.
+By default, Hawk reads and writes text in a tabular format, as is typical on the
+command-line. Each line is interpreted as a record containing whitespace-separated fields.
 
-This table is represented as a list of list of strings, which is what
-the user expression receives in the `--apply` mode. One easy way of
-validating that your input is being parsed the way you expect is to
-[show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show) it:
+The user expression receives this table as a list of list of strings. If you want to make
+sure that Hawk is parsing your input the way you expect, we recommend using
+[show](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:show)
+to print the input in an unambiguous way:
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'show'
 [["1","2","3"],["4","5","6"],["7","8","9"]]
 ```
 
-One slightly-confusing detail is that those elements aren't `String`s, they're `ByteString`s.
-This allows your transformations to run faster, at the cost of a bit of inconvenience
-when you need to parse a numeric field.
+One slightly-confusing detail is that this `"1"` is a `ByteString`, not a regular `String`.
+This allows your text transformations to run faster, at the cost of a bit of inconvenience
+when you need to parse a numeric field, as explained above.
+
+To verify that you and Hawk agree on the type which your user expression can have, we
+recommend using a type annotation, like you would in ghci. As you can see, the input type
+is fixed, but the output type can vary.
 
 ```bash
 > printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'id :: [[B.ByteString]] -> [[B.ByteString]]'
 1 2 3
 4 5 6
 7 8 9
+> printf "1 2 3\n4 5 6\n7 8 9\n" | hawk -a 'L.head :: [[B.ByteString]] -> [B.ByteString]'
+1 2 3
 ```
 
 By default, fields are separated by a sequence of whitespace characters.
@@ -166,7 +172,9 @@ To change the `--field-delimiter`, use the `-d` flag to split on the character o
 3,6,9
 ```
 
-It is also possible to change the `--record-delimiter` using `-D`. By default, records are separated by newlines. As you can see, delimiters can be longer than a single character.
+By default, records are separated by newlines.
+To change the `--record-delimiter`, use the `-D` flag.
+As you can see, delimiters can be longer than a single character.
 
 ```bash
 > printf "x1*y1*z1 + x2*y2*z2" | hawk -D' + ' -d'*' -a 'L.transpose'
@@ -174,14 +182,14 @@ x1*x2 + y1*y2 + z1*z2
 ```
 
 Of course, tables are not the only common command-line format. If you don't
-need records to be separated into fields, simply use an empty `--field-delimiter`.
+need records to be separated into fields, you can use an empty `--field-delimiter` to disable fields.
 
 ```bash
 > seq 3 | hawk -d -a 'show :: [B.ByteString] -> String'
 ["1","2","3"]
 ```
 
-Finally, to work directly on the ByteString, use an empty `--record-delimiter`.
+Finally, disabling records gives you direct access to the input `ByteString`. This allows you to manually parse the input from any format, including binary formats such as images.
 
 ```bash
 > seq 3 | hawk -D -a 'show :: B.ByteString -> String'
