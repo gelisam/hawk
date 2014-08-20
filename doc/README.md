@@ -148,17 +148,17 @@ of ByteString. The function that the user provides works on that datatype.
 It is possible to change the `--field-delimiter` for tables using `-d`.
 
 ```bash
-> printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'id'
-1	2	3
-4	5	6
-7	8	9
+> printf "1\t2\t3\n4\t5\t6\n7\t8\t9\n" | hawk -a -d'\t' 'L.transpose'
+1	4	7
+2	5	8
+3	6	9
 ```
 
 ```bash
-> printf "1,2,3\n4,5,6\n7,8,9\n" | hawk -ad, id
-1,2,3
-4,5,6
-7,8,9
+> printf "1,2,3\n4,5,6\n7,8,9\n" | hawk -ad, L.transpose
+1,4,7
+2,5,8
+3,6,9
 ```
 
 It is also possible to change the `--record-delimiter` using `-D`.
