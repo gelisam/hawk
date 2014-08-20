@@ -170,8 +170,7 @@ To change the `--field-delimiter`, use the `-d` flag to split on the character o
 3,6,9
 ```
 
-By default, records are separated by newlines.
-To change the `--record-delimiter`, use the `-D` flag.
+Unsurprisingly, the default delimiter for records is a newline, and you can change this `--record-delimiter` by using the `-D` flag.
 As you can see, delimiters can be longer than a single character.
 
 ```bash
