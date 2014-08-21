@@ -144,15 +144,15 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 4 5 6
 -- 7 8 9
 -- 
--- >>> test ["-a", "-d\\t"] "id" "1-9tabs"
--- 1	2	3
--- 4	5	6
--- 7	8	9
+-- >>> test ["-a", "-d\\t"] "L.transpose" "1-9tabs"
+-- 1	4	7
+-- 2	5	8
+-- 3	6	9
 -- 
--- >>> test ["-ad,"] "id" "1-9commas"
--- 1,2,3
--- 4,5,6
--- 7,8,9
+-- >>> test ["-ad,"] "L.transpose" "1-9commas"
+-- 1,4,7
+-- 2,5,8
+-- 3,6,9
 -- 
 -- >>> test ["-D + ", "-d*", "-a"] "L.transpose" "equation"
 -- x1*x2 + y1*y2 + z1*z2
