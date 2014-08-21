@@ -19,12 +19,14 @@ env:
 # - GHCVER=7.6.1
  - GHCVER=7.6.2
  - GHCVER=7.6.3
- - GHCVER=7.8.1
+# - GHCVER=7.8.1
  - GHCVER=7.8.2
- - HPVER=2013.2.0.0
- - HPVER=2012.4.0.0
-# - HPVER=2012.2.0.0
+ - GHCVER=7.8.3
 # - HPVER=2011.4.0.0
+# - HPVER=2012.2.0.0
+# - HPVER=2012.4.0.0
+- HPVER=2013.2.0.0
+- HPVER=2014.2.0.0
  - GHCVER=head
 
 # Note: the distinction between `before_install` and `install` is not
