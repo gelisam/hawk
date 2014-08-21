@@ -200,7 +200,7 @@ Starting from a raw ByteString allows you to interpret the input as any format, 
 Done "\n" Object fromList [("message",String "OK"),("code",Number 200.0)]
 ```
 
-Another potentially-confusing detail is that we have to use [Data.Attoparsec.ByteString.Lazy.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString-Lazy.html#v:parse), not [Data.Attoparsec.ByteString.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString.html#v:parse), because we the ByteString variant known as lazy ByteStrings. This allows the input to be processed one record at a time.
+Another potentially-confusing detail is that we have to use [Data.Attoparsec.ByteString.Lazy.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString-Lazy.html#v:parse), not [Data.Attoparsec.ByteString.parse](https://hackage.haskell.org/package/attoparsec-0.12.1.0/docs/Data-Attoparsec-ByteString.html#v:parse), because we use the ByteString variant known as lazy ByteStrings. This allows the input to be processed one record at a time.
 
 
 ## Output Formats
