@@ -157,6 +157,9 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- >>> test ["-D + ", "-d*", "-a"] "L.transpose" "equation"
 -- x1*x2 + y1*y2 + z1*z2
 -- 
+-- >>> testDoc "aeson" ["-aD"] "show . P.parse J.json" "json"
+-- Done "\n" Object (fromList [("code",Number 200.0),("message",String "OK")])
+-- 
 -- >>> test ["-d", "-a"] "show :: [B.ByteString] -> String" "1-3"
 -- ["1","2","3"]
 -- 
