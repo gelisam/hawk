@@ -1,6 +1,6 @@
 # Contributing to Hawk
 
-Welcome aboard! If you're in a hurry, don't worry about these guidelines, just send us a pull request or open a [new issue](https://github.com/gelisam/hawk/issues/new) to start a discussion thread with us. Alternatively, if you would prefer to discover the codebase on your own, we have written a document giving [overview of the codebase](doc/code-overview.md).
+Welcome aboard! If you're in a hurry, don't worry about these guidelines, just send us a pull request or open a [new issue](https://github.com/gelisam/hawk/issues/new) to start a discussion thread with us. Alternatively, if you would prefer to discover the codebase on your own, we have written a document giving an [overview of the codebase](doc/code-overview.md).
 
 ## What needs to be done?
 
