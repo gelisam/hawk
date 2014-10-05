@@ -2,6 +2,7 @@
 module System.Console.Hawk.UserPrelude where
 
 import Control.Applicative
+import Control.Monad (when)
 import Control.Monad.Trans.Class
 import Data.ByteString as B
 import Text.Printf
@@ -9,6 +10,7 @@ import Text.Printf
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule
 import System.Console.Hawk.Sandbox
+import System.Console.Hawk.UserPrelude.Defaults
 import System.Console.Hawk.UserPrelude.Extend
 
 
@@ -31,7 +33,7 @@ testC f = do
 -- import qualified Data.List as L
 -- 
 -- >>> testC "moduleName"
--- module MyPrelude where
+-- module System.Console.Hawk.CachedPrelude where
 -- import Prelude
 -- {-# LINE 2 "tests/preludes/moduleName/prelude.hs" #-}
 -- t = take
@@ -39,8 +41,15 @@ canonicalizeUserPrelude :: HaskellModule -> UserPrelude
 canonicalizeUserPrelude = extendModuleName . extendImports
 
 readUserPrelude :: FilePath -> UncertainT IO UserPrelude
-readUserPrelude f = canonicalizeUserPrelude <$> readModule f
-
+readUserPrelude f = do
+  haskellModule <- readModule f
+  warnOnNotDefaultModName (moduleName haskellModule)
+  return $ canonicalizeUserPrelude haskellModule
+  where
+    warnOnNotDefaultModName Nothing     = return ()
+    warnOnNotDefaultModName (Just name) =
+      when (name /= defaultModuleName)
+           (warn $ printf "ignoring user defined module name '%s' and setting module name to '%s'" name defaultModuleName)
 
 compileUserPrelude :: FilePath -- ^ the original's filename,
                                --   used for fixing up line numbers

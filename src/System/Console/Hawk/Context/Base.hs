@@ -56,6 +56,7 @@ getContext contextDir = do
 newContext :: ContextPaths -> UncertainT IO Context
 newContext paths = do
     userPrelude <- readUserPrelude originalFile
+    liftIO $ print userPrelude
     lift $ createDirectoryIfMissing True cacheDir
     compileUserPrelude originalFile canonicalFile userPrelude
     

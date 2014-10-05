@@ -13,11 +13,7 @@ import System.Console.Hawk.UserPrelude.Defaults
 
 -- | We cannot import a module unless it has a name.
 extendModuleName :: HaskellModule -> HaskellModule
-extendModuleName = until hasModuleName
-                       $ addDefaultModuleName defaultModuleName
-  where
-    hasModuleName = isJust . moduleName
-
+extendModuleName = setDefaultModuleName defaultModuleName
 
 moduleNames :: HaskellModule -> [String]
 moduleNames = map fst . importedModules

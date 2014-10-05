@@ -41,9 +41,9 @@ addExtension e m = m
     
     languagePragma = printf "{-# LANGUAGE %s #-}"
 
-addDefaultModuleName :: String -> HaskellModule -> HaskellModule
-addDefaultModuleName s m = m
-    { moduleName   = moduleName m <|> defaultName s
+setDefaultModuleName :: String -> HaskellModule -> HaskellModule
+setDefaultModuleName s m = m
+    { moduleName   = defaultName s
     , moduleSource = extraSource s ++ moduleSource m
     }
   where
