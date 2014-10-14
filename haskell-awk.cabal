@@ -52,7 +52,7 @@ Executable hawk
                   , exceptions >=0.1
                   , filepath
                   , haskell-awk
-                  , haskell-src-exts >=1.14.0
+                  , haskell-src-exts >=1.16.0
                   , hint >=0.3.3.5
                   , MonadCatchIO-mtl >=0.2.0.0
                   , mtl >=2.1.2
