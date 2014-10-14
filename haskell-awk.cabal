@@ -53,7 +53,7 @@ Executable hawk
                   , exceptions >=0.1
                   , filepath
                   , haskell-awk
-                  , haskell-src-exts >=1.14.0
+                  , haskell-src-exts >=1.16.0
                   , hint >=0.3.3.5
                   , mtl >=2.1.2
                   , network >=2.3.1.0
