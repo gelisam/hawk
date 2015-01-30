@@ -8,9 +8,6 @@ import Language.Haskell.Interpreter
 import Data.HaskellExpr
 
 
-interpretExpr :: (Typeable a, MonadInterpreter m)
+interpretExpr :: forall m a. (MonadInterpreter m, Typeable a)
               => HaskellExpr a -> m a
-interpretExpr eExpr = interpret (code eExpr) proxy
-  where
-    proxy :: a
-    proxy = undefined
+interpretExpr eExpr = interpret (code eExpr) (as :: a)
