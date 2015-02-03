@@ -47,22 +47,18 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = applyExpr (wrapExpr eConst e) noInput o
-processSpec (Apply e i o) = applyExpr e                   i       o
-processSpec (Map   e i o) = applyExpr (wrapExpr eMap   e) i       o
+processSpec (Eval  e   o) = applyExpr (contextSpec e) noInput o (wrapExpr eConst (userExpression e))
+processSpec (Apply e i o) = applyExpr (contextSpec e) i       o                  (userExpression e)
+processSpec (Map   e i o) = applyExpr (contextSpec e) i       o (wrapExpr eMap   (userExpression e))
 
 -- We cannot give `eTransform` a precise phantom type because the type of
 -- the user expression is still unknown.
-wrapExpr :: HaskellExpr (a -> b -> c) -> ExprSpec -> ExprSpec
-wrapExpr eTransform e = e'
-  where
-    eExpr = eUserExpression (userExpression e)
-    eExpr' = eTransform `eAp` eExpr
-    e' = e { userExpression = code eExpr' }
+wrapExpr :: HaskellExpr (a -> b -> c) -> String -> String
+wrapExpr eTransform s = code (eTransform `eAp` eUserExpression s)
 
-applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
-applyExpr e i o = do
-    let contextDir = userContextDirectory e
+applyExpr :: ContextSpec -> InputSpec -> OutputSpec -> String -> IO ()
+applyExpr c i o e = do
+    let contextDir = userContextDirectory c
     
     processRuntime <- runUncertainIO $ runHawkInterpreter $ do
       applyContext contextDir
@@ -86,4 +82,4 @@ applyExpr e i o = do
     -- note that the user expression needs to have a different type under each of
     -- the above modes, so we cannot give it a precise phantom type.
     eExpr :: HaskellExpr (a -> ())
-    eExpr = eUserExpression (userExpression e)
+    eExpr = eUserExpression e

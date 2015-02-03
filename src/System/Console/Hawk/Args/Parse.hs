@@ -128,7 +128,7 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
 --                       ; lift $ print $ userExpression e
---                       ; lift $ print $ userContextDirectory e
+--                       ; lift $ print $ userContextDirectory (contextSpec e)
 --                       }
 -- :}
 -- 
@@ -145,7 +145,8 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- "somedir"
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> contextDir <*> expr
+exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
+                    <*> expr
   where
     contextDir = do
       dir <- consumeLast Option.ContextDirectory "" consumeString

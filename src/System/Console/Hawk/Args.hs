@@ -6,7 +6,7 @@ module System.Console.Hawk.Args
   , InputFormat(..), RecordFormat(..)
   , OutputFormat(..)
   , Separator(..), Delimiter
-  , ExprSpec(..)
+  , ContextSpec(..), ExprSpec(..)
   , parseArgs
   ) where
 
