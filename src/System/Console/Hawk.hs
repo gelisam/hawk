@@ -29,6 +29,7 @@ import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
+import System.Console.Hawk.Runtime
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Runtime.HaskellExpr
 import System.Console.Hawk.Version
@@ -72,12 +73,12 @@ applyExpr c i o e = do
     eProcessInput = eFlip `eAp` eProcessTable `eAp` eTableExpr
     
     -- turn the user expr into an expression manipulating [[B.ByteString]]
-    eTableExpr :: HaskellExpr ([[B.ByteString]] -> ())
+    eTableExpr :: HaskellExpr ([[B.ByteString]] -> SomeRows)
     eTableExpr = go (inputFormat i)
       where
-        go RawStream              = eExpr `eComp` eHead `eComp` eHead
-        go (Records _ RawRecord)  = eExpr `eComp` (eMap `eAp` eHead)
-        go (Records _ (Fields _)) = eExpr
+        go RawStream              = eSomeRows `eComp` eExpr `eComp` eHead `eComp` eHead
+        go (Records _ RawRecord)  = eSomeRows `eComp` eExpr `eComp` (eMap `eAp` eHead)
+        go (Records _ (Fields _)) = eSomeRows `eComp` eExpr
     
     -- note that the user expression needs to have a different type under each of
     -- the above modes, so we cannot give it a precise phantom type.
