@@ -28,8 +28,8 @@ import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.UserExpr.CanonicalExpr
+import System.Console.Hawk.UserExpr.InputReadyExpr
 import System.Console.Hawk.UserExpr.OriginalExpr
-import System.Console.Hawk.UserExpr.ProcessedExpr
 import System.Console.Hawk.Version
 
 
@@ -55,21 +55,21 @@ userExpr = originalUserExpr . untypedUserExpr
 
 
 processEvalSpec :: ContextSpec -> OutputSpec -> OriginalUserExpr -> IO ()
-processEvalSpec c o = runUncertainIO . processProcessedExpr c noInput o . constExpr
+processEvalSpec c o = runUncertainIO . processInputReadyExpr c noInput o . constExpr
 
 processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
-processApplySpec c i o = runUncertainIO . processProcessedExpr c i o . applyExpr
+processApplySpec c i o = runUncertainIO . processInputReadyExpr c i o . applyExpr
 
 processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
-processMapSpec c i o = runUncertainIO . processProcessedExpr c i o . mapExpr
+processMapSpec c i o = runUncertainIO . processInputReadyExpr c i o . mapExpr
 
 
-processProcessedExpr :: ContextSpec
-                     -> InputSpec
-                     -> OutputSpec
-                     -> ProcessedUserExpr
-                     -> UncertainT IO ()
-processProcessedExpr c i o e = case canonicalizeExpr i e of
+processInputReadyExpr :: ContextSpec
+                      -> InputSpec
+                      -> OutputSpec
+                      -> InputReadyExpr
+                      -> UncertainT IO ()
+processInputReadyExpr c i o e = case canonicalizeExpr i e of
     Just e' -> processCanonicalExpr c i o e'
     Nothing -> fail "conflicting flags"
 

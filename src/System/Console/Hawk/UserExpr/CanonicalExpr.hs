@@ -10,8 +10,8 @@ import System.Console.Hawk.Args
 import System.Console.Hawk.Runtime
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Runtime.HaskellExpr
+import System.Console.Hawk.UserExpr.InputReadyExpr
 import System.Console.Hawk.UserExpr.OriginalExpr
-import System.Console.Hawk.UserExpr.ProcessedExpr
 
 
 -- | Regardless of the requested input format, we currently convert all user expressions
@@ -23,7 +23,7 @@ type CanonicalUserExpr = HaskellExpr ([[B.ByteString]] -> SomeRows)
 
 -- | Could fail if the required case of the user expression is `Nothing`, meaning that the
 --   other flags were not compatible with the requested input format.
-canonicalizeExpr :: InputSpec -> ProcessedUserExpr -> Maybe CanonicalUserExpr
+canonicalizeExpr :: InputSpec -> InputReadyExpr -> Maybe CanonicalUserExpr
 canonicalizeExpr i (UserExpr _ e1 e2 e3) = case inputFormat i of
   RawStream            -> (`eComp` (eHead `eComp` eHead)) <$> e1
   Records _ RawRecord  -> (`eComp` (eMap `eAp` eHead)) <$> e2
