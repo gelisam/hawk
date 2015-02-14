@@ -19,15 +19,17 @@ module System.Console.Hawk
   ) where
 
 
-import Language.Haskell.Interpreter
-import Text.Printf (printf)
-
+import Control.Monad.Trans
 import Control.Monad.Trans.Uncertain
+import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
+import System.Console.Hawk.UserExpr.CanonicalExpr
+import System.Console.Hawk.UserExpr.InputReadyExpr
+import System.Console.Hawk.UserExpr.OriginalExpr
 import System.Console.Hawk.Version
 
 
@@ -44,59 +46,44 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = applyExpr (wrapExpr "const" e) noInput o
-processSpec (Apply e i o) = applyExpr e                    i       o
-processSpec (Map   e i o) = applyExpr (wrapExpr "map"   e) i       o
+processSpec (Eval  e   o) = processEvalSpec  (contextSpec e)   o (userExpr e)
+processSpec (Apply e i o) = processApplySpec (contextSpec e) i o (userExpr e)
+processSpec (Map   e i o) = processMapSpec   (contextSpec e) i o (userExpr e)
 
-wrapExpr :: String -> ExprSpec -> ExprSpec
-wrapExpr f e = e'
-  where
-    u = userExpression e
-    u' = printf "%s (%s)" (prel f) u
-    e' = e { userExpression = u' }
+userExpr :: ExprSpec -> OriginalExpr
+userExpr = originalExpr . untypedExpr
 
-applyExpr :: ExprSpec -> InputSpec -> OutputSpec -> IO ()
-applyExpr e i o = do
-    let contextDir = userContextDirectory e
-    let expr = userExpression e
-    
-    processRuntime <- runUncertainIO $ runHawkInterpreter $ do
+
+processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> IO ()
+processEvalSpec c o = runUncertainIO . processInputReadyExpr c noInput o . constExpr
+
+processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
+processApplySpec c i o = runUncertainIO . processInputReadyExpr c i o . applyExpr
+
+processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
+processMapSpec c i o = runUncertainIO . processInputReadyExpr c i o . mapExpr
+
+
+processInputReadyExpr :: ContextSpec
+                      -> InputSpec
+                      -> OutputSpec
+                      -> InputReadyExpr
+                      -> UncertainT IO ()
+processInputReadyExpr c i o e = case canonicalizeExpr i e of
+    Just e' -> processCanonicalExpr c i o e'
+    Nothing -> fail "conflicting flags"
+
+processCanonicalExpr :: ContextSpec
+                     -> InputSpec
+                     -> OutputSpec
+                     -> CanonicalExpr
+                     -> UncertainT IO ()
+processCanonicalExpr c i o e = do
+    let contextDir = userContextDirectory c
+    processRuntime <- runHawkInterpreter $ do
       applyContext contextDir
-      interpret' $ processTable' $ tableExpr expr
-    runHawkIO $ processRuntime hawkRuntime
+      interpretExpr (runCanonicalExpr e)
+    lift $ runHawkIO $ processRuntime hawkRuntime
   where
-    interpret' expr = do
-      interpret expr (as :: HawkRuntime -> HawkIO ())
-    
+    hawkRuntime :: HawkRuntime
     hawkRuntime = HawkRuntime i o
-    
-    processTable' :: String -> String
-    processTable' = printf "(%s) (%s) (%s)" (prel "flip")
-                                            (runtime "processTable")
-    
-    -- turn the user expr into an expression manipulating [[B.ByteString]]
-    tableExpr :: String -> String
-    tableExpr = (`compose` fromTable)
-      where
-        fromTable = case inputFormat i of
-            RawStream            -> head' `compose` head'
-            Records _ RawRecord  -> map' head'
-            Records _ (Fields _) -> prel "id"
-    
-    compose :: String -> String -> String
-    compose f g = printf "(%s) %s (%s)" f (prel ".") g
-    
-    head' :: String
-    head' = prel "head"
-    
-    map' :: String -> String
-    map' = printf "(%s) (%s)" (prel "map")
-
--- we cannot use any unqualified symbols in the user expression,
--- because we don't know which modules the user prelude will import.
-qualify :: String -> String -> String
-qualify moduleName = printf "%s.%s" moduleName
-
-prel, runtime :: String -> String
-prel = qualify "Prelude"
-runtime = qualify "System.Console.Hawk.Runtime"

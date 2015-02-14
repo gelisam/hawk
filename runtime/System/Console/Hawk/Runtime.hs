@@ -1,8 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification, OverloadedStrings, RankNTypes #-}
 -- | Applying the user expression as directed by the HawkRuntime.
 --   The API may change at any time.
 module System.Console.Hawk.Runtime
-  ( processTable
+  ( SomeRows(..)
+  , processTable
   ) where
 
 import Control.Applicative
@@ -17,10 +18,13 @@ import System.Console.Hawk.Representable
 import System.Console.Hawk.Runtime.Base
 
 
-processTable :: Rows a => HawkRuntime -> ([[B.ByteString]] -> a) -> HawkIO ()
+data SomeRows = forall a. Rows a => SomeRows a
+
+processTable :: HawkRuntime -> ([[B.ByteString]] -> SomeRows) -> HawkIO ()
 processTable runtime f = HawkIO $ do
     xss <- getTable (inputSpec runtime)
-    outputRows (outputSpec runtime) (f xss)
+    case f xss of
+      SomeRows x -> outputRows (outputSpec runtime) x
 
 
 getTable :: InputSpec -> IO [[B.ByteString]]

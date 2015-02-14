@@ -127,8 +127,8 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- 
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
---                       ; lift $ print $ userExpression e
---                       ; lift $ print $ userContextDirectory e
+--                       ; lift $ print $ untypedExpr e
+--                       ; lift $ print $ userContextDirectory (contextSpec e)
 --                       }
 -- :}
 -- 
@@ -145,7 +145,8 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- "somedir"
 exprSpec :: (Functor m, MonadIO m)
          => OptionParserT HawkOption m ExprSpec
-exprSpec = ExprSpec <$> contextDir <*> expr
+exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
+                    <*> expr
   where
     contextDir = do
       dir <- consumeLast Option.ContextDirectory "" consumeString
@@ -170,9 +171,9 @@ exprSpec = ExprSpec <$> contextDir <*> expr
 --                    ; case spec of
 --                        Help        -> putStrLn "Help"
 --                        Version     -> putStrLn "Version"
---                        Eval  e   o -> putStrLn "Eval"  >> print (userExpression e)                                         >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
---                        Apply e i o -> putStrLn "Apply" >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
---                        Map   e i o -> putStrLn "Map"   >> print (userExpression e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Eval  e   o -> putStrLn "Eval"  >> print (untypedExpr e)                                         >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Apply e i o -> putStrLn "Apply" >> print (untypedExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Map   e i o -> putStrLn "Map"   >> print (untypedExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
 --                    }
 -- :}
 -- 

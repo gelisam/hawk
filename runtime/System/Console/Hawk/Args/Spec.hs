@@ -70,9 +70,16 @@ fromSeparator Whitespace    = " "
 fromSeparator (Delimiter d) = d
 
 
-data ExprSpec = ExprSpec
+newtype ContextSpec = ContextSpec
     { userContextDirectory :: FilePath
-    , userExpression :: String
+    }
+  deriving (Show, Eq)
+
+type UntypedExpr = String
+
+data ExprSpec = ExprSpec
+    { contextSpec :: ContextSpec
+    , untypedExpr :: UntypedExpr
     }
   deriving (Show, Eq)
 

@@ -17,6 +17,7 @@ Extra-Source-Files: README.md
                   , src/Control/Monad/Trans/*.hs
                   , src/Control/Monad/Trans/State/*.hs
                   , src/Data/*.hs
+                  , src/Data/HaskellExpr/*.hs
                   , src/Data/HaskellModule/*.hs
                   , src/Data/Monoid/*.hs
                   , src/Language/Haskell/Exts/*.hs
@@ -24,6 +25,7 @@ Extra-Source-Files: README.md
                   , src/System/Console/Hawk/*.hs
                   , src/System/Console/Hawk/Args/*.hs
                   , src/System/Console/Hawk/Context/*.hs
+                  , src/System/Console/Hawk/Runtime/*.hs
                   , src/System/Console/Hawk/UserPrelude/*.hs
                   , src/System/Directory/*.hs
                   , tests/*.hs
