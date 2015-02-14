@@ -50,17 +50,17 @@ processSpec (Eval  e   o) = processEvalSpec  (contextSpec e)   o (userExpr e)
 processSpec (Apply e i o) = processApplySpec (contextSpec e) i o (userExpr e)
 processSpec (Map   e i o) = processMapSpec   (contextSpec e) i o (userExpr e)
 
-userExpr :: ExprSpec -> OriginalUserExpr
-userExpr = originalUserExpr . untypedUserExpr
+userExpr :: ExprSpec -> OriginalExpr
+userExpr = originalExpr . untypedExpr
 
 
-processEvalSpec :: ContextSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> IO ()
 processEvalSpec c o = runUncertainIO . processInputReadyExpr c noInput o . constExpr
 
-processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
 processApplySpec c i o = runUncertainIO . processInputReadyExpr c i o . applyExpr
 
-processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
 processMapSpec c i o = runUncertainIO . processInputReadyExpr c i o . mapExpr
 
 
@@ -76,7 +76,7 @@ processInputReadyExpr c i o e = case canonicalizeExpr i e of
 processCanonicalExpr :: ContextSpec
                      -> InputSpec
                      -> OutputSpec
-                     -> CanonicalUserExpr
+                     -> CanonicalExpr
                      -> UncertainT IO ()
 processCanonicalExpr c i o e = do
     let contextDir = userContextDirectory c

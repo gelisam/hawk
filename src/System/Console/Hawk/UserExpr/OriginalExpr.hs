@@ -16,10 +16,10 @@ data UserExpr a b c d = UserExpr (Maybe (HaskellExpr a))
 
 -- | To avoid an ambiguous type variable, we instantiate the output type of the
 --   user expression to unit. The code will still work with any instance of Rows.
-type OriginalUserExpr = UserExpr ()
-                                 (B.ByteString -> ())
-                                 ([B.ByteString] -> ())
-                                 ([[B.ByteString]] -> ())
+type OriginalExpr = UserExpr ()
+                             (B.ByteString -> ())
+                             ([B.ByteString] -> ())
+                             ([[B.ByteString]] -> ())
 
 -- | The user expression is expected to have one of the above four types.
 --   For now we just pretend like it has all four types, and as the flags
@@ -28,8 +28,8 @@ type OriginalUserExpr = UserExpr ()
 -- 
 -- If the actual user expression doesn't have the type we use it at, hint
 -- will give a type error, and that's fine.
-originalUserExpr :: String -> OriginalUserExpr
-originalUserExpr s = UserExpr (Just $ HaskellExpr s)
-                              (Just $ HaskellExpr s)
-                              (Just $ HaskellExpr s)
-                              (Just $ HaskellExpr s)
+originalExpr :: String -> OriginalExpr
+originalExpr s = UserExpr (Just $ HaskellExpr s)
+                          (Just $ HaskellExpr s)
+                          (Just $ HaskellExpr s)
+                          (Just $ HaskellExpr s)

@@ -127,7 +127,7 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- 
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
---                       ; lift $ print $ untypedUserExpr e
+--                       ; lift $ print $ untypedExpr e
 --                       ; lift $ print $ userContextDirectory (contextSpec e)
 --                       }
 -- :}
@@ -171,9 +171,9 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 --                    ; case spec of
 --                        Help        -> putStrLn "Help"
 --                        Version     -> putStrLn "Version"
---                        Eval  e   o -> putStrLn "Eval"  >> print (untypedUserExpr e)                                         >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
---                        Apply e i o -> putStrLn "Apply" >> print (untypedUserExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
---                        Map   e i o -> putStrLn "Map"   >> print (untypedUserExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Eval  e   o -> putStrLn "Eval"  >> print (untypedExpr e)                                         >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Apply e i o -> putStrLn "Apply" >> print (untypedExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
+--                        Map   e i o -> putStrLn "Map"   >> print (untypedExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
 --                    }
 -- :}
 -- 
