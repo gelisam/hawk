@@ -75,9 +75,11 @@ newtype ContextSpec = ContextSpec
     }
   deriving (Show, Eq)
 
+type UntypedUserExpression = String
+
 data ExprSpec = ExprSpec
     { contextSpec :: ContextSpec
-    , userExpression :: String
+    , untypedUserExpression :: UntypedUserExpression
     }
   deriving (Show, Eq)
 

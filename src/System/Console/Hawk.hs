@@ -21,6 +21,8 @@ module System.Console.Hawk
 
 import qualified Data.ByteString.Lazy.Char8 as B
 
+import Control.Applicative
+import Control.Monad.Trans
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr
 import Data.HaskellExpr.Base
@@ -48,39 +50,97 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = applyExpr (contextSpec e) noInput o (wrapExpr eConst (userExpression e))
-processSpec (Apply e i o) = applyExpr (contextSpec e) i       o                  (userExpression e)
-processSpec (Map   e i o) = applyExpr (contextSpec e) i       o (wrapExpr eMap   (userExpression e))
+processSpec (Eval  e   o) = runEvalSpec  (contextSpec e)   o (userExpression e)
+processSpec (Apply e i o) = runApplySpec (contextSpec e) i o (userExpression e)
+processSpec (Map   e i o) = runMapSpec   (contextSpec e) i o (userExpression e)
 
--- We cannot give `eTransform` a precise phantom type because the type of
--- the user expression is still unknown.
-wrapExpr :: HaskellExpr (a -> b -> c) -> String -> String
-wrapExpr eTransform s = code (eTransform `eAp` eUserExpression s)
+userExpression :: ExprSpec -> OriginalUserExpression
+userExpression = originalUserExpression . untypedUserExpression
 
-applyExpr :: ContextSpec -> InputSpec -> OutputSpec -> String -> IO ()
-applyExpr c i o e = do
+
+-- | While the original user input may describe a value or a function on a
+--   single record, the processed user expression is always a function on
+--   the entire input. Also, its output is wrapped in `SomeRows`, to make
+--   sure we don't accidentally rely on the fake `()` return type used by
+--   `OriginalUserExpression`.
+type ProcessedUserExpression = UserExpression (() -> SomeRows)
+                                              (B.ByteString -> SomeRows)
+                                              ([B.ByteString] -> SomeRows)
+                                              ([[B.ByteString]] -> SomeRows)
+
+-- | Asserts that the user expression is not a function, and applies `const`
+--   to it in order to make it a function.
+constExpression :: OriginalUserExpression -> ProcessedUserExpression
+constExpression (UserExpression e _ _ _) = UserExpression (eAp eConst . eAp eSomeRows <$> e)
+                                                          (eAp eConst . eAp eSomeRows <$> e)
+                                                          (eAp eConst . eAp eSomeRows <$> e)
+                                                          (eAp eConst . eAp eSomeRows <$> e)
+
+-- | Asserts that the user expression is a function.
+applyExpression :: OriginalUserExpression -> ProcessedUserExpression
+applyExpression (UserExpression _ e1 e2 e3) = UserExpression Nothing
+                                                             (eComp eSomeRows <$> e1)
+                                                             (eComp eSomeRows <$> e2)
+                                                             (eComp eSomeRows <$> e3)
+
+-- | Asserts that the user expression is a function on one record, and applies
+--   `map` to it in order to make it a function on all records.
+mapExpression :: OriginalUserExpression -> ProcessedUserExpression
+mapExpression (UserExpression _ e1 e2 _) = UserExpression Nothing
+                                                          Nothing
+                                                          (eComp eSomeRows . eAp eMap <$> e1)
+                                                          (eComp eSomeRows . eAp eMap <$> e2)
+
+
+-- | Regardless of the requested input format, we currently convert all user expressions
+--   so that they expect a `[[ByteString]]`. The runtime will also look at the input format,
+--   in order to encode it as a `[[ByteString]]` as well. For example, if the input format is
+--   supposed to be a single `ByteString`, the runtime will pack that string `s` into a nested
+--   singleton list `[[s]]`, and the canonical user expression will expect this format.
+type CanonicalUserExpression = HaskellExpr ([[B.ByteString]] -> SomeRows)
+
+-- Could fail if the required case of the user expression is `Nothing`, meaning that the
+-- other flags were not compatible with the requested input format.
+canonicalizeExpression :: InputSpec -> ProcessedUserExpression -> Maybe CanonicalUserExpression
+canonicalizeExpression i (UserExpression _ e1 e2 e3) = case inputFormat i of
+  RawStream            -> (`eComp` (eHead `eComp` eHead)) <$> e1
+  Records _ RawRecord  -> (`eComp` (eMap `eAp` eHead)) <$> e2
+  Records _ (Fields _) -> e3
+
+
+runEvalSpec :: ContextSpec -> OutputSpec -> OriginalUserExpression -> IO ()
+runEvalSpec c o = runUncertainIO . runProcessedExpr c noInput o . constExpression
+
+runApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpression -> IO ()
+runApplySpec c i o = runUncertainIO . runProcessedExpr c i o . applyExpression
+
+runMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpression -> IO ()
+runMapSpec c i o = runUncertainIO . runProcessedExpr c i o . mapExpression
+
+
+runProcessedExpr :: ContextSpec
+                 -> InputSpec
+                 -> OutputSpec
+                 -> ProcessedUserExpression
+                 -> UncertainT IO ()
+runProcessedExpr c i o e = case canonicalizeExpression i e of
+    Just e' -> runCanonicalExpr c i o e'
+    Nothing -> fail "conflicting flags"
+
+runCanonicalExpr :: ContextSpec
+                 -> InputSpec
+                 -> OutputSpec
+                 -> CanonicalUserExpression
+                 -> UncertainT IO ()
+runCanonicalExpr c i o e = do
     let contextDir = userContextDirectory c
-    
-    processRuntime <- runUncertainIO $ runHawkInterpreter $ do
+    processRuntime <- runHawkInterpreter $ do
       applyContext contextDir
-      interpretExpr eProcessInput
-    runHawkIO $ processRuntime hawkRuntime
+      interpretExpr (eApplyCanonicalExpr e)
+    lift $ runHawkIO $ processRuntime hawkRuntime
   where
     hawkRuntime :: HawkRuntime
     hawkRuntime = HawkRuntime i o
     
-    eProcessInput :: HaskellExpr (HawkRuntime -> HawkIO ())
-    eProcessInput = eFlip `eAp` eProcessTable `eAp` eTableExpr
-    
-    -- turn the user expr into an expression manipulating [[B.ByteString]]
-    eTableExpr :: HaskellExpr ([[B.ByteString]] -> SomeRows)
-    eTableExpr = go (inputFormat i)
-      where
-        go RawStream              = eSomeRows `eComp` eExpr `eComp` eHead `eComp` eHead
-        go (Records _ RawRecord)  = eSomeRows `eComp` eExpr `eComp` (eMap `eAp` eHead)
-        go (Records _ (Fields _)) = eSomeRows `eComp` eExpr
-    
-    -- note that the user expression needs to have a different type under each of
-    -- the above modes, so we cannot give it a precise phantom type.
-    eExpr :: HaskellExpr (a -> ())
-    eExpr = eUserExpression e
+    eApplyCanonicalExpr :: CanonicalUserExpression -> HaskellExpr (HawkRuntime -> HawkIO ())
+    eApplyCanonicalExpr eExpr = eFlip `eAp` eProcessTable `eAp` eExpr
