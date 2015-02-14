@@ -1,4 +1,4 @@
-module System.Console.Hawk.UserExpression.CanonicalExpression where
+module System.Console.Hawk.UserExpr.CanonicalExpr where
 
 
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -10,8 +10,8 @@ import System.Console.Hawk.Args
 import System.Console.Hawk.Runtime
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.Runtime.HaskellExpr
-import System.Console.Hawk.UserExpression.OriginalExpression
-import System.Console.Hawk.UserExpression.ProcessedExpression
+import System.Console.Hawk.UserExpr.OriginalExpr
+import System.Console.Hawk.UserExpr.ProcessedExpr
 
 
 -- | Regardless of the requested input format, we currently convert all user expressions
@@ -19,16 +19,16 @@ import System.Console.Hawk.UserExpression.ProcessedExpression
 --   in order to encode it as a `[[ByteString]]` as well. For example, if the input format is
 --   supposed to be a single `ByteString`, the runtime will pack that string `s` into a nested
 --   singleton list `[[s]]`, and the canonical user expression will expect this format.
-type CanonicalUserExpression = HaskellExpr ([[B.ByteString]] -> SomeRows)
+type CanonicalUserExpr = HaskellExpr ([[B.ByteString]] -> SomeRows)
 
 -- | Could fail if the required case of the user expression is `Nothing`, meaning that the
 --   other flags were not compatible with the requested input format.
-canonicalizeExpression :: InputSpec -> ProcessedUserExpression -> Maybe CanonicalUserExpression
-canonicalizeExpression i (UserExpression _ e1 e2 e3) = case inputFormat i of
+canonicalizeExpr :: InputSpec -> ProcessedUserExpr -> Maybe CanonicalUserExpr
+canonicalizeExpr i (UserExpr _ e1 e2 e3) = case inputFormat i of
   RawStream            -> (`eComp` (eHead `eComp` eHead)) <$> e1
   Records _ RawRecord  -> (`eComp` (eMap `eAp` eHead)) <$> e2
   Records _ (Fields _) -> e3
 
 
-runCanonicalExpr :: CanonicalUserExpression -> HaskellExpr (HawkRuntime -> HawkIO ())
+runCanonicalExpr :: CanonicalUserExpr -> HaskellExpr (HawkRuntime -> HawkIO ())
 runCanonicalExpr eExpr = eFlip `eAp` eProcessTable `eAp` eExpr

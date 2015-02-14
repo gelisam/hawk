@@ -27,9 +27,9 @@ import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
-import System.Console.Hawk.UserExpression.CanonicalExpression
-import System.Console.Hawk.UserExpression.OriginalExpression
-import System.Console.Hawk.UserExpression.ProcessedExpression
+import System.Console.Hawk.UserExpr.CanonicalExpr
+import System.Console.Hawk.UserExpr.OriginalExpr
+import System.Console.Hawk.UserExpr.ProcessedExpr
 import System.Console.Hawk.Version
 
 
@@ -46,37 +46,37 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = processEvalSpec  (contextSpec e)   o (userExpression e)
-processSpec (Apply e i o) = processApplySpec (contextSpec e) i o (userExpression e)
-processSpec (Map   e i o) = processMapSpec   (contextSpec e) i o (userExpression e)
+processSpec (Eval  e   o) = processEvalSpec  (contextSpec e)   o (userExpr e)
+processSpec (Apply e i o) = processApplySpec (contextSpec e) i o (userExpr e)
+processSpec (Map   e i o) = processMapSpec   (contextSpec e) i o (userExpr e)
 
-userExpression :: ExprSpec -> OriginalUserExpression
-userExpression = originalUserExpression . untypedUserExpression
+userExpr :: ExprSpec -> OriginalUserExpr
+userExpr = originalUserExpr . untypedUserExpr
 
 
-processEvalSpec :: ContextSpec -> OutputSpec -> OriginalUserExpression -> IO ()
-processEvalSpec c o = runUncertainIO . processProcessedExpr c noInput o . constExpression
+processEvalSpec :: ContextSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processEvalSpec c o = runUncertainIO . processProcessedExpr c noInput o . constExpr
 
-processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpression -> IO ()
-processApplySpec c i o = runUncertainIO . processProcessedExpr c i o . applyExpression
+processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processApplySpec c i o = runUncertainIO . processProcessedExpr c i o . applyExpr
 
-processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpression -> IO ()
-processMapSpec c i o = runUncertainIO . processProcessedExpr c i o . mapExpression
+processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalUserExpr -> IO ()
+processMapSpec c i o = runUncertainIO . processProcessedExpr c i o . mapExpr
 
 
 processProcessedExpr :: ContextSpec
                      -> InputSpec
                      -> OutputSpec
-                     -> ProcessedUserExpression
+                     -> ProcessedUserExpr
                      -> UncertainT IO ()
-processProcessedExpr c i o e = case canonicalizeExpression i e of
+processProcessedExpr c i o e = case canonicalizeExpr i e of
     Just e' -> processCanonicalExpr c i o e'
     Nothing -> fail "conflicting flags"
 
 processCanonicalExpr :: ContextSpec
                      -> InputSpec
                      -> OutputSpec
-                     -> CanonicalUserExpression
+                     -> CanonicalUserExpr
                      -> UncertainT IO ()
 processCanonicalExpr c i o e = do
     let contextDir = userContextDirectory c
