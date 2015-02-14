@@ -10,7 +10,6 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.Functor.Identity
 import System.Directory
-import System.FilePath
 import System.IO
 
 -- $setup

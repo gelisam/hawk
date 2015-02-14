@@ -2,7 +2,6 @@
 module System.Directory.Extra where
 
 import Data.List
-import System.Directory
 import System.FilePath
 
 

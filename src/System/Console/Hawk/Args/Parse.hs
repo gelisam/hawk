@@ -73,7 +73,7 @@ commonSeparators = do
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
           => CommonSeparators -> OptionParserT HawkOption m InputSpec
-inputSpec (r, f) = InputSpec <$> source <*> format
+inputSpec (rSep, fSep) = InputSpec <$> source <*> format
   where
     source = do
         r <- consumeExtra consumeString
@@ -81,10 +81,10 @@ inputSpec (r, f) = InputSpec <$> source <*> format
           Nothing -> UseStdin
           Just f  -> InputFile f
     format = return streamFormat
-    streamFormat | r == Delimiter "" = RawStream
-                 | otherwise         = Records r recordFormat
-    recordFormat | f == Delimiter ""   = RawRecord
-                 | otherwise           = Fields f
+    streamFormat | rSep == Delimiter "" = RawStream
+                 | otherwise            = Records rSep recordFormat
+    recordFormat | fSep == Delimiter "" = RawRecord
+                 | otherwise            = Fields fSep
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
