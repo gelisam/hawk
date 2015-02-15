@@ -104,7 +104,7 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- 
 -- >>> test ["-D;", "-d", "-a", "L.reverse"]
 -- UseStdout
--- (";","")
+-- (";"," ")
 -- 
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
