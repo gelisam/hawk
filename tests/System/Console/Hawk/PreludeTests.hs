@@ -73,6 +73,14 @@ testEval flags expr = test flags expr ""
 -- 23
 -- 33
 -- 
+-- Making sure that we report errors in the user expression, not our wrapper code:
+-- 
+-- >>> testEval [] "[[],"
+-- error: Won't compile:
+-- 	user expression:1:5:
+--     parse error (possibly incorrect indentation or mismatched brackets)
+-- *** Exception: ExitFailure 1
+-- 
 -- Making sure that we don't assume the user prelude exports "map":
 -- 
 -- >>> testPrelude "set" ["-m"] "const $ \"hello\"" "1-3"

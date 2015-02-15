@@ -20,6 +20,9 @@ module System.Console.Hawk
 
 
 import Control.Monad.Trans
+import Data.List
+import Language.Haskell.Interpreter
+
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
@@ -46,22 +49,58 @@ processArgs args = do
 processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = processEvalSpec  (contextSpec e)   o (userExpr e)
-processSpec (Apply e i o) = processApplySpec (contextSpec e) i o (userExpr e)
-processSpec (Map   e i o) = processMapSpec   (contextSpec e) i o (userExpr e)
+processSpec (Eval  e   o) = myRunUncertainIO e $ processEvalSpec  (contextSpec e)   o (userExpr e)
+processSpec (Apply e i o) = myRunUncertainIO e $ processApplySpec (contextSpec e) i o (userExpr e)
+processSpec (Map   e i o) = myRunUncertainIO e $ processMapSpec   (contextSpec e) i o (userExpr e)
+
+-- | A version of `runUncertainIO` which detects poor error messages and improves them.
+myRunUncertainIO :: ExprSpec -> UncertainT IO () -> IO ()
+myRunUncertainIO e = runUncertainIO . clarifyErrors e
+  where
+    clarifyErrors :: ExprSpec -> UncertainT IO () -> UncertainT IO ()
+    clarifyErrors exprSpec body = do
+        r <- lift $ runUncertainT body
+        case r of
+          (Left errorMsg, _) | fromWrapperCode errorMsg -> do
+            -- try again without the wrapper code
+            let contextDir = userContextDirectory (contextSpec exprSpec)
+            runHawkInterpreter $ do
+              applyContext contextDir
+              interpret annotatedExpr
+                        (as :: ())  -- not the right type, but it should
+                                    -- error-out before type-checking anyway.
+            
+            -- Unfortunately, if we messed up and the error really was in the wrapper
+            -- code, the above will tell the user that the problem is that their user
+            -- expression did not have type unit. In the unlikely case that it did
+            -- have type unit, tell them that we messed up.
+            warn "this should not happen."
+            warn "please report this to https://github.com/gelisam/hawk/issues/new"
+          _ -> return ()
+        
+        -- we didn't succeed at replacing the error (of we would have aborted by now).
+        -- rethrow the original errors and warnings.
+        uncertainT r
+      where
+        annotatedExpr = "{-# LINE 1 \"user expression\" #-}\n" ++ untypedExpr exprSpec
+    
+    fromWrapperCode :: String -> Bool
+    fromWrapperCode msg = "\twrapper code:" `isPrefixOf` firstLine
+      where
+        firstLine = (lines msg ++ ["",""]) !! 1
 
 userExpr :: ExprSpec -> OriginalExpr
 userExpr = originalExpr . untypedExpr
 
 
-processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> IO ()
-processEvalSpec c o = runUncertainIO . processInputReadyExpr c noInput o . constExpr
+processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processEvalSpec c o = processInputReadyExpr c noInput o . constExpr
 
-processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
-processApplySpec c i o = runUncertainIO . processInputReadyExpr c i o . applyExpr
+processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processApplySpec c i o = processInputReadyExpr c i o . applyExpr
 
-processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> IO ()
-processMapSpec c i o = runUncertainIO . processInputReadyExpr c i o . mapExpr
+processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processMapSpec c i o = processInputReadyExpr c i o . mapExpr
 
 
 processInputReadyExpr :: ContextSpec

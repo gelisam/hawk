@@ -85,6 +85,10 @@ mapUncertainT f = UncertainT . (mapErrorT . mapWriterT) f . unUncertainT
 runUncertainT :: UncertainT m a -> m (Either Error a, [Warning])
 runUncertainT = runWriterT . runErrorT . unUncertainT
 
+uncertainT :: Monad m => (Either Error a, [Warning]) -> UncertainT m a
+uncertainT (Left  e, warnings) = mapM_ warn warnings >> fail e
+uncertainT (Right x, warnings) = mapM_ warn warnings >> return x
+
 
 -- | A version of `runWarnings` which allows you to interleave IO actions
 --   with uncertain actions.
