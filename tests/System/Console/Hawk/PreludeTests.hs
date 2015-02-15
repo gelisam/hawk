@@ -60,6 +60,26 @@ testEval flags expr = test flags expr ""
 -- 2
 -- 3
 -- 
+-- Making sure that we support multi-line, whitespace-sensitive expressions:
+-- 
+-- >>> testEval [] "do x <- [1,2,3]\n   y <- [10,20,30]\n   return (x+y)"
+-- 11
+-- 21
+-- 31
+-- 12
+-- 22
+-- 32
+-- 13
+-- 23
+-- 33
+-- 
+-- Making sure that we report errors in the user expression, not our wrapper code:
+-- 
+-- >>> testEval [] "[[],"
+-- error: Won't compile:
+-- 	user expression:1:5:
+--     parse error (possibly incorrect indentation or mismatched brackets)
+-- *** Exception: ExitFailure 1
 -- 
 -- Making sure that we don't assume the user prelude exports "map":
 -- 

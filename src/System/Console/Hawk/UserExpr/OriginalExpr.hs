@@ -2,6 +2,8 @@ module System.Console.Hawk.UserExpr.OriginalExpr where
 
 import qualified Data.ByteString.Lazy.Char8 as B
 
+import Text.Printf
+
 import Data.HaskellExpr
 
 
@@ -29,7 +31,10 @@ type OriginalExpr = UserExpr ()
 -- If the actual user expression doesn't have the type we use it at, hint
 -- will give a type error, and that's fine.
 originalExpr :: String -> OriginalExpr
-originalExpr s = UserExpr (Just $ HaskellExpr s)
-                          (Just $ HaskellExpr s)
-                          (Just $ HaskellExpr s)
-                          (Just $ HaskellExpr s)
+originalExpr s = UserExpr (wrapExpr s) (wrapExpr s) (wrapExpr s) (wrapExpr s)
+  where
+    wrapExpr :: String -> Maybe (HaskellExpr a)
+    wrapExpr = Just . HaskellExpr . annotateExpr
+    
+    annotateExpr :: String -> String
+    annotateExpr = printf "{-# LINE 1 \"user expression\" #-}\n%s{-# LINE 2 \"wrapper code\" #-}\n"
