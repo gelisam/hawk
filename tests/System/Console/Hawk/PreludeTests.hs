@@ -81,6 +81,25 @@ testEval flags expr = test flags expr ""
 --     parse error (possibly incorrect indentation or mismatched brackets)
 -- *** Exception: ExitFailure 1
 -- 
+-- Making sure that setting line-mode or stream-mode doesn't affect the output format
+-- unless specifically requested:
+-- 
+-- >>> testPrelude "default" ["-d", "-m"]       "\\x -> ('a', x, 'b')" "1-3"
+-- a 1 b
+-- a 2 b
+-- a 3 b
+-- 
+-- >>> testPrelude "default" ["-d", "-o", "-m"] "\\x -> ('a', x, 'b')" "1-3"
+-- a1b
+-- a2b
+-- a3b
+-- 
+-- >>> testPrelude "default" ["-D", "-a"]       "\\x -> ('a', x, 'b')" "equation"
+-- a x1*y1*z1 + x2*y2*z2 b
+-- 
+-- >>> testPrelude "default" ["-D", "-O", "-a"] "\\x -> ('a', x, 'b')" "equation"
+-- ax1*y1*z1 + x2*y2*z2b
+-- 
 -- Making sure that we don't assume the user prelude exports "map":
 -- 
 -- >>> testPrelude "set" ["-m"] "const $ \"hello\"" "1-3"

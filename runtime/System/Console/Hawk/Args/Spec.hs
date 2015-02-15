@@ -66,8 +66,9 @@ data Separator = Whitespace | Delimiter Delimiter
   deriving (Show, Eq)
 
 fromSeparator :: Separator -> Delimiter
-fromSeparator Whitespace    = " "
-fromSeparator (Delimiter d) = d
+fromSeparator Whitespace     = " "
+fromSeparator (Delimiter "") = " "
+fromSeparator (Delimiter d)  = d
 
 
 newtype ContextSpec = ContextSpec
