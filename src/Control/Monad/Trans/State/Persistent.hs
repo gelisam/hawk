@@ -13,6 +13,7 @@ import System.Directory
 import System.IO
 
 -- $setup
+-- >>> import System.FilePath
 -- >>> tmp <- getTemporaryDirectory
 -- >>> let f = tmp </> "doctest.txt"
 
