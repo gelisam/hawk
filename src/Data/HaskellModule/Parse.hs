@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, PackageImports, RecordWildCards #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
