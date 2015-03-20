@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, PackageImports, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
@@ -45,6 +45,7 @@ locatedModule srcLoc source (ModuleName mName) = case moduleLine of
     Nothing -> return Nothing
     Just line -> located (srcLoc {srcLine = line}) >> return (Just mName)
   where
+    isModuleDecl :: Either B.ByteString String -> Bool
     isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
     isModuleDecl (Right xs) = "module " `isPrefixOf` xs
     
