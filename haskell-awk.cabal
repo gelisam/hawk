@@ -56,7 +56,6 @@ Executable hawk
                   , haskell-awk
                   , haskell-src-exts >=1.16.0
                   , hint >=0.3.3.5
-                  , MonadCatchIO-mtl >=0.2.0.0
                   , mtl >=2.1.2
                   , network >=2.3.1.0
                   , stringsearch >=0.3.6.4
