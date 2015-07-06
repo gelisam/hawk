@@ -1,6 +1,10 @@
 # What's new?
 
-## New since 1.0
+## New in 1.1.1
+
+GHC 7.10 compatibility.
+
+## New in 1.1
 
 In a nutshell, custom context directories and GHC 7.8 compatibility.
 
