@@ -37,14 +37,14 @@ instance Location Decl where
   location (DataInsDecl      loc _ _ _ _)       = Just loc
   location (GDataInsDecl     loc _ _ _ _ _)     = Just loc
   location (ClassDecl        loc _ _ _ _ _)     = Just loc
-  location (InstDecl         loc _ _ _ _)       = Just loc
-  location (DerivDecl        loc _ _ _)         = Just loc
+  location (InstDecl         loc _ _ _ _ _ _)   = Just loc
+  location (DerivDecl        loc _ _ _ _ _)     = Just loc
   location (InfixDecl        loc _ _ _)         = Just loc
   location (DefaultDecl      loc _)             = Just loc
   location (SpliceDecl       loc _)             = Just loc
   location (TypeSig          loc _ _)           = Just loc
   location (FunBind matches) = location matches
-  location (PatBind          loc _ _ _ _)       = Just loc
+  location (PatBind          loc _ _ _)         = Just loc
   location (ForImp           loc _ _ _ _ _)     = Just loc
   location (ForExp           loc _ _ _ _)       = Just loc
   location (RulePragmaDecl   loc _)             = Just loc
@@ -54,7 +54,7 @@ instance Location Decl where
   location (InlineConlikeSig loc _ _)           = Just loc
   location (SpecSig          loc _ _ _)         = Just loc
   location (SpecInlineSig    loc _ _ _ _)       = Just loc
-  location (InstSig          loc _ _ _)         = Just loc
+  location (InstSig          loc _ _ _ _)       = Just loc
   location (AnnPragma        loc _)             = Just loc
 
 instance Location Match where

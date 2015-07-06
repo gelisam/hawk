@@ -45,6 +45,7 @@ locatedModule srcLoc source (ModuleName mName) = case moduleLine of
     Nothing -> return Nothing
     Just line -> located (srcLoc {srcLine = line}) >> return (Just mName)
   where
+    isModuleDecl :: Either B.ByteString String -> Bool
     isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
     isModuleDecl (Right xs) = "module " `isPrefixOf` xs
     

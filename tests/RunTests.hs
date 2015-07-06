@@ -30,7 +30,7 @@ substSuffix oldSuffix newSuffix xs | oldSuffix `isSuffixOf` xs = prefix ++ newSu
     prefix = take (length xs - length oldSuffix) xs
 substSuffix _ _ xs = xs
 
--- make sure doctest can the source of Hawk and the generated Paths_haskell_awk.hs
+-- make sure doctest can see the source of Hawk and the generated Paths_haskell_awk.hs
 doctest' :: String -> IO ()
 doctest' file = do
     exePath <- dropExtension <$> getExecutablePath
