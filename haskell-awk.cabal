@@ -13,6 +13,7 @@ License-File:   LICENSE
 Build-Type:     Custom
 Cabal-version:  >=1.10
 Extra-Source-Files: README.md
+                  , CHANGELOG.md
                   , src/*.hs
                   , src/Control/Monad/Trans/*.hs
                   , src/Control/Monad/Trans/State/*.hs
