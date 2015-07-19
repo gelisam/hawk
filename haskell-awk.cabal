@@ -90,6 +90,8 @@ Test-suite reference
                       , directory
                       , doctest >=0.3.0
                       , exceptions >=0.1
+                      , extra
+                      , template-haskell
                       , test-framework >=0.1
                       , test-framework-hunit >=0.2.0
                       , temporary >=1.0
