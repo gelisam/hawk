@@ -46,11 +46,6 @@ data Sandbox = Sandbox
   , packageDbFinder :: MultiPathFinder
   }
 
-cabalDev :: Sandbox
-cabalDev = Sandbox (basenameIs "cabal-dev") $ do
-    someChild
-    basenameMatches "packages-" ".conf"
-
 dotCabal :: Sandbox
 dotCabal = Sandbox (basenameIs ".cabal") $ do
     relativePath (".." </> ".ghc")
@@ -62,13 +57,10 @@ cabalSandbox = Sandbox (basenameIs ".cabal-sandbox") $ do
     someChild
     basenameMatches "" "-packages.conf.d"
 
-stackTool :: Sandbox
-stackTool = Sandbox (hasAncestor ".stack-work") $ do
-    relativePath "pkgdb"
-
--- all the sandbox systems we support.
+-- All the sandbox systems we support.
+-- We also support stack and cabal-dev, via HASKELL_PACKAGE_SANDBOXES.
 sandboxes :: [Sandbox]
-sandboxes = [cabalDev, dotCabal, cabalSandbox, stackTool]
+sandboxes = [dotCabal, cabalSandbox]
 
 
 -- something like (Just "/.../.cabal-sandbox")
