@@ -19,7 +19,7 @@
 -- installed libraries. If hawk has been installed with a sandbox, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TemplateHaskell, TupleSections #-}
 module System.Console.Hawk.Sandbox
     ( extraGhcArgs
     , runHawkInterpreter
@@ -27,10 +27,13 @@ module System.Console.Hawk.Sandbox
 
 import Control.Applicative
 import Control.Monad
+import Data.List.Extra (wordsBy)
 import Data.Maybe
 import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
+import Language.Haskell.TH.Syntax (lift, runIO)
 import System.Directory.PathFinder
+import System.Environment (getEnvironment)
 import System.FilePath ((</>))
 import Text.Printf (printf)
 
@@ -76,8 +79,8 @@ findSandboxPath sandbox = do
     runPathFinder sandboxPathFromBin bindir
 
 -- something like (cabalSandbox, "/.../.cabal-sandbox")
-detectSandbox :: IO (Sandbox, FilePath)
-detectSandbox = do
+detectCabalSandbox :: IO (Sandbox, FilePath)
+detectCabalSandbox = do
     detectedSandboxes <- forM sandboxes $ \sandbox -> do
         sandboxPath <- findSandboxPath sandbox
         return $ (sandbox,) <$> sandboxPath
@@ -90,9 +93,9 @@ detectSandbox = do
              in error msg
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
-detectPackageDb :: IO String
-detectPackageDb = do
-    (sandbox, sandboxPath) <- detectSandbox
+detectCabalPackageDb :: IO String
+detectCabalPackageDb = do
+    (sandbox, sandboxPath) <- detectCabalSandbox
     let fail' s = error $ printf "%s found in sandbox %s" s sandboxPath
     packageDbPaths <- runMultiPathFinder (packageDbFinder sandbox) sandboxPath
     case packageDbPaths of
@@ -100,12 +103,27 @@ detectPackageDb = do
         []          -> fail' "no package-db"
         _           -> fail' "multiple package-db's"
 
+-- stack requires two package-databases, the second is passed at compile time
+-- via an environment variable.
+detectEnvPackageDbs :: Maybe [String]
+detectEnvPackageDbs = $(do
+      env <- runIO getEnvironment
+      lift $ wordsBy (== ':') <$> lookup "HASKELL_PACKAGE_SANDBOXES" env
+    )
+
+-- prefer the env-provided list of package-dbs if there is one, otherwise
+-- try to pick a package-db path based on the installation path given by cabal.
+detectPackageDbs :: IO [String]
+detectPackageDbs = case detectEnvPackageDbs of
+    Just packageDbs -> return packageDbs
+    Nothing -> do
+      packageDb <- detectCabalPackageDb
+      return [packageDb]
+
 
 -- something like ["-package-db /.../cabal-dev/package-7.6.3.conf"]
 extraGhcArgs :: IO [String]
-extraGhcArgs = do
-    packageDb <- detectPackageDb
-    return [printf "-package-db %s" packageDb]
+extraGhcArgs = fmap (printf "-package-db %s") <$> detectPackageDbs
 
 -- | a version of runInterpreter which can load libraries
 --   installed along hawk's sandbox folder, if applicable.
