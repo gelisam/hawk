@@ -46,7 +46,8 @@ relativePath rel = do
     let pwd' = pwd </> rel
     exists <- liftIO $ doesDirectoryExist pwd'
     guard exists
-    put pwd'
+    pwd'' <- liftIO $ canonicalizePath pwd'
+    put pwd''
 
 someChild :: MultiPathFinder
 someChild = do
