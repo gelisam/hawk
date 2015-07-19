@@ -52,6 +52,7 @@ Executable hawk
                   , directory
                   , easy-file
                   , exceptions >=0.1
+                  , extra
                   , filepath
                   , haskell-awk
                   , haskell-src-exts >=1.16.0
@@ -60,6 +61,7 @@ Executable hawk
                   , network >=2.3.1.0
                   , stringsearch >=0.3.6.4
                   , process
+                  , template-haskell
                   , time
                   , transformers >=0.3.0.0
     hs-source-dirs: src
