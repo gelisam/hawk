@@ -1,4 +1,4 @@
-# Hawk [![Hackage](https://img.shields.io/hackage/v/Hawk.svg)](https://hackage.haskell.org/package/Hawk) 
+# Hawk [![Hackage](https://img.shields.io/hackage/v/haskell-awk.svg)](https://hackage.haskell.org/package/haskell-awk) 
 
 Transform text from the command-line using Haskell expressions. Similar to [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), but using Haskell as the text-processing language.
 
