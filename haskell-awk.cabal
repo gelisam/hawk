@@ -1,5 +1,5 @@
 Name:           haskell-awk
-Version:        1.1.1
+Version:        1.1.2
 Author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 Maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 Synopsis:       Transform text from the command-line using Haskell expressions.
