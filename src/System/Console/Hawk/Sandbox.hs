@@ -19,17 +19,22 @@
 -- installed libraries. If hawk has been installed with a sandbox, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
+{-# LANGUAGE TemplateHaskell, TupleSections #-}
 module System.Console.Hawk.Sandbox
     ( extraGhcArgs
     , runHawkInterpreter
     ) where
 
 import Control.Applicative
-import Data.List
+import Control.Monad
+import Data.List.Extra (wordsBy)
+import Data.Maybe
 import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
-import System.Directory (getDirectoryContents)
-import System.FilePath (pathSeparator)
+import Language.Haskell.TH.Syntax (lift, runIO)
+import System.Directory.PathFinder
+import System.Environment (getEnvironment)
+import System.FilePath ((</>))
 import Text.Printf (printf)
 
 -- magic self-referential module created by cabal
@@ -37,78 +42,80 @@ import Paths_haskell_awk (getBinDir)
 
 
 data Sandbox = Sandbox
-  { folder :: FilePath
-  , packageFilePrefix :: String
-  , packageFileSuffix :: String
-  } deriving Show
+  { sandboxPathFinder :: PathFinder
+  , packageDbFinder :: MultiPathFinder
+  }
 
-cabalDev, cabalSandbox :: Sandbox
-cabalDev = Sandbox "cabal-dev" "packages-" ".conf"
-cabalSandbox = Sandbox ".cabal-sandbox" "" "-packages.conf.d"
+dotCabal :: Sandbox
+dotCabal = Sandbox (basenameIs ".cabal") $ do
+    relativePath (".." </> ".ghc")
+    someChild
+    relativePath "package.conf.d"
 
--- all the sandbox systems we support.
+cabalSandbox :: Sandbox
+cabalSandbox = Sandbox (basenameIs ".cabal-sandbox") $ do
+    someChild
+    basenameMatches "" "-packages.conf.d"
+
+-- All the sandbox systems we support.
+-- We also support stack and cabal-dev, via HASKELL_PACKAGE_SANDBOXES.
 sandboxes :: [Sandbox]
-sandboxes = [cabalDev, cabalSandbox]
+sandboxes = [dotCabal, cabalSandbox]
 
 
--- a version of isSuffixOf which returns the string stripped of its suffix.
-isSuffixOf' :: String -> String -> Maybe String
-isSuffixOf' suffix s = if suffix `isSuffixOf` s
-                         then Just (take (n - m) s)
-                         else Nothing
-  where
-    n = length s
-    m = length suffix
+-- something like (Just "/.../.cabal-sandbox")
+findSandboxPath :: Sandbox -> IO (Maybe FilePath)
+findSandboxPath sandbox = do
+    bindir <- Paths_haskell_awk.getBinDir
+    let sandboxPathFromBin = relativePath ".." >> sandboxPathFinder sandbox
+    runPathFinder sandboxPathFromBin bindir
 
-
--- convert slashes to backslashes if needed
-path :: String -> String
-path = map replaceSeparator where
-    replaceSeparator '/' = pathSeparator
-    replaceSeparator x = x
-
-
--- if hawk has been compiled by a sandboxing tool,
--- its binary has been placed in a special folder.
--- 
--- return something like (Just "/.../cabal-dev")
-getSandboxDir :: Sandbox -> IO (Maybe String)
-getSandboxDir sandbox = do
-    dir <- Paths_haskell_awk.getBinDir
-    let sandboxFolder = folder sandbox
-    let suffix = path (sandboxFolder ++ "/bin")
-    let basePath = suffix `isSuffixOf'` dir
-    let sandboxPath = fmap (++ sandboxFolder) basePath
-    return sandboxPath
-
--- something like "packages-7.6.3.conf"
-isPackageFile :: Sandbox -> FilePath -> Bool
-isPackageFile sandbox f = packageFilePrefix sandbox `isPrefixOf` f
-                       && packageFileSuffix sandbox `isSuffixOf` f
+-- something like (cabalSandbox, "/.../.cabal-sandbox")
+detectCabalSandbox :: IO (Sandbox, FilePath)
+detectCabalSandbox = do
+    detectedSandboxes <- forM sandboxes $ \sandbox -> do
+        sandboxPath <- findSandboxPath sandbox
+        return $ (sandbox,) <$> sandboxPath
+    case catMaybes detectedSandboxes of
+      [r] -> return r
+      []  -> error "No package-db found. Did you install Hawk in an unusual way?"
+      rs  -> let paths = fmap snd rs
+                 msg = printf "Multiple sandboxes found: %s\nDon't know which one to use, aborting."
+                              (show paths)
+             in error msg
 
 -- something like "/.../cabal-dev/package-7.6.3.conf"
-getPackageFile :: Sandbox -> String -> IO String
-getPackageFile sandbox dir = do
-    files <- getDirectoryContents dir
-    case filter (isPackageFile sandbox) files of
-      [file] -> return $ printf (path "%s/%s") dir file
-      [] -> fail' "no package-db"
-      _ -> fail' $ "multiple package-db's"
-  where
-    fail' s = error $ printf "%s found in sandbox %s" s (folder sandbox)
+detectCabalPackageDb :: IO String
+detectCabalPackageDb = do
+    (sandbox, sandboxPath) <- detectCabalSandbox
+    let fail' s = error $ printf "%s found in sandbox %s" s sandboxPath
+    packageDbPaths <- runMultiPathFinder (packageDbFinder sandbox) sandboxPath
+    case packageDbPaths of
+        [packageDb] -> return packageDb
+        []          -> fail' "no package-db"
+        _           -> fail' "multiple package-db's"
 
-sandboxSpecificGhcArgs :: Sandbox -> IO [String]
-sandboxSpecificGhcArgs sandbox = do
-    sandboxDir <- getSandboxDir sandbox
-    case sandboxDir of
-      Nothing -> return []
-      Just dir -> do packageFile <- getPackageFile sandbox dir
-                     let arg = printf "-package-db %s" packageFile
-                     return [arg]
+-- stack requires two package-databases, the second is passed at compile time
+-- via an environment variable.
+detectEnvPackageDbs :: Maybe [String]
+detectEnvPackageDbs = $(do
+      env <- runIO getEnvironment
+      lift $ wordsBy (== ':') <$> lookup "HASKELL_PACKAGE_SANDBOXES" env
+    )
+
+-- prefer the env-provided list of package-dbs if there is one, otherwise
+-- try to pick a package-db path based on the installation path given by cabal.
+detectPackageDbs :: IO [String]
+detectPackageDbs = case detectEnvPackageDbs of
+    Just packageDbs -> return packageDbs
+    Nothing -> do
+      packageDb <- detectCabalPackageDb
+      return [packageDb]
 
 
+-- something like ["-package-db /.../cabal-dev/package-7.6.3.conf"]
 extraGhcArgs :: IO [String]
-extraGhcArgs = concat <$> mapM sandboxSpecificGhcArgs sandboxes
+extraGhcArgs = fmap (printf "-package-db %s") <$> detectPackageDbs
 
 -- | a version of runInterpreter which can load libraries
 --   installed along hawk's sandbox folder, if applicable.

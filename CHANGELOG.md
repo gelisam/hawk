@@ -1,5 +1,9 @@
 # What's new?
 
+## New in 1.1.2
+
+[Stack](http://www.haskellstack.org) compatibility.
+
 ## New in 1.1.1
 
 GHC 7.10 compatibility.
