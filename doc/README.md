@@ -303,7 +303,7 @@ be used to change the format of the given input.
 
 The file `~/.hawk/prelude.hs` contains the Hawk context and can be used to
 customize Hawk. If the directory `~/.hawk` doesn't
-exist, Hawk creates it the first time is run with a default `prelude.hs` file
+exist, Hawk creates the following default `prelude.hs` file on the first run:
 
 ```haskell
 {-# LANGUAGE ExtendedDefaultRules, OverloadedStrings #-}
