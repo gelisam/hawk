@@ -257,7 +257,7 @@ of `Show`. For examples, we can use String or Float instead of ByteString.
 In the examples above we used list as type for the list of fields and for the
 list of records but what happens when we use other types? Each type has its own
 representation but usually if the type is a container then it is represented
-like a list (of fields or records) else it is represented as itself.
+like a list (of fields or records), otherwise it is represented as itself.
 
 ```bash
 > hawk '1 :: Double'
