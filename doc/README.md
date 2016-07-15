@@ -210,8 +210,8 @@ Another potentially-confusing detail is that we have to use [Data.Attoparsec.Byt
 Hawk writes text in a tabular format typical of the command-line.
 
 The type of the user function must be compatible with this tabular format.
-Recall that, in Hawk, tabular means list of lists of ByteString where the first
-list is the list of records, the second list is the list of fields for each record
+Recall that, in Hawk, tabular means list of lists of ByteString where the outer
+list is the list of records, the inner list is the list of fields for each record,
 and the ByteString is the content of a single cell.
 
 For the cell content type, any type that is instance of
