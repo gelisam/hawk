@@ -1,4 +1,6 @@
-{-# LANGUAGE ExistentialQuantification, OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RankNTypes                #-}
 -- | Applying the user expression as directed by the HawkRuntime.
 --   The API may change at any time.
 module System.Console.Hawk.Runtime
@@ -6,16 +8,15 @@ module System.Console.Hawk.Runtime
   , processTable
   ) where
 
-import Control.Applicative
-import Control.Exception
-import Data.ByteString.Lazy.Char8 as B
-import Data.ByteString.Lazy.Search as Search
-import GHC.IO.Exception
-import System.IO
+import           Control.Exception
+import           Data.ByteString.Lazy.Char8        as B
+import           Data.ByteString.Lazy.Search       as Search
+import           GHC.IO.Exception
+import           System.IO
 
-import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.Representable
-import System.Console.Hawk.Runtime.Base
+import           System.Console.Hawk.Args.Spec
+import           System.Console.Hawk.Representable
+import           System.Console.Hawk.Runtime.Base
 
 
 data SomeRows = forall a. Rows a => SomeRows a
@@ -81,16 +82,16 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
   where
     join' = join (B.fromStrict $ recordDelimiter spec)
     toRows = repr (B.fromStrict $ fieldDelimiter spec)
-    
+
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
 ignoringBrokenPipe :: IO () -> IO ()
-ignoringBrokenPipe = handleJust isBrokenPipe $ \_ -> do
+ignoringBrokenPipe = handleJust isBrokenPipe $ \_ ->
     -- ignore the broken pipe
     return ()
   where
     isBrokenPipe e | ioe_type e == ResourceVanished = Just e
-    isBrokenPipe _ | otherwise                      = Nothing
+    isBrokenPipe _                                  = Nothing

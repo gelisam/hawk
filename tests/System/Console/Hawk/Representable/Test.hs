@@ -12,17 +12,18 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-{-# LANGUAGE ExtendedDefaultRules,OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE OverloadedStrings    #-}
 module System.Console.Hawk.Representable.Test where
 
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Set (Set)
-import qualified Data.Set as S
+import           Data.Map                          (Map)
+import qualified Data.Map                          as M
+import           Data.Set                          (Set)
+import qualified Data.Set                          as S
 
-import System.Console.Hawk.Representable
+import           System.Console.Hawk.Representable
 
-import Test.Hspec 
+import           Test.Hspec
 
 
 -- explicitly type all values to avoid warnings.
@@ -35,7 +36,7 @@ emptyString,word,word_word,w_w :: String
 
 
 reprSpec' :: Spec
-reprSpec' = describe "repr'" $ do
+reprSpec' = describe "repr'" $
     it "can convert tuple values" $ do
       example $ repr' " " (_1,True) `shouldBe` "1 True"
       example $ repr' " " (_1,True,_2) `shouldBe` "1 True 2"
@@ -68,7 +69,7 @@ reprSpec = describe "repr" $ do
     it "can convert integer values" $ example $
         repr "\t" (1::Integer) `shouldBe` ["1"]
 
-    it "can convert maybe values" $ do 
+    it "can convert maybe values" $ do
         example $ repr "\t" (Nothing::Maybe ()) `shouldBe` [""]
         example $ repr "\t" (Just 1::Maybe Int) `shouldBe` ["1"]
         example $ repr "\t" (Just (Just True)) `shouldBe` ["True"]
@@ -105,9 +106,9 @@ reprSpec = describe "repr" $ do
     it "can convert map values" $ do
         repr "\t" (M.empty::Map Bool Bool) `shouldBe` []
         example $ repr "\t" (M.fromList [(_1,_2),(_3,_4)]) `shouldBe` ["1\t2","3\t4"]
-        example $ repr "\t" ([M.fromList [(_1,_2),(_3,_4)]]) `shouldBe` ["1 2\t3 4"]
+        example $ repr "\t" [M.fromList [(_1,_2),(_3,_4)]] `shouldBe` ["1 2\t3 4"]
 
     it "can convert set values" $ do
         repr "\t" (S.empty::Set Bool) `shouldBe` []
         example $ repr "\t" (S.fromList [_1,_2,_3,_4]) `shouldBe` ["1","2","3","4"]
-        example $ repr "\t" ([S.fromList [_1,_2]]) `shouldBe` ["1\t2"]
+        example $ repr "\t" [S.fromList [_1,_2]] `shouldBe` ["1\t2"]

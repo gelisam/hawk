@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 -- | An opaque representation of a Haskell module.
--- 
+--
 -- The few parts which can be modified are easier to modify than using raw
 -- bytes or a raw HaskellSource.
 module Data.HaskellModule
@@ -10,20 +10,20 @@ module Data.HaskellModule
   , compileModule, compileModuleWithArgs
   ) where
 
-import Control.Monad.Trans.Class
-import qualified Data.ByteString.Char8 as B
+import           Control.Monad.Trans.Class
+import qualified Data.ByteString.Char8         as B
 
-import Data.HaskellSource
-import Control.Monad.Trans.Uncertain
+import           Control.Monad.Trans.Uncertain
+import           Data.HaskellSource
 
 -- Most of the API is re-exported from those submodules
-import Data.HaskellModule.Base
-import Data.HaskellModule.Parse
+import           Data.HaskellModule.Base
+import           Data.HaskellModule.Parse
 
 
 -- |
 -- >>> B.putStr $ showModule "orig.hs" $ emptyModule
--- 
+--
 -- >>> B.putStr $ showModule "orig.hs" $ addExtension "OverloadedStrings" $ addImport ("Data.ByteString.Char8", Just "B") $ addExtension "RecordWildCards" $ addImport ("Prelude", Nothing) $ emptyModule
 -- {-# LANGUAGE OverloadedStrings #-}
 -- {-# LANGUAGE RecordWildCards #-}
@@ -32,7 +32,7 @@ import Data.HaskellModule.Parse
 showModule :: FilePath -- ^ the original's filename,
                        --   used for fixing up line numbers
            -> HaskellModule -> B.ByteString
-showModule orig (HaskellModule {..}) = showSource orig fullSource
+showModule orig HaskellModule {..} = showSource orig fullSource
   where
     fullSource = concat [ pragmaSource
                         , moduleSource

@@ -1,9 +1,9 @@
 -- | The user prelude you get if the user doesn't have a prelude.
 module System.Console.Hawk.UserPrelude.Defaults where
 
-import Control.Arrow ((&&&))
+import           Control.Arrow      ((&&&))
 
-import Data.HaskellModule
+import           Data.HaskellModule
 
 
 -- | Imported at runtime even if missing from the user prelude.
@@ -22,7 +22,7 @@ defaultModules =
       , "Data.ByteString.Lazy.Char8"
       ]
   where
-    fullyQualified = (id &&& Just)
+    fullyQualified = id &&& Just
 
 defaultPrelude :: String
 defaultPrelude = unlines

@@ -1,14 +1,13 @@
 module System.Console.Hawk.UserExpr.InputReadyExpr where
 
 
-import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.ByteString.Lazy.Char8                as B
 
-import Control.Applicative
-import Data.HaskellExpr
-import Data.HaskellExpr.Base
-import System.Console.Hawk.Runtime
-import System.Console.Hawk.Runtime.HaskellExpr
-import System.Console.Hawk.UserExpr.OriginalExpr
+import           Data.HaskellExpr
+import           Data.HaskellExpr.Base
+import           System.Console.Hawk.Runtime
+import           System.Console.Hawk.Runtime.HaskellExpr
+import           System.Console.Hawk.UserExpr.OriginalExpr
 
 
 -- | While the original user input may describe a value or a function on a

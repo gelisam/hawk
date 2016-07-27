@@ -6,37 +6,37 @@ module System.Console.Hawk.Context.Base
   , getContext
   ) where
 
-import "mtl" Control.Monad.Trans
-import Data.Maybe
-import System.Directory
-import System.IO
+import           "mtl" Control.Monad.Trans
+import           Data.Maybe
+import           System.Directory
+import           System.IO
 
-import Control.Monad.Trans.Uncertain
-import Control.Monad.Trans.State.Persistent
-import Data.Cache
-import qualified Data.HaskellModule as M
-import System.Console.Hawk.Context.Dir
-import System.Console.Hawk.Context.Paths
-import System.Console.Hawk.UserPrelude
-import System.Console.Hawk.Version
+import           Control.Monad.Trans.State.Persistent
+import           Control.Monad.Trans.Uncertain
+import           Data.Cache
+import qualified Data.HaskellModule                   as M
+import           System.Console.Hawk.Context.Dir
+import           System.Console.Hawk.Context.Paths
+import           System.Console.Hawk.UserPrelude
+import           System.Console.Hawk.Version
 
 
 data Context = Context
   { contextPaths :: ContextPaths
-  , moduleName :: String
-  , extensions :: [M.ExtensionName]
-  , modules :: [M.QualifiedModule]
+  , moduleName   :: String
+  , extensions   :: [M.ExtensionName]
+  , modules      :: [M.QualifiedModule]
   } deriving (Eq, Read, Show)
 
 -- | Obtains a Context, either from the cache or from the user prelude.
--- 
+--
 -- Must be called inside a `withLock` block, otherwise the cache file
 -- might get accessed by two instances of Hawk at once.
 getContext :: FilePath -> UncertainT IO Context
 getContext contextDir = do
     createDefaultContextDir paths
     key <- lift $ getKey preludeFile
-    
+
     -- skip `newContext` if the cached copy is still good.
     withPersistentStateT cacheFile [] $ cached cache key
                                       $ lift
@@ -46,7 +46,7 @@ getContext contextDir = do
     preludeFile = originalPreludePath paths
     cacheFile   = cachedPreludePath paths
     cache = singletonCache assocCache
-    
+
     getKey f = do
         modifiedTime <- getModificationTime f
         fileSize <- withFile f ReadMode hFileSize
@@ -58,8 +58,8 @@ newContext paths = do
     userPrelude <- readUserPrelude originalFile
     lift $ createDirectoryIfMissing True cacheDir
     compileUserPrelude originalFile canonicalFile userPrelude
-    
-    return $ Context
+
+    return Context
            { contextPaths = paths
            , moduleName = fromJust (M.moduleName userPrelude)
            , extensions = M.languageExtensions userPrelude

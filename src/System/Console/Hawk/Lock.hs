@@ -20,16 +20,16 @@ module System.Console.Hawk.Lock
     , withTestLock
     ) where
 
-import Control.Concurrent ( threadDelay )
-import Control.Exception
-import Control.Monad ( when, guard )
-import Data.List ( elemIndex )
-import GHC.IO.Exception
-import GHC.IO.Handle ( Handle, hGetContents, hClose )
-import Network.BSD ( getProtocolNumber ) -- still cross-platform, don't let the name fool you
-import Network ( PortID (..), connectTo )
-import Network.Socket
-import Text.Printf
+import           Control.Concurrent (threadDelay)
+import           Control.Exception
+import           Control.Monad      (guard, when)
+import           Data.List          (elemIndex)
+import           GHC.IO.Exception
+import           GHC.IO.Handle      (Handle, hClose, hGetContents)
+import           Network            (PortID (..), connectTo)
+import           Network.BSD        (getProtocolNumber)
+import           Network.Socket
+import           Text.Printf
 
 
 -- use a socket number as a lock indicator.
@@ -52,19 +52,19 @@ type Lock = Socket
 lock :: Bool -> IO Lock
 lock testing = catchJust isADDRINUSE openSocket $ \() -> do
     -- open failed, the lock must be in use.
-    
+
     when testing $ putStrLn "** LOCKED **"
-    
+
     -- used to test an interleaving in which the socket is closed here,
     -- between openSocket and waitForException.
     when testing $ threadDelay 20000
-    
+
     -- wait for the other instance to signal that it is done with the lock.
     catchJust isDisconnected waitForException $ \_ -> do
       -- we were disconnected, the server must have released the lock!
-      
+
       when testing $ printf "** UNLOCKED **\n"
-      
+
       -- try again.
       lock testing
 
@@ -114,7 +114,7 @@ listenOn port = do
     proto <- getProtocolNumber "tcp"
     bracketOnError
         (socket AF_INET Stream proto)
-        (sClose)
+        sClose
         (\sock -> do
             -- unlike the original listenOn, we do NOT set ReuseAddr.
             -- this way the call will fail if another instance holds the lock.

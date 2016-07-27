@@ -14,23 +14,13 @@
 
 module System.Console.Hawk.TestUtils where
 
-import Control.Applicative
-  ( (<$>) )
-import Control.Exception
-  ( bracket_ )
-import Data.List
-  ( isSuffixOf
-  , isPrefixOf )
-import System.Directory
-  ( createDirectory 
-  , getDirectoryContents
-  , getTemporaryDirectory
-  , removeFile
-  , removeDirectoryRecursive)
-import System.FilePath
-  ( (</>)
-  , dropExtension
-  , takeExtension)
+import           Control.Applicative ((<$>))
+import           Control.Exception   (bracket_)
+import           Data.List           (isPrefixOf, isSuffixOf)
+import           System.Directory    (createDirectory, getDirectoryContents,
+                                      getTemporaryDirectory,
+                                      removeDirectoryRecursive, removeFile)
+import           System.FilePath     (dropExtension, takeExtension, (</>))
 
 
 nextFilePath :: FilePath -- ^ directory
@@ -58,11 +48,11 @@ withTempFilePath :: FilePath -- ^ directory
 withTempFilePath dir template action isDir = do
     let pre = dropExtension template
     let post = takeExtension template
-    tempFileName <- ((</>) dir) <$> nextFilePath dir pre post
+    tempFileName <- (dir </>) <$> nextFilePath dir pre post
     bracket_ (create tempFileName) (delete tempFileName) (action tempFileName)
   where create fp = if isDir
                       then createDirectory fp
-                      else writeFile fp "" 
+                      else writeFile fp ""
         delete fp = if isDir
                       then removeDirectoryRecursive fp
                       else removeFile fp
