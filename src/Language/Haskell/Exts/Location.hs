@@ -1,11 +1,11 @@
 -- | Easier access to haskell-src-exts's SrcLoc values.
 module Language.Haskell.Exts.Location where
 
-import Control.Monad
-import Control.Monad.Trans.Writer
-import Language.Haskell.Exts.Syntax
+import           Control.Monad
+import           Control.Monad.Trans.Writer
+import           Language.Haskell.Exts.Syntax
 
-import Data.Monoid.Ord
+import           Data.Monoid.Ord
 
 
 -- | Many haskell-src-exts datastructures contain a SrcLoc,
@@ -56,6 +56,12 @@ instance Location Decl where
   location (SpecInlineSig    loc _ _ _ _)       = Just loc
   location (InstSig          loc _ _ _ _)       = Just loc
   location (AnnPragma        loc _)             = Just loc
+  location (ClosedTypeFamDecl loc _ _ _ _)      = Just loc
+  location (PatSynSig         loc _ _ _ _ _)    = Just loc
+  location (PatSyn            loc _ _ _)        = Just loc
+  location (MinimalPragma     loc _)            = Just loc
+  location (RoleAnnotDecl     loc _ _)          = Just loc
+
 
 instance Location Match where
   location (Match loc _ _ _ _ _) = Just loc
@@ -69,7 +75,7 @@ instance Location a => Location [a] where
 
 
 -- | A value obtained from a particular location in the source code.
--- 
+--
 -- The location only indicates the beginning of a range, because that's what
 -- haskell-src-exts provides.
 type Located a = Writer (MinPriority SrcLoc) a

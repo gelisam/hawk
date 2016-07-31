@@ -4,11 +4,11 @@ module System.Console.Hawk.UserPrelude.Extend
   , extendImports
   ) where
 
-import Control.Applicative
-import Data.Maybe
+import           Control.Applicative                      (liftA2)
+import           Data.Maybe
 
-import Data.HaskellModule
-import System.Console.Hawk.UserPrelude.Defaults
+import           Data.HaskellModule
+import           System.Console.Hawk.UserPrelude.Defaults
 
 
 -- | We cannot import a module unless it has a name.
@@ -23,7 +23,7 @@ moduleNames :: HaskellModule -> [String]
 moduleNames = map fst . importedModules
 
 -- | GHC imports the Haskell Prelude by default, but hint doesn't.
--- 
+--
 -- >>> let m name = (name, Nothing)
 -- >>> :{
 --   let testM exts modules = moduleNames m'
@@ -33,16 +33,16 @@ moduleNames = map fst . importedModules
 --           m2  = foldr addImport m1 modules
 --           m' = extendImports m2
 -- :}
--- 
+--
 -- >>> testM [] []
 -- ["Prelude"]
--- 
+--
 -- >>> testM [] [m "Data.Maybe"]
 -- ["Prelude","Data.Maybe"]
--- 
+--
 -- >>> testM [] [m "Data.Maybe", m "Prelude", m "Data.Either"]
 -- ["Data.Maybe","Prelude","Data.Either"]
--- 
+--
 -- >>> :{
 -- testM [] [ ("Data.Maybe", Just "M")
 --          , ("Prelude", Just "P")
@@ -50,7 +50,7 @@ moduleNames = map fst . importedModules
 --          ]
 -- :}
 -- ["Data.Maybe","Prelude","Data.Either"]
--- 
+--
 -- >>> :{
 -- testM ["OverloadedStrings","NoImplicitPrelude"]
 --       [m "Data.Maybe"]
@@ -63,7 +63,7 @@ extendImports = until preludeOk
     prelude = "Prelude"
     noPrelude = "NoImplicitPrelude"
     unqualified_prelude = (prelude, Nothing)
-    
+
     preludeOk = liftA2 (||) hasPrelude noImplicitPrelude
     hasPrelude        m =   prelude `elem` moduleNames m
     noImplicitPrelude m = noPrelude `elem` languageExtensions m

@@ -24,14 +24,14 @@ module System.Console.Hawk.Representable (
 
 ) where
 
-import Prelude
-import Data.ByteString.Lazy.Char8 (ByteString)
+import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)
-import qualified Data.List as L
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Map (Map)
-import qualified Data.Map as M
+import qualified Data.List                  as L
+import           Data.Map                   (Map)
+import qualified Data.Map                   as M
+import           Data.Set                   (Set)
+import qualified Data.Set                   as S
+import           Prelude
 
 
 -- | A type that instantiate ListAsRow is a type that has a representation
@@ -66,7 +66,7 @@ instance ListAsRow Char where
     listRepr' _ = C8.pack
 
 instance ListAsRow ByteString where
-    listRepr' d = C8.intercalate d
+    listRepr' = C8.intercalate
 
 instance (Row a, Row b) => ListAsRow (Map a b) where
     listRepr' d = listRepr' d . L.map (listRepr' d . M.toList)
@@ -257,7 +257,7 @@ instance ListAsRows Int
 instance ListAsRows Integer
 instance (Row a) => ListAsRows (Maybe a)
 instance ListAsRows ()
-instance (ListAsRow a,ListAsRows a) => ListAsRows [a]
+instance (ListAsRow a) => ListAsRows [a]
 instance (Row a,Row b) => ListAsRows (a,b)
 instance (Row a,Row b,Row c) => ListAsRows (a,b,c)
 instance (Row a,Row b,Row c,Row d) => ListAsRows (a,b,c,d)
@@ -274,7 +274,7 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 instance ListAsRows Char where
     listRepr _ = (:[]) . C8.pack
 
-instance (ListAsRow a,ListAsRows a) => ListAsRows (Set a) where
+instance (ListAsRow a) => ListAsRows (Set a) where
     listRepr d = listRepr d . L.map S.toList
 
 instance (Row a,Row b) => ListAsRows (Map a b) where

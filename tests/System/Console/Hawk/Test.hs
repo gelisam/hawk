@@ -15,13 +15,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.Console.Hawk.Test where
 
-import System.Directory
-import System.IO
-import Test.Hspec
-import Test.HUnit
-import GHC.IO.Handle
+import           GHC.IO.Handle
+import           System.Directory
+import           System.IO
+import           Test.Hspec
+import           Test.HUnit
 
-import System.Console.Hawk
+import           System.Console.Hawk
 
 
 run :: IO ()
@@ -36,14 +36,14 @@ run = withContextHSpec $ \itEval itApply itMap ->
           itEval "[[1]]" `into` "1\n"
           itEval "[[1,2]]" `into` "1 2\n"
           itEval "[[1,2],[3,4]]" `into` "1 2\n3 4\n"
-          
+
           itApply "id" `onInput` "foo" `into` "foo\n"
           itApply "L.transpose" `onInput` "1 2\n3 4" `into` "1 3\n2 4\n"
           itApply "L.map (!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
 
           itMap "(!! 1)" `onInput` "1 2\n3 4" `into` "2\n4\n"
-  where onInput f x = f x
-        into f x = f x
+  where onInput f = f
+        into f = f
 
 withContextHSpec :: ((String -> String -> Spec)
                     -> (String -> String -> String -> Spec)
@@ -60,7 +60,7 @@ withContextHSpec body = do
              (tmpf, tmph) <- openTempFile tmpd "hawk_input"
              hPutStr tmph input
              hClose tmph
-             out <- catchOutput $ do
+             out <- catchOutput $
                processArgs $ concat [ ["-c", "tests/preludes/default"]
                                     , flags
                                     , [expr, tmpf]
@@ -68,7 +68,7 @@ withContextHSpec body = do
              removeFile tmpf
              assertEqual descr expected out
   let [itApply,itMap] = map it' [["-a"],["-m"]]
-  let itEval expr expected = it' [] expr "" expected
+  let itEval expr = it' [] expr ""
   hspec $ body itEval itApply itMap
 
 

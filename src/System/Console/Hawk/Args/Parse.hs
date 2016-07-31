@@ -1,15 +1,15 @@
-{-# LANGUAGE OverloadedStrings, PackageImports #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PackageImports    #-}
 -- | In which Hawk's command-line arguments are structured into a `HawkSpec`.
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
-import Control.Applicative
-import Data.Char                                 (isSpace)
-import "mtl" Control.Monad.Trans
+import           "mtl" Control.Monad.Trans
+import           Data.Char                        (isSpace)
 
-import Control.Monad.Trans.OptionParser
-import Control.Monad.Trans.Uncertain
-import qualified System.Console.Hawk.Args.Option as Option
-import           System.Console.Hawk.Args.Option (HawkOption, options)
+import           Control.Monad.Trans.OptionParser
+import           Control.Monad.Trans.Uncertain
+import           System.Console.Hawk.Args.Option  (HawkOption, options)
+import qualified System.Console.Hawk.Args.Option  as Option
 import           System.Console.Hawk.Args.Spec
 import           System.Console.Hawk.Context.Dir
 
@@ -22,18 +22,18 @@ type CommonSeparators = (Separator, Separator)
 
 -- | Extract '-D' and '-d'. We perform this step separately because those two
 --   delimiters are used by both the input and output specs.
--- 
+--
 -- >>> let test = testP commonSeparators
--- 
+--
 -- >>> test []
 -- (Delimiter "\n",Whitespace)
--- 
+--
 -- >>> test ["-D\\n", "-d\\t"]
 -- (Delimiter "\n",Delimiter "\t")
--- 
+--
 -- >>> test ["-D|", "-d,"]
 -- (Delimiter "|",Delimiter ",")
-commonSeparators :: (Functor m, Monad m)
+commonSeparators :: (Monad m)
                  => OptionParserT HawkOption m CommonSeparators
 commonSeparators = do
     r <- lastSep Option.RecordDelimiter defaultRecordSeparator
@@ -46,7 +46,7 @@ commonSeparators = do
 
 -- | The input delimiters have already been parsed, but we still need to
 --   interpret them and to determine the input source.
--- 
+--
 -- >>> :{
 -- let test = testP $ do { c <- commonSeparators
 --                       ; _ <- consumeExtra consumeString  -- skip expr
@@ -55,23 +55,23 @@ commonSeparators = do
 --                       ; lift $ print $ inputFormat i
 --                       }
 -- :}
--- 
+--
 -- >>> test []
 -- UseStdin
 -- Records (Delimiter "\n") (Fields Whitespace)
--- 
+--
 -- >>> test ["-d", "-a", "L.reverse"]
 -- UseStdin
 -- Records (Delimiter "\n") RawRecord
--- 
+--
 -- >>> test ["-D", "-a", "B.reverse"]
 -- UseStdin
 -- RawStream
--- 
+--
 -- >>> test ["-d:", "-m", "L.head", "/etc/passwd"]
 -- InputFile "/etc/passwd"
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
-inputSpec :: (Functor m, Monad m)
+inputSpec :: (Monad m)
           => CommonSeparators -> OptionParserT HawkOption m InputSpec
 inputSpec (rSep, fSep) = InputSpec <$> source <*> format
   where
@@ -88,7 +88,7 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
--- 
+--
 -- >>> :{
 -- let test = testP $ do { c <- commonSeparators
 --                       ; o <- outputSpec c
@@ -97,19 +97,19 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 --                       ; lift $ print (r, f)
 --                       }
 -- :}
--- 
+--
 -- >>> test []
 -- UseStdout
 -- ("\n"," ")
--- 
+--
 -- >>> test ["-D;", "-d", "-a", "L.reverse"]
 -- UseStdout
 -- (";"," ")
--- 
+--
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
-outputSpec :: (Functor m, Monad m)
+outputSpec :: (Monad m)
            => CommonSeparators -> OptionParserT HawkOption m OutputSpec
 outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
@@ -124,18 +124,18 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- | The information we need in order to evaluate a user expression:
 --   the expression itself, and the context in which it should be evaluated.
 --   In Hawk, that context is the user prelude.
--- 
+--
 -- >>> :{
 -- let test = testP $ do { e <- exprSpec
 --                       ; lift $ print $ untypedExpr e
 --                       ; lift $ print $ userContextDirectory (contextSpec e)
 --                       }
 -- :}
--- 
+--
 -- >>> test []
 -- error: missing user expression
 -- *** Exception: ExitFailure 1
--- 
+--
 -- >>> test [""]
 -- error: user expression cannot be empty
 -- *** Exception: ExitFailure 1
@@ -143,7 +143,7 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- >>> test ["-D;", "-d", "-a", "L.reverse","-c","somedir"]
 -- "L.reverse"
 -- "somedir"
-exprSpec :: (Functor m, MonadIO m)
+exprSpec :: (MonadIO m)
          => OptionParserT HawkOption m ExprSpec
 exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
                     <*> expr
@@ -163,9 +163,9 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 
 
 -- | Parse command-line arguments to construct a `HawkSpec`.
--- 
+--
 -- TODO: complain if some arguments are unused (except perhaps "-d" and "-D").
--- 
+--
 -- >>> :{
 -- let test args = do { spec <- runUncertainIO $ parseArgs args
 --                    ; case spec of
@@ -176,33 +176,33 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 --                        Map   e i o -> putStrLn "Map"   >> print (untypedExpr e, inputSource i) >> print (inputFormat i) >> print (recordDelimiter (outputFormat o), fieldDelimiter (outputFormat o))
 --                    }
 -- :}
--- 
+--
 -- >>> test []
 -- Help
--- 
+--
 -- >>> test ["--help"]
 -- Help
--- 
+--
 -- >>> test ["--version"]
 -- Version
--- 
+--
 -- >>> test ["-d\\t", "L.head"]
 -- Eval
 -- "L.head"
 -- ("\n","\t")
--- 
+--
 -- >>> test ["-D\r\n", "-d\\t", "-m", "L.head"]
 -- Map
 -- ("L.head",UseStdin)
 -- Records (Delimiter "\r\n") (Fields (Delimiter "\t"))
 -- ("\r\n","\t")
--- 
+--
 -- >>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
 -- Map
 -- ("L.head",InputFile "file.in")
 -- RawStream
 -- ("\n"," ")
-parseArgs :: (Functor m,MonadIO m) => [String] -> UncertainT m HawkSpec
+parseArgs :: (MonadIO m) => [String] -> UncertainT m HawkSpec
 parseArgs [] = return Help
 parseArgs args = runOptionParserT options parser args
   where
@@ -216,8 +216,8 @@ parseArgs args = runOptionParserT options parser args
             , (Option.Apply,   apply)
             , (Option.Map,     map')
             ]
-    
-    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonSeparators
+
+    help, version, eval, apply, map' :: (MonadIO m) => CommonSeparators
                                      -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version

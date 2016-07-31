@@ -2,17 +2,15 @@
 {-# LANGUAGE LambdaCase #-}
 module System.Directory.PathFinder where
 
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.List
-import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.State
-import Data.List
-import System.Directory
-import System.FilePath
-
-import System.Directory.Extra
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.List
+import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans.State
+import           Data.List
+import           System.Directory
+import           System.FilePath
 
 
 type PathFinder = StateT FilePath (MaybeT IO) ()

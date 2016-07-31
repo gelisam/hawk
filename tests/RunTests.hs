@@ -12,16 +12,15 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-import Control.Applicative
-import Data.List
+import           Data.List
 import qualified System.Console.Hawk.Representable.Test as ReprTest
-import qualified System.Console.Hawk.Test as HawkTest
-import System.FilePath
-import System.Environment
-import Text.Printf
+import qualified System.Console.Hawk.Test               as HawkTest
+import           System.Environment
+import           System.FilePath
+import           Text.Printf
 
-import Test.DocTest (doctest)
-import Test.Hspec (hspec)
+import           Test.DocTest                           (doctest)
+import           Test.Hspec                             (hspec)
 
 
 substSuffix :: Eq a => [a] -> [a] -> [a] -> [a]
@@ -34,15 +33,15 @@ substSuffix _ _ xs = xs
 doctest' :: String -> IO ()
 doctest' file = do
     exePath <- dropExtension <$> getExecutablePath
-    
+
     let srcPath = "src"
     let autogenPath = substSuffix ("reference" </> "reference")
                                   "autogen"
                                   exePath
-    
+
     let includeSrc      = printf "-i%s" srcPath
     let includeAutogen  = printf "-i%s" autogenPath
-    
+
     doctest [includeSrc, includeAutogen, file]
 
 main :: IO ()
