@@ -129,17 +129,17 @@ withAssocCache body = evalStateT (body assocCache) []
 -- [3,3,3,3,7,7]
 finiteCache :: Monad m => Int -> Cache m k a -> Cache (StateT Int m) k a
 finiteCache n c = Cache
-    { readCache      = lift . readCache      c
+    { readCache      =                  lift . readCache     c
     , writeCache     = \k v -> do
         alreadyFull <- isFull
         if alreadyFull
           then return False
           else do
-            r <- lift $ writeCache c k v
+            r <- lift $                 writeCache           c k v
             when r incr
             return r
-    , clearCache     =         put 0 >> lift (clearCache     c)
-    , clearFromCache = \k   -> decr  >> lift (clearFromCache c k)
+    , clearCache     =         put 0 >> lift (clearCache     c    )
+    , clearFromCache = \k   -> decr  >> lift (clearFromCache c k  )
     }
   where
     isFull = fmap (== n) get
