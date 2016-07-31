@@ -7,4 +7,3 @@ cabal-dev
 *.swp
 *.swo
 .virthualenv
-.vscode/
