@@ -236,7 +236,7 @@ runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
 -- after
 -- warning: be careful!
 -- 42
-wrapUncertain :: (Monad m, Monad m')
+wrapUncertain :: (Monad m')
               => (forall a. m a -> m' a)
               -> (UncertainT m b -> UncertainT m' b)
 wrapUncertain wrap body = wrapUncertainArg wrap' body'
@@ -277,7 +277,7 @@ wrapUncertain wrap body = wrapUncertainArg wrap' body'
 -- after
 -- warning: be careful!
 -- 43
-wrapUncertainArg :: (Monad m, Monad m')
+wrapUncertainArg :: (Monad m')
                  => (forall a. (v -> m a) -> m' a)
                  -> ((v -> UncertainT m b) -> UncertainT m' b)
 wrapUncertainArg wrap body = do

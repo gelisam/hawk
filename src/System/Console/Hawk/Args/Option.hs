@@ -30,16 +30,16 @@ delimiter :: OptionType
 delimiter = nullable (Setting "delim")
 
 -- | Interpret escape sequences, but don't worry if they're invalid.
--- 
+--
 -- >>> parseDelimiter ","
 -- ","
--- 
+--
 -- >>> parseDelimiter "\\n"
 -- "\n"
--- 
+--
 -- >>> parseDelimiter "\\t"
 -- "\t"
--- 
+--
 -- >>> parseDelimiter "\\"
 -- "\\"
 parseDelimiter :: String -> ByteString
@@ -48,7 +48,7 @@ parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
     _          -> s
 
 -- | Almost like a string, except escape sequences are interpreted.
-consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m ByteString
+consumeDelimiter :: (Monad m) => OptionConsumer m ByteString
 consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeString
 
 instance Option HawkOption where
@@ -61,7 +61,7 @@ instance Option HawkOption where
   shortName Version               = 'v'
   shortName Help                  = 'h'
   shortName ContextDirectory      = 'c'
-  
+
   longName Apply                 = "apply"
   longName Map                   = "map"
   longName FieldDelimiter        = "field-delimiter"
@@ -71,7 +71,7 @@ instance Option HawkOption where
   longName Version               = "version"
   longName Help                  = "help"
   longName ContextDirectory      = "context-directory"
-  
+
   helpMsg Apply                      = ["apply <expr> to the entire table"]
   helpMsg Map                        = ["apply <expr> to each row"]
   helpMsg FieldDelimiter             = ["default whitespace"]
@@ -82,7 +82,7 @@ instance Option HawkOption where
   helpMsg Help                       = ["this help"]
   helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
                                        ,"'~/.hawk'"]
-  
+
   optionType Apply                 = flag
   optionType Map                   = flag
   optionType FieldDelimiter        = delimiter

@@ -165,7 +165,7 @@ runOptionParserT = runOptionParserWith shortName longName helpMsg optionType
 --   }
 -- :}
 -- (True,False,True)
-runOptionParserWith :: (Eq o, Monad m)
+runOptionParserWith :: (Monad m)
                     => (o -> Char)
                     -> (o -> String)
                     -> (o -> [String])
@@ -435,7 +435,7 @@ consumeLast o defaultValue consume = do
 
 
 -- | For use with mutually-exclusive flags.
-consumeExclusive :: (Option o, Functor m, Monad m)
+consumeExclusive :: (Option o, Monad m)
                  => [(o, a)] -> a -> OptionParserT o m a
 consumeExclusive = consumeExclusiveWith longName
 
@@ -453,7 +453,7 @@ consumeExclusive = consumeExclusiveWith longName
 -- >>> testP ["-cs"] tp consume
 -- error: cowbell and saxophone are incompatible
 -- *** Exception: ExitFailure 1
-consumeExclusiveWith :: (Eq o, Functor m, Monad m)
+consumeExclusiveWith :: (Eq o, Monad m)
                      => (o -> String)
                      -> [(o, a)] -> a -> OptionParserT o m a
 consumeExclusiveWith longName' assoc defaultValue = do
@@ -482,7 +482,7 @@ consumeExclusiveWith longName' assoc defaultValue = do
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume >> consume)
 -- Nothing
-consumeExtra :: (Functor m, Monad m)
+consumeExtra :: (Monad m)
              => OptionConsumer m a -> OptionParserT o m (Maybe a)
 consumeExtra consume = OptionParserT $ do
     extra_options <- lift get
@@ -505,7 +505,7 @@ consumeExtra consume = OptionParserT $ do
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
 -- []
-consumeExtras :: (Functor m, Monad m)
+consumeExtras :: (Monad m)
               => OptionConsumer m a -> OptionParserT o m [a]
 consumeExtras consume = fmap reverse $ go []
   where

@@ -1,9 +1,9 @@
 {-# LANGUAGE PackageImports #-}
 -- | A generic caching interface.
--- 
+--
 -- The intent is to support many concrete implementations,
 -- and to use specify caching policies using combinators.
--- 
+--
 -- Note that even though we _support_ many concrete implementations,
 -- for simplicity we only provide one based on an association-list.
 module Data.Cache where
@@ -47,9 +47,9 @@ cached c k computeSlowly = do
 
 
 -- | A dummy cache which never caches anything.
--- 
+--
 -- Semantically equivalent to `finiteCache 0 $ assocCache`, except for the `m`.
--- 
+--
 -- >>> withNullCache testC
 -- one
 -- two
@@ -71,7 +71,7 @@ withNullCache body = body nullCache
 
 
 -- | A very inefficient example implementation.
--- 
+--
 -- >>> withAssocCache testC
 -- one
 -- two
@@ -97,14 +97,14 @@ withAssocCache body = evalStateT (body assocCache) []
 
 -- | Only cache the first `n` requests (use n=-1 for unlimited).
 --   Combine with a cache policy in order to reuse those `n` slots.
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 2 $ testC
 -- one
 -- two
 -- testing
 -- testing
 -- [3,3,3,3,7,7]
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 1 $ testC
 -- one
 -- two
@@ -112,7 +112,7 @@ withAssocCache body = evalStateT (body assocCache) []
 -- testing
 -- testing
 -- [3,3,3,3,7,7]
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 0 $ testC
 -- one
 -- two
@@ -121,7 +121,7 @@ withAssocCache body = evalStateT (body assocCache) []
 -- testing
 -- testing
 -- [3,3,3,3,7,7]
--- 
+--
 -- >>> withAssocCache $ withFiniteCache (-1) $ testC
 -- one
 -- two
@@ -154,13 +154,13 @@ withFiniteCache n body c = evalStateT (body $ finiteCache n c) 0
 
 
 -- | An example cache-policy implementation: Least-Recently-Used.
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 2 $ withLruCache testC
 -- one
 -- two
 -- testing
 -- [3,3,3,3,7,7]
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 1 $ withLruCache testC
 -- one
 -- two
@@ -168,7 +168,7 @@ withFiniteCache n body c = evalStateT (body $ finiteCache n c) 0
 -- two
 -- testing
 -- [3,3,3,3,7,7]
--- 
+--
 -- >>> withAssocCache $ withFiniteCache 0 $ withLruCache testC
 -- one
 -- two
@@ -204,7 +204,7 @@ lruCache c = Cache
           [] -> do
             -- the cache is both full and empty? try to reset.
             lift $ clearCache c
-    
+
     write  k = modify (k:)
     remove k = modify $ filter $ (/= k)
 
@@ -215,9 +215,9 @@ withLruCache body c = evalStateT (body $ lruCache c) []
 
 
 -- | An extreme version of the LRU strategy.
--- 
+--
 -- Semantically equivalent to `lruCache . finiteCache 1`, except for the `m`.
--- 
+--
 -- >>> withAssocCache $ withSingletonCache testC
 -- one
 -- two
@@ -225,12 +225,12 @@ withLruCache body c = evalStateT (body $ lruCache c) []
 -- two
 -- testing
 -- [3,3,3,3,7,7]
-singletonCache :: (Monad m, Eq k) => Cache m k a -> Cache m k a
+singletonCache :: (Monad m) => Cache m k a -> Cache m k a
 singletonCache c = c { writeCache = go }
   where
     go k mx = clearCache c >> writeCache c k mx
 
-withSingletonCache :: (Monad m, Eq k)
+withSingletonCache :: (Monad m)
                    => (Cache m k v -> m a)
                    -> (Cache m k v -> m a)
 withSingletonCache body c = body (singletonCache c)

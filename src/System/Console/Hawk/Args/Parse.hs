@@ -32,7 +32,7 @@ type CommonSeparators = (Separator, Separator)
 --
 -- >>> test ["-D|", "-d,"]
 -- (Delimiter "|",Delimiter ",")
-commonSeparators :: (Functor m, Monad m)
+commonSeparators :: (Monad m)
                  => OptionParserT HawkOption m CommonSeparators
 commonSeparators = do
     r <- lastSep Option.RecordDelimiter defaultRecordSeparator
@@ -70,7 +70,7 @@ commonSeparators = do
 -- >>> test ["-d:", "-m", "L.head", "/etc/passwd"]
 -- InputFile "/etc/passwd"
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
-inputSpec :: (Functor m, Monad m)
+inputSpec :: (Monad m)
           => CommonSeparators -> OptionParserT HawkOption m InputSpec
 inputSpec (rSep, fSep) = InputSpec <$> source <*> format
   where
@@ -108,7 +108,7 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
-outputSpec :: (Functor m, Monad m)
+outputSpec :: (Monad m)
            => CommonSeparators -> OptionParserT HawkOption m OutputSpec
 outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
@@ -142,7 +142,7 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
 -- >>> test ["-D;", "-d", "-a", "L.reverse","-c","somedir"]
 -- "L.reverse"
 -- "somedir"
-exprSpec :: (Functor m, MonadIO m)
+exprSpec :: (MonadIO m)
          => OptionParserT HawkOption m ExprSpec
 exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
                     <*> expr
@@ -201,7 +201,7 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 -- ("L.head",InputFile "file.in")
 -- RawStream
 -- ("\n"," ")
-parseArgs :: (Functor m,MonadIO m) => [String] -> UncertainT m HawkSpec
+parseArgs :: (MonadIO m) => [String] -> UncertainT m HawkSpec
 parseArgs [] = return Help
 parseArgs args = runOptionParserT options parser args
   where
@@ -216,7 +216,7 @@ parseArgs args = runOptionParserT options parser args
             , (Option.Map,     map')
             ]
 
-    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonSeparators
+    help, version, eval, apply, map' :: (MonadIO m) => CommonSeparators
                                      -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version
