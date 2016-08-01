@@ -13,37 +13,36 @@
 --   limitations under the License.
 
 -- Extra steps to be performed if hawk was installed from a sandbox.
--- 
+--
 -- Extra steps are needed because the hawk binary needs runtime access
 -- to the hawk library, but the hint library only knows about the globally-
 -- installed libraries. If hawk has been installed with a sandbox, its
 -- binary and its library will be installed in a local folder instead of
 -- in the global location.
-{-# LANGUAGE TemplateHaskell, TupleSections #-}
+{-# LANGUAGE TemplateHaskell, TupleSections   #-}
 module System.Console.Hawk.Sandbox
     ( extraGhcArgs
     , runHawkInterpreter
     ) where
 
-import Control.Applicative
-import Control.Monad
-import Data.List.Extra (wordsBy)
-import Data.Maybe
-import Language.Haskell.Interpreter (InterpreterT, InterpreterError)
-import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
-import Language.Haskell.TH.Syntax (lift, runIO)
-import System.Directory.PathFinder
-import System.Environment (getEnvironment)
-import System.FilePath ((</>))
-import Text.Printf (printf)
+import           Control.Monad
+import           Data.List.Extra (wordsBy)
+import           Data.Maybe
+import           Language.Haskell.Interpreter (InterpreterError, InterpreterT)
+import           Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
+import           Language.Haskell.TH.Syntax (lift, runIO)
+import           System.Directory.PathFinder
+import           System.Environment (getEnvironment)
+import           System.FilePath ((</>))
+import           Text.Printf (printf)
 
 -- magic self-referential module created by cabal
-import Paths_haskell_awk (getBinDir)
+import           Paths_haskell_awk (getBinDir)
 
 
 data Sandbox = Sandbox
   { sandboxPathFinder :: PathFinder
-  , packageDbFinder :: MultiPathFinder
+  , packageDbFinder   :: MultiPathFinder
   }
 
 dotCabal :: Sandbox
@@ -119,10 +118,10 @@ extraGhcArgs = fmap (printf "-package-db %s") <$> detectPackageDbs
 
 -- | a version of runInterpreter which can load libraries
 --   installed along hawk's sandbox folder, if applicable.
--- 
+--
 -- Must be called inside a `withLock` block, otherwise hint will generate
 -- conflicting temporary files.
--- 
+--
 -- TODO: Didn't we write a patch for hint about this?
 --       Do we still need the lock?
 runHawkInterpreter :: InterpreterT IO a -> IO (Either InterpreterError a)

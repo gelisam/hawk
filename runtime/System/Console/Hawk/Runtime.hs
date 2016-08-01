@@ -6,16 +6,15 @@ module System.Console.Hawk.Runtime
   , processTable
   ) where
 
-import Control.Applicative
-import Control.Exception
-import Data.ByteString.Lazy.Char8 as B
-import Data.ByteString.Lazy.Search as Search
-import GHC.IO.Exception
-import System.IO
+import           Control.Exception
+import           Data.ByteString.Lazy.Char8 as B
+import           Data.ByteString.Lazy.Search as Search
+import           GHC.IO.Exception
+import           System.IO
 
-import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.Representable
-import System.Console.Hawk.Runtime.Base
+import           System.Console.Hawk.Args.Spec
+import           System.Console.Hawk.Representable
+import           System.Console.Hawk.Runtime.Base
 
 
 data SomeRows = forall a. Rows a => SomeRows a
@@ -34,8 +33,8 @@ getTable spec = splitIntoTable' <$> getInputString'
     getInputString' = getInputString (inputSource spec)
 
 getInputString :: InputSource -> IO B.ByteString
-getInputString NoInput = return B.empty
-getInputString UseStdin = B.getContents
+getInputString NoInput       = return B.empty
+getInputString UseStdin      = B.getContents
 getInputString (InputFile f) = B.readFile f
 
 -- [[contents]]
@@ -54,7 +53,7 @@ splitIntoTable (Records sep format) = fmap splitIntoFields' . splitIntoRecords'
 -- or
 -- [field0, field1, ...]
 splitIntoFields :: RecordFormat -> B.ByteString -> [B.ByteString]
-splitIntoFields RawRecord = return
+splitIntoFields RawRecord    = return
 splitIntoFields (Fields sep) = splitAtSeparator sep
 
 splitAtSeparator :: Separator -> B.ByteString -> [B.ByteString]
@@ -81,7 +80,7 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
   where
     join' = join (B.fromStrict $ recordDelimiter spec)
     toRows = repr (B.fromStrict $ fieldDelimiter spec)
-    
+
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep

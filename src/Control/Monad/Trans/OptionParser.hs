@@ -3,20 +3,19 @@
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
 
-import Control.Applicative
-import Control.Monad
-import "mtl" Control.Monad.Identity
-import "mtl" Control.Monad.Trans
-import Control.Monad.Trans.State
-import Data.List
-import Data.Maybe
+import           Control.Monad
+import           "mtl" Control.Monad.Identity
+import           "mtl" Control.Monad.Trans
+import           Control.Monad.Trans.State
+import           Data.List
+import           Data.Maybe
 import qualified System.Console.GetOpt as GetOpt
-import Text.Printf
+import           Text.Printf
 
-import Control.Monad.Trans.Uncertain
+import           Control.Monad.Trans.Uncertain
 
 -- $setup
--- 
+--
 -- >>> :{
 -- let testH tp = do { putStrLn "Usage: more [option]... <song.mp3>"
 --                   ; putStr $ optionsHelpWith head
@@ -26,7 +25,7 @@ import Control.Monad.Trans.Uncertain
 --                                              ["cowbell","guitar","saxophone"]
 --                   }
 -- :}
--- 
+--
 -- >>> let testP args tp p = runUncertain $ runOptionParserWith head id (const [""]) tp ["cowbell","guitar","saxophone"] p args
 
 
@@ -41,7 +40,7 @@ class Eq a => Option a where
 -- | The type of the argument set by the option. Since Haskell doesn't support
 --   dependent types, this is just a string description of the type, plus extra
 --   support for boolean flags and optional arguments.
--- 
+--
 -- To maintain the illusion of precise types, please use combining functions
 -- such as `nullable int` instead.
 data OptionType
@@ -118,21 +117,21 @@ optionsHelp :: Option o => [o] -> String
 optionsHelp = optionsHelpWith shortName longName helpMsg optionType
 
 -- | A version of `optionsHelp` which doesn't use the Option typeclass.
--- 
+--
 -- >>> :{
 -- let { tp "cowbell"   = flag
 --     ; tp "guitar"    = string
 --     ; tp "saxophone" = nullable int
 --     }
 -- :}
--- 
+--
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
 -- Options:
 --   -c       --cowbell          adds more cowbell.
 --   -g str   --guitar=str       adds more guitar.
 --   -s[int]  --saxophone[=int]  adds more saxophone.
--- 
+--
 optionsHelpWith :: (o -> Char)
                 -> (o -> String)
                 -> (o -> [String])
@@ -156,7 +155,7 @@ runOptionParserT :: (Option o, Monad m)
 runOptionParserT = runOptionParserWith shortName longName helpMsg optionType
 
 -- | A version of `runOptionParserT` which doesn't use the Option typeclass.
--- 
+--
 -- >>> :{
 -- testP ["--cowbell","-s"] (const flag) $ do
 --   { c <- consumeLast "cowbell"   False consumeFlag
@@ -195,7 +194,7 @@ runOptionParserWith shortName' longName' helpMsg' optionType'
 
 
 -- | Try to parse a setting of a particular type.
--- 
+--
 -- The input will never be Nothing unless the optionType is nullable, and even
 -- then consumeNullable will get rid of it for you. Yet we still need the type
 -- of the input to be `Maybe String` in order for consumeNullable itself to be
@@ -204,7 +203,7 @@ type OptionConsumer m a = Maybe String -> UncertainT m a
 
 
 -- | Specifies that the option cannot be assigned a value.
--- 
+--
 -- >>> let tp = const flag
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
@@ -216,13 +215,13 @@ flag :: OptionType
 flag = Flag
 
 -- | True if the given flag appears.
--- 
+--
 -- >>> let tp = const flag
 -- >>> let consumeCowbell = consumeLast "cowbell" False consumeFlag :: OptionParser String Bool
--- 
+--
 -- >>> testP ["-cs"] tp consumeCowbell
 -- True
--- 
+--
 -- >>> testP ["--saxophone"] tp consumeCowbell
 -- False
 consumeFlag :: Monad m => OptionConsumer m Bool
@@ -230,7 +229,7 @@ consumeFlag _ = return True
 
 
 -- | Specifies that the option must be assigned a String value.
--- 
+--
 -- >>> let tp = const string
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
@@ -242,19 +241,19 @@ string :: OptionType
 string = Setting "str"
 
 -- | The value assigned to the option, interpreted as a string.
--- 
+--
 -- >>> let tp = const string
 -- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
--- 
+--
 -- >>> testP ["--cowbell", "extra"] tp consumeCowbell
 -- "extra"
--- 
+--
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
--- 
+--
 -- >>> testP [] tp consumeCowbell
 -- "<none>"
--- 
+--
 -- >>> testP ["-c"] tp consumeCowbell
 -- error: option `-c' requires an argument str
 -- *** Exception: ExitFailure 1
@@ -264,7 +263,7 @@ consumeString Nothing = error "please use consumeNullable to consume nullable op
 
 
 -- | Specifies that the value of the option may be omitted.
--- 
+--
 -- >>> let tp = const (nullable string)
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
@@ -273,41 +272,41 @@ consumeString Nothing = error "please use consumeNullable to consume nullable op
 --   -g[str]  --guitar[=str]     adds more guitar.
 --   -s[str]  --saxophone[=str]  adds more saxophone.
 nullable :: OptionType -> OptionType
-nullable (Setting tp) = NullableSetting tp
+nullable (Setting tp)        = NullableSetting tp
 nullable (NullableSetting _) = error "double nullable"
-nullable Flag = error "nullable flag doesn't make sense"
+nullable Flag                = error "nullable flag doesn't make sense"
 
 -- | The value assigned to an option, or a default value if no value was
 --   assigned. Must be used to consume `nullable` options.
--- 
+--
 -- >>> let tp = const (nullable string)
 -- >>> let consumeCowbell = consumeLast "cowbell" "<none>" $ consumeNullable "<default>" consumeString :: OptionParser String String
--- 
+--
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
--- 
+--
 -- >>> testP ["-c", "-s"] tp consumeCowbell
 -- "<default>"
--- 
+--
 -- >>> testP ["-s"] tp consumeCowbell
 -- "<none>"
--- 
+--
 -- >>> testP ["-c"] tp $ consumeLast "cowbell" "<none>" consumeString
 -- *** Exception: please use consumeNullable to consume nullable options
 consumeNullable :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
 consumeNullable nullValue _ Nothing = return nullValue
-consumeNullable _ consume o = consume o
+consumeNullable _ consume o         = consume o
 
 
 -- | A helper for defining custom options types.
--- 
+--
 -- >>> :{
 -- let { tp "cowbell"   = readable "amount"
 --     ; tp "guitar"    = readable "file"
 --     ; tp "saxophone" = readable "weight"
 --     }
 -- :}
--- 
+--
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
 -- Options:
@@ -318,13 +317,13 @@ readable :: String -> OptionType
 readable = Setting
 
 -- | The value assigned to the option, interpreted by `read`.
--- 
+--
 -- >>> let tp = const (readable "unit")
 -- >>> let consumeCowbell = consumeLast "cowbell" () consumeReadable :: OptionParser String ()
--- 
+--
 -- >>> testP ["--cowbell=()"] tp consumeCowbell >>= print
 -- ()
--- 
+--
 -- >>> testP ["--cowbell=foo"] tp consumeCowbell >>= print
 -- error: "foo" is not a valid value for this option.
 -- *** Exception: ExitFailure 1
@@ -337,19 +336,19 @@ consumeReadable o = do
 
 
 -- | Users are encouraged to create custom option types, like this.
--- 
+--
 -- (see the source)
 int :: OptionType
 int = readable "int"
 
 -- | The value assigned to the option, interpreted as an int.
--- 
+--
 -- This is a good example of how to consume custom option types.
 -- (see the source)
--- 
+--
 -- >>> let tp = const int
 -- >>> let consumeCowbell = consumeLast "cowbell" (-1) consumeInt :: OptionParser String Int
--- 
+--
 -- >>> testP ["--cowbell=42"] tp consumeCowbell
 -- 42
 consumeInt :: Monad m => OptionConsumer m Int
@@ -390,13 +389,13 @@ consumeFilePath check input = consumeString input >>= check >>= return
 
 
 -- | All the occurences of a given option.
--- 
+--
 -- It is an error to consume the same value twice (we currently return an
 -- empty list).
--- 
+--
 -- >>> let tp = const string
 -- >>> let consumeCowbell = consumeAll "cowbell" consumeString :: OptionParser String [String]
--- 
+--
 -- >>> :{
 -- testP ["--cowbell=foo", "--cowbell", "bar"] tp $ do
 --   { xs <- consumeCowbell
@@ -413,13 +412,13 @@ consumeAll o consume = OptionParserT $ do
 
 -- | The last occurence of a given option, or a default value if the option
 --   isn't specified.
--- 
+--
 -- It is an error to consume the same value twice (we currently return the
 -- default value).
--- 
+--
 -- >>> let tp = const string
 -- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
--- 
+--
 -- >>> :{
 -- testP ["--cowbell=foo", "--cowbell", "bar"] tp $ do
 --   { xs <- consumeCowbell
@@ -441,16 +440,16 @@ consumeExclusive :: (Option o, Functor m, Monad m)
 consumeExclusive = consumeExclusiveWith longName
 
 -- | A version of `consumeExclusive` which doesn't use the Option typeclass.
--- 
+--
 -- >>> let tp = const flag
 -- >>> let consume = consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] (-1) :: OptionParser String Int
--- 
+--
 -- >>> testP ["-s"] tp consume
 -- 2
--- 
+--
 -- >>> testP [] tp consume
 -- -1
--- 
+--
 -- >>> testP ["-cs"] tp consume
 -- error: cowbell and saxophone are incompatible
 -- *** Exception: ExitFailure 1
@@ -471,16 +470,16 @@ consumeExclusiveWith longName' assoc defaultValue = do
 
 
 -- | The next non-option argument.
--- 
+--
 -- >>> let tp = const flag
 -- >>> let consume = consumeExtra consumeString :: OptionParser String (Maybe String)
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
 -- Just "song.mp3"
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
 -- Just "jazz.mp3"
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume >> consume)
 -- Nothing
 consumeExtra :: (Functor m, Monad m)
@@ -494,16 +493,16 @@ consumeExtra consume = OptionParserT $ do
         fmap Just $ lift . lift $ consume $ Just x
 
 -- | All remaining non-option arguments.
--- 
+--
 -- >>> let tp = const flag
 -- >>> let consume = consumeExtras consumeString :: OptionParser String [String]
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
 -- ["song.mp3","jazz.mp3"]
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consumeExtra consumeString >> consume)
 -- ["jazz.mp3"]
--- 
+--
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
 -- []
 consumeExtras :: (Functor m, Monad m)

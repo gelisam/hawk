@@ -2,14 +2,13 @@
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
-import Control.Applicative
-import "mtl" Control.Monad.Trans
-import "mtl" Control.Monad.Identity
-import "transformers" Control.Monad.Trans.Error hiding (Error)
-import "transformers" Control.Monad.Trans.Writer
-import System.Exit
-import System.IO
-import Text.Printf
+import           "mtl" Control.Monad.Identity
+import           "mtl" Control.Monad.Trans
+import           "transformers" Control.Monad.Trans.Error hiding (Error)
+import           "transformers" Control.Monad.Trans.Writer
+import           System.Exit
+import           System.IO
+import           Text.Printf
 
 
 type Warning = String
@@ -58,7 +57,7 @@ multilineMsg = concat . map (printf "\n  %s") . lines
 --   multilineWarn "foo\nbar\n"
 --   return 42
 -- :}
--- warning: 
+-- warning:
 --   foo
 --   bar
 -- 42
@@ -71,7 +70,7 @@ multilineWarn = warn . multilineMsg
 --   multilineFail "foo\nbar\n"
 --   return 42
 -- :}
--- error: 
+-- error:
 --   foo
 --   bar
 -- *** Exception: ExitFailure 1
@@ -92,9 +91,9 @@ uncertainT (Right x, warnings) = mapM_ warn warnings >> return x
 
 -- | A version of `runWarnings` which allows you to interleave IO actions
 --   with uncertain actions.
--- 
+--
 -- Note that the warnings are displayed after the IO's output.
--- 
+--
 -- >>> :{
 -- runWarningsIO $ do
 --   warn "before"
@@ -106,7 +105,7 @@ uncertainT (Right x, warnings) = mapM_ warn warnings >> return x
 -- warning: before
 -- warning: after
 -- Right 42
--- 
+--
 -- >>> :{
 -- runWarningsIO $ do
 --   warn "before"
@@ -125,7 +124,7 @@ runWarningsIO u = do
 
 -- | A version of `runUncertain` which only prints the warnings, not the
 --   errors. Unlike `runUncertain`, it doesn't terminate on error.
--- 
+--
 -- >>> :{
 -- runWarnings $ do
 --   warn "before"
@@ -135,7 +134,7 @@ runWarningsIO u = do
 -- warning: before
 -- warning: after
 -- Right 42
--- 
+--
 -- >>> :{
 -- runWarnings $ do
 --   warn "before"
@@ -150,9 +149,9 @@ runWarnings = runWarningsIO . mapUncertainT (return . runIdentity)
 
 -- | A version of `runUncertain` which allows you to interleave IO actions
 --   with uncertain actions.
--- 
+--
 -- Note that the warnings are displayed after the IO's output.
--- 
+--
 -- >>> :{
 -- runUncertainIO $ do
 --   warn "before"
@@ -164,7 +163,7 @@ runWarnings = runWarningsIO . mapUncertainT (return . runIdentity)
 -- warning: before
 -- warning: after
 -- 42
--- 
+--
 -- >>> :{
 -- runUncertainIO $ do
 --   warn "before"
@@ -186,9 +185,9 @@ runUncertainIO u = do
       Right x -> return x
 
 -- | Print warnings and errors, terminating on error.
--- 
+--
 -- Note that the warnings are displayed even if there is also an error.
--- 
+--
 -- >>> :{
 -- runUncertainIO $ do
 --   warn "first"
@@ -206,7 +205,7 @@ runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
 
 -- | Upgrade an `IO a -> IO a` wrapping function into a variant which uses
 --   `UncertainT IO` instead of `IO`.
--- 
+--
 -- >>> :{
 -- let wrap body = do { putStrLn "before"
 --                    ; r <- body
@@ -214,7 +213,7 @@ runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
 --                    ; return r
 --                    }
 -- :}
--- 
+--
 -- >>> :{
 -- wrap $ do { putStrLn "hello"
 --           ; return 42
@@ -224,7 +223,7 @@ runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
 -- hello
 -- after
 -- 42
--- 
+--
 -- >>> :{
 -- runUncertainIO $ wrapUncertain wrap
 --                $ do { lift $ putStrLn "hello"
@@ -247,7 +246,7 @@ wrapUncertain wrap body = wrapUncertainArg wrap' body'
 
 -- | A version of `wrapUncertain` for wrapping functions of type
 --   `(Handle -> IO a) -> IO a`.
--- 
+--
 -- >>> :{
 -- let wrap body = do { putStrLn "before"
 --                    ; r <- body 42
@@ -255,7 +254,7 @@ wrapUncertain wrap body = wrapUncertainArg wrap' body'
 --                    ; return r
 --                    }
 -- :}
--- 
+--
 -- >>> :{
 -- wrap $ \x -> do { putStrLn "hello"
 --                 ; return (x + 1)
@@ -265,7 +264,7 @@ wrapUncertain wrap body = wrapUncertainArg wrap' body'
 -- hello
 -- after
 -- 43
--- 
+--
 -- >>> :{
 -- runUncertainIO $ wrapUncertainArg wrap
 --                $ \x -> do { lift $ putStrLn "hello"
@@ -283,7 +282,7 @@ wrapUncertainArg :: (Monad m, Monad m')
                  -> ((v -> UncertainT m b) -> UncertainT m' b)
 wrapUncertainArg wrap body = do
     (r, ws) <- lift $ wrap $ runUncertainT . body
-    
+
     -- repackage the warnings and errors
     mapM_ warn ws
     fromRightM r

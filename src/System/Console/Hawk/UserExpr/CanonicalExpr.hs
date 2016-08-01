@@ -3,15 +3,14 @@ module System.Console.Hawk.UserExpr.CanonicalExpr where
 
 import qualified Data.ByteString.Lazy.Char8 as B
 
-import Control.Applicative
-import Data.HaskellExpr
-import Data.HaskellExpr.Base
-import System.Console.Hawk.Args
-import System.Console.Hawk.Runtime
-import System.Console.Hawk.Runtime.Base
-import System.Console.Hawk.Runtime.HaskellExpr
-import System.Console.Hawk.UserExpr.InputReadyExpr
-import System.Console.Hawk.UserExpr.OriginalExpr
+import           Data.HaskellExpr
+import           Data.HaskellExpr.Base
+import           System.Console.Hawk.Args
+import           System.Console.Hawk.Runtime
+import           System.Console.Hawk.Runtime.Base
+import           System.Console.Hawk.Runtime.HaskellExpr
+import           System.Console.Hawk.UserExpr.InputReadyExpr
+import           System.Console.Hawk.UserExpr.OriginalExpr
 
 
 -- | Regardless of the requested input format, we currently convert all user expressions
