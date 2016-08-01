@@ -66,7 +66,7 @@ instance ListAsRow Char where
     listRepr' _ = C8.pack
 
 instance ListAsRow ByteString where
-    listRepr' d = C8.intercalate d
+    listRepr' = C8.intercalate
 
 instance (Row a, Row b) => ListAsRow (Map a b) where
     listRepr' d = listRepr' d . L.map (listRepr' d . M.toList)
