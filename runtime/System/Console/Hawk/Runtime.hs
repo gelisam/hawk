@@ -81,16 +81,16 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
   where
     join' = join (B.fromStrict $ recordDelimiter spec)
     toRows = repr (B.fromStrict $ fieldDelimiter spec)
-    
+
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
 ignoringBrokenPipe :: IO () -> IO ()
-ignoringBrokenPipe = handleJust isBrokenPipe $ \_ -> do
+ignoringBrokenPipe = handleJust isBrokenPipe $ \_ ->
     -- ignore the broken pipe
     return ()
   where
     isBrokenPipe e | ioe_type e == ResourceVanished = Just e
-    isBrokenPipe _ | otherwise                      = Nothing
+    isBrokenPipe _                                  = Nothing

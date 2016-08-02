@@ -36,7 +36,7 @@ findContext startDir =
   where
     mkHawkPath = (</> ".hawk")
     possibleContextDirs = map mkHawkPath (ancestors startDir)
-    
+
     validDirOrNothing dir = do
       dirExists <- doesDirectoryExist dir
       if dirExists
@@ -80,10 +80,10 @@ checkContextDir dir = do
     if dirExists
       then do
         permissions <- liftIO $ getPermissions dir
-        when (not $ writable permissions) $ fail $ concat [
+        unless (writable permissions) $ fail $ concat [
            "cannot use '",dir,"' as context directory because it is not "
           ,"writable"]
-        when (not $ searchable permissions) $ fail $ concat [
+        unless (searchable permissions) $ fail $ concat [
            "cannot use '",dir,"' as context directory because it is not "
           ,"searchable"]
         return False
@@ -92,10 +92,10 @@ checkContextDir dir = do
         -- and searchable
         let parent = case takeDirectory dir of {"" -> ".";p -> p}
         permissions <- liftIO $ getPermissions parent
-        when (not $ writable permissions) $ fail $ concat[
+        unless (writable permissions) $ fail $ concat[
            "cannot create context directory '",dir,"' because the parent "
           ," directory is not writable (",show permissions,")"]
-        when (not $ searchable permissions) $ fail $ concat[
+        unless (searchable permissions) $ fail $ concat[
            "cannot create context directory '",dir,"' because the parent "
           ," directory is not searchable (",show permissions,")"]
         warn $ concat ["directory '",dir,"' doesn't exist, creating a "
