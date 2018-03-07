@@ -80,33 +80,34 @@ Library
                  , stringsearch >=0.3.6.4
     Default-Language: Haskell98
 
-Test-suite reference
-  Hs-Source-Dirs:       src,tests
-  Main-Is:              RunTests.hs
-  Type:                 exitcode-stdio-1.0
-  Ghc-Options:          -Wall
-  Build-Depends:        base >=4.6.0.1 && <5
-                      , bytestring
-                      , containers
-                      , directory
-                      , doctest >=0.3.0
-                      , easy-file
-                      , exceptions >=0.1
-                      , extra
-                      , filepath
-                      , haskell-awk
-                      , haskell-src-exts >=1.14.0 && < 1.18
-                      , hint >=0.3.3.5
-                      , hspec >=0.2.0
-                      , HUnit >=1.1
-                      , mtl >=2.1.2
-                      , network >=2.3.1.0
-                      , process
-                      , stringsearch >=0.3.6.4
-                      , template-haskell
-                      , temporary >=1.0
-                      , test-framework >=0.1
-                      , test-framework-hunit >=0.2.0
-                      , time
-                      , transformers >=0.3.0.0
-  Default-Language: Haskell98
+--Test-suite reference
+--  Hs-Source-Dirs:       src,tests
+--  Main-Is:              RunTests.hs
+--  Type:                 exitcode-stdio-1.0
+--  Ghc-Options:          -Wall
+--  Build-Depends:        base >=4.6.0.1 && <5
+--                      , aeson
+--                      , bytestring
+--                      , containers
+--                      , directory
+--                      , doctest >=0.3.0
+--                      , easy-file
+--                      , exceptions >=0.1
+--                      , extra
+--                      , filepath
+--                      , haskell-awk
+--                      , haskell-src-exts >=1.14.0 && < 1.18
+--                      , hint >=0.3.3.5
+--                      , hspec >=0.2.0
+--                      , HUnit >=1.1
+--                      , mtl >=2.1.2
+--                      , network >=2.3.1.0
+--                      , process
+--                      , stringsearch >=0.3.6.4
+--                      , template-haskell
+--                      , temporary >=1.0
+--                      , test-framework >=0.1
+--                      , test-framework-hunit >=0.2.0
+--                      , time
+--                      , transformers >=0.3.0.0
+--  Default-Language: Haskell98
