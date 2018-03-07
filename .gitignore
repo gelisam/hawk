@@ -1,9 +1,1 @@
-dist
-cabal-dev
-*.o
-*.hi
-*.chi
-*.chs.h
-*.swp
-*.swo
-.virthualenv
+.stack-work
