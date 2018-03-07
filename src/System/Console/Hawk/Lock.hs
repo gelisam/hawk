@@ -24,24 +24,28 @@ import System.Directory ( doesFileExist, removeFile )
 import Control.Monad ( when )
 import System.FileLock ( SharedExclusive( Exclusive ), withFileLock )
 
+-- | Create a temporary file to indicate to other hawk process
+--  not to run until this process is unblocked
 withLock :: IO a -> IO a
-withLock = lock False
+withLock action = withFileLock lockfile Exclusive (const action) >>= cleanup
 
+-- | withLock but with additional messages
 withTestLock :: IO a -> IO a
-withTestLock = lock True
+withTestLock action = do
+    result <- withFileLock lockfile Exclusive $ \_ -> do
+        putStrLn "** LOCKED **"
+        res <- action
+        putStrLn "** UNLOCKED **"
+        return res
+    cleanup result
 
+-- A temporary file - to be deleted after unlock
 lockfile :: FilePath
 lockfile = "lock"
 
--- | Create a temporary file to indicate to other hawk process
---  not to run until this process is unblocked
-lock :: Bool -> IO a -> IO a
-lock testing action = do
-    when testing $ putStrLn "** LOCKED **"
-    res <- withFileLock lockfile Exclusive $ const action
-    -- check in-case another process deletes filelock
+-- check in-case another process deletes filelock
+cleanup :: a -> IO a
+cleanup result = do
     fileExists <- doesFileExist lockfile
     when fileExists $ removeFile lockfile
-    when testing $ putStrLn "** UNLOCKED **"
-    return res
-
+    return result
