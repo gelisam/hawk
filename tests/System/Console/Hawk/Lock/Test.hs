@@ -72,11 +72,14 @@ printDelayed (x:xs) = do threadDelay 10000
 -- two instances are trying to enter `withLock` at the same time.
 -- 
 -- >>> withTestLock print3
+-- ** LOCKED **
 -- 1
 -- 2
 -- 3
+-- ** UNLOCKED **
 -- 
 -- >>> withTestLock print3 `par` withTestLock print3
+-- ** LOCKED **
 -- ** LOCKED **
 -- 1
 -- 2
@@ -85,6 +88,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 1
 -- 2
 -- 3
+-- ** UNLOCKED **
 -- 
 -- Here is a variant of the previous test which tests a race condition in which
 -- instance 1 releases the lock immediately after instance 2 notices that the
@@ -96,6 +100,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- moment.
 -- 
 -- >>> withTestLock print3 `par` (threadDelay 15000 >> withTestLock print3)
+-- ** LOCKED **
 -- 1
 -- ** LOCKED **
 -- 2
@@ -104,5 +109,6 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 1
 -- 2
 -- 3
+-- ** UNLOCKED **
 print3 :: IO ()
 print3 = printDelayed [1..3]
