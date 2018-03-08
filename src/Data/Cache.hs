@@ -225,12 +225,12 @@ withLruCache body c = evalStateT (body $ lruCache c) []
 -- two
 -- testing
 -- [3,3,3,3,7,7]
-singletonCache :: (Monad m, Eq k) => Cache m k a -> Cache m k a
+singletonCache :: (Monad m) => Cache m k a -> Cache m k a
 singletonCache c = c { writeCache = go }
   where
     go k mx = clearCache c >> writeCache c k mx
 
-withSingletonCache :: (Monad m, Eq k)
+withSingletonCache :: (Monad m)
                    => (Cache m k v -> m a)
                    -> (Cache m k v -> m a)
 withSingletonCache body c = body (singletonCache c)

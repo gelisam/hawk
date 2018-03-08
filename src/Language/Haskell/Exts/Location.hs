@@ -56,6 +56,11 @@ instance Location Decl where
   location (SpecInlineSig    loc _ _ _ _)       = Just loc
   location (InstSig          loc _ _ _ _)       = Just loc
   location (AnnPragma        loc _)             = Just loc
+  location (ClosedTypeFamDecl loc _ _ _ _)      = Just loc
+  location (PatSynSig         loc _ _ _ _ _)    = Just loc
+  location (PatSyn            loc _ _ _)        = Just loc
+  location (MinimalPragma     loc _)            = Just loc
+  location (RoleAnnotDecl     loc _ _)          = Just loc
 
 instance Location Match where
   location (Match loc _ _ _ _ _) = Just loc

@@ -1,15 +1,14 @@
 -- | In which the user prelude is massaged into the form hint needs.
 module System.Console.Hawk.UserPrelude where
 
-import Control.Applicative
-import Control.Monad.Trans.Class
-import Data.ByteString as B
-import Text.Printf
+import           Control.Monad.Trans.Class
+import           Data.ByteString as B
+import           Text.Printf
 
-import Control.Monad.Trans.Uncertain
-import Data.HaskellModule
-import System.Console.Hawk.Sandbox
-import System.Console.Hawk.UserPrelude.Extend
+import           Control.Monad.Trans.Uncertain
+import           Data.HaskellModule
+import           System.Console.Hawk.Sandbox
+import           System.Console.Hawk.UserPrelude.Extend
 
 
 type UserPrelude = HaskellModule
@@ -29,7 +28,7 @@ testC f = do
 -- import Prelude
 -- import qualified Data.ByteString.Lazy.Char8 as B
 -- import qualified Data.List as L
--- 
+--
 -- >>> testC "moduleName"
 -- module MyPrelude where
 -- import Prelude

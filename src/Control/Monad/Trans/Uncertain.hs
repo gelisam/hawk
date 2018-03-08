@@ -2,14 +2,13 @@
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
-import Control.Applicative
-import "mtl" Control.Monad.Trans
-import "mtl" Control.Monad.Identity
-import "transformers" Control.Monad.Trans.Error hiding (Error)
-import "transformers" Control.Monad.Trans.Writer
-import System.Exit
-import System.IO
-import Text.Printf
+import           "mtl" Control.Monad.Identity
+import           "mtl" Control.Monad.Trans
+import           "transformers" Control.Monad.Trans.Error hiding (Error)
+import           "transformers" Control.Monad.Trans.Writer
+import           System.Exit
+import           System.IO
+import           Text.Printf
 
 
 type Warning = String
@@ -237,7 +236,7 @@ runUncertain = runUncertainIO . mapUncertainT (return . runIdentity)
 -- after
 -- warning: be careful!
 -- 42
-wrapUncertain :: (Monad m, Monad m')
+wrapUncertain :: (Monad m')
               => (forall a. m a -> m' a)
               -> (UncertainT m b -> UncertainT m' b)
 wrapUncertain wrap body = wrapUncertainArg wrap' body'
@@ -278,7 +277,7 @@ wrapUncertain wrap body = wrapUncertainArg wrap' body'
 -- after
 -- warning: be careful!
 -- 43
-wrapUncertainArg :: (Monad m, Monad m')
+wrapUncertainArg :: (Monad m')
                  => (forall a. (v -> m a) -> m' a)
                  -> ((v -> UncertainT m b) -> UncertainT m' b)
 wrapUncertainArg wrap body = do

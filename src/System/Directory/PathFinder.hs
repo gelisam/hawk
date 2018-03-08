@@ -12,8 +12,6 @@ import Data.List
 import System.Directory
 import System.FilePath
 
-import System.Directory.Extra
-
 
 type PathFinder = StateT FilePath (MaybeT IO) ()
 type MultiPathFinder = StateT FilePath (ListT IO) ()

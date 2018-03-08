@@ -3,17 +3,16 @@
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
 
-import Control.Applicative
-import Control.Monad
-import "mtl" Control.Monad.Identity
-import "mtl" Control.Monad.Trans
-import Control.Monad.Trans.State
-import Data.List
-import Data.Maybe
+import           Control.Monad
+import           "mtl" Control.Monad.Identity
+import           "mtl" Control.Monad.Trans
+import           Control.Monad.Trans.State
+import           Data.List
+import           Data.Maybe
 import qualified System.Console.GetOpt as GetOpt
-import Text.Printf
+import           Text.Printf
 
-import Control.Monad.Trans.Uncertain
+import           Control.Monad.Trans.Uncertain
 
 -- $setup
 --
@@ -166,7 +165,7 @@ runOptionParserT = runOptionParserWith shortName longName helpMsg optionType
 --   }
 -- :}
 -- (True,False,True)
-runOptionParserWith :: (Eq o, Monad m)
+runOptionParserWith :: (Monad m)
                     => (o -> Char)
                     -> (o -> String)
                     -> (o -> [String])
@@ -273,9 +272,9 @@ consumeString Nothing = error "please use consumeNullable to consume nullable op
 --   -g[str]  --guitar[=str]     adds more guitar.
 --   -s[str]  --saxophone[=str]  adds more saxophone.
 nullable :: OptionType -> OptionType
-nullable (Setting tp) = NullableSetting tp
+nullable (Setting tp)        = NullableSetting tp
 nullable (NullableSetting _) = error "double nullable"
-nullable Flag = error "nullable flag doesn't make sense"
+nullable Flag                = error "nullable flag doesn't make sense"
 
 -- | The value assigned to an option, or a default value if no value was
 --   assigned. Must be used to consume `nullable` options.
@@ -296,7 +295,7 @@ nullable Flag = error "nullable flag doesn't make sense"
 -- *** Exception: please use consumeNullable to consume nullable options
 consumeNullable :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
 consumeNullable nullValue _ Nothing = return nullValue
-consumeNullable _ consume o = consume o
+consumeNullable _ consume o         = consume o
 
 
 -- | A helper for defining custom options types.
@@ -436,7 +435,7 @@ consumeLast o defaultValue consume = do
 
 
 -- | For use with mutually-exclusive flags.
-consumeExclusive :: (Option o, Functor m, Monad m)
+consumeExclusive :: (Option o, Monad m)
                  => [(o, a)] -> a -> OptionParserT o m a
 consumeExclusive = consumeExclusiveWith longName
 
@@ -454,7 +453,7 @@ consumeExclusive = consumeExclusiveWith longName
 -- >>> testP ["-cs"] tp consume
 -- error: cowbell and saxophone are incompatible
 -- *** Exception: ExitFailure 1
-consumeExclusiveWith :: (Eq o, Functor m, Monad m)
+consumeExclusiveWith :: (Eq o, Monad m)
                      => (o -> String)
                      -> [(o, a)] -> a -> OptionParserT o m a
 consumeExclusiveWith longName' assoc defaultValue = do
@@ -483,7 +482,7 @@ consumeExclusiveWith longName' assoc defaultValue = do
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume >> consume)
 -- Nothing
-consumeExtra :: (Functor m, Monad m)
+consumeExtra :: (Monad m)
              => OptionConsumer m a -> OptionParserT o m (Maybe a)
 consumeExtra consume = OptionParserT $ do
     extra_options <- lift get
@@ -506,7 +505,7 @@ consumeExtra consume = OptionParserT $ do
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
 -- []
-consumeExtras :: (Functor m, Monad m)
+consumeExtras :: (Monad m)
               => OptionConsumer m a -> OptionParserT o m [a]
 consumeExtras consume = fmap reverse $ go []
   where
