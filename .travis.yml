@@ -18,23 +18,34 @@ language: generic
 cache:
   directories:
   - $HOME/.stack
+  - $HOME/.cabal
 
 # Ensure necessary system libraries are present
 addons:
   apt:
     packages:
       - libgmp-dev
+      - ghc
+      # this installs an older version of cabal which doesn't support new-build
+      #- cabal-install
 
 before_install:
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+# Install a recent version of cabal which supports new-build
+- stack install cabal-install
 
 install:
-# Build dependencies
+# Build dependencies (stack)
 - stack --no-terminal --install-ghc test --only-dependencies
+# Build dependencies (cabal)
+- ~/.local/bin/cabal update
+- ~/.local/bin/cabal new-build --only-dependencies
 
 script:
-# Build the package, its tests, and its docs and run the tests
+# Build the package, its tests, and its docs and run the tests (stack)
 - stack --no-terminal test --haddock --no-haddock-deps
+# Build the package (cabal)
+- ~/.local/bin/cabal new-build
