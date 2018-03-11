@@ -25,6 +25,7 @@ addons:
   apt:
     packages:
       - libgmp-dev
+      - cabal-install
 
 before_install:
 # Download and unpack the stack executable
