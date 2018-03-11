@@ -16,6 +16,8 @@ data HawkOption
     | RecordDelimiter
     | OutputFieldDelimiter
     | OutputRecordDelimiter
+    | InPlaceEdit
+    | InputFile
     | Version
     | Help
     | ContextDirectory
@@ -25,6 +27,9 @@ data HawkOption
 options :: [HawkOption]
 options = enumFrom minBound
 
+
+suffix :: OptionType
+suffix = nullable (Setting "suffix")
 
 delimiter :: OptionType
 delimiter = nullable (Setting "delim")
@@ -58,6 +63,8 @@ instance Option HawkOption where
   shortName RecordDelimiter       = 'D'
   shortName OutputFieldDelimiter  = 'o'
   shortName OutputRecordDelimiter = 'O'
+  shortName InPlaceEdit           = 'i'
+  shortName InputFile             = 'f'
   shortName Version               = 'v'
   shortName Help                  = 'h'
   shortName ContextDirectory      = 'c'
@@ -68,6 +75,8 @@ instance Option HawkOption where
   longName RecordDelimiter       = "record-delimiter"
   longName OutputFieldDelimiter  = "output-field-delim"
   longName OutputRecordDelimiter = "output-record-delim"
+  longName InPlaceEdit           = "in-place-edit"
+  longName InputFile             = "file"
   longName Version               = "version"
   longName Help                  = "help"
   longName ContextDirectory      = "context-directory"
@@ -78,6 +87,8 @@ instance Option HawkOption where
   helpMsg RecordDelimiter            = ["default '\\n'"]
   helpMsg OutputFieldDelimiter       = ["default <field-delim>"]
   helpMsg OutputRecordDelimiter      = ["default <record-delim>"]
+  helpMsg InPlaceEdit                = ["edit file in place <backup-suffix>"]
+  helpMsg InputFile                  = ["input file for in place editing"]
   helpMsg Version                    = ["print version and exit"]
   helpMsg Help                       = ["this help"]
   helpMsg ContextDirectory           = ["<ctx-dir> directory, default is"
@@ -89,6 +100,8 @@ instance Option HawkOption where
   optionType RecordDelimiter       = delimiter
   optionType OutputFieldDelimiter  = delimiter
   optionType OutputRecordDelimiter = delimiter
+  optionType InPlaceEdit           = suffix
+  optionType InputFile             = suffix
   optionType Version               = flag
   optionType Help                  = flag
   optionType ContextDirectory      = filePath

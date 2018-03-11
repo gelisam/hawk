@@ -18,7 +18,7 @@ import           System.Console.Hawk.Context.Dir
 
 
 -- | (record separator, field separator)
-type CommonSeparators = (Separator, Separator)
+type CommonSeparators = (Separator, Separator, String)
 
 -- | Extract '-D' and '-d'. We perform this step separately because those two
 --   delimiters are used by both the input and output specs.
@@ -38,11 +38,11 @@ commonSeparators :: (Functor m, Monad m)
 commonSeparators = do
     r <- lastSep Option.RecordDelimiter defaultRecordSeparator
     f <- lastSep Option.FieldDelimiter defaultFieldSeparator
-    return (r, f)
+    file <- consumeLast Option.InputFile "" $ consumeNullable "" consumeString
+    return (r, f, file)
   where
     lastSep opt def = consumeLast opt def consumeSep
     consumeSep = fmap Delimiter . Option.consumeDelimiter
-
 
 -- | The input delimiters have already been parsed, but we still need to
 --   interpret them and to determine the input source.
@@ -73,13 +73,11 @@ commonSeparators = do
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
           => CommonSeparators -> OptionParserT HawkOption m InputSpec
-inputSpec (rSep, fSep) = InputSpec <$> source <*> format
+inputSpec (rSep, fSep, file) = InputSpec <$> source <*> format
   where
-    source = do
-        r <- consumeExtra consumeString
-        return $ case r of
-          Nothing -> UseStdin
-          Just f  -> InputFile f
+    source = return $ if null file
+        then UseStdin
+        else InputFile file
     format = return streamFormat
     streamFormat | rSep == Delimiter "" = RawStream
                  | otherwise            = Records rSep recordFormat
@@ -109,11 +107,25 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
+--
+-- TODO: write test cases for in-place edit
 outputSpec :: (Functor m, Monad m)
            => CommonSeparators -> OptionParserT HawkOption m OutputSpec
-outputSpec (r, f) = OutputSpec <$> sink <*> format
+outputSpec (r, f, file) = OutputSpec <$> sink <*> format
   where
-    sink = return UseStdout
+    sink = do
+        backupSuffix <- consumeLast Option.InPlaceEdit "" $
+                            consumeNullable "<none>" consumeString
+        if null file
+            then if null backupSuffix
+                then return UseStdout
+                else fail "in-place edit requires input file"
+            else if null backupSuffix
+                then return UseStdout
+                else if backupSuffix == "<none>"
+                    then return $ OutputFile file ""
+                    else return $ OutputFile file $ file ++ backupSuffix
+
     format = OutputFormat <$> record <*> field
     record = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
     field = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
