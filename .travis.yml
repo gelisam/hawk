@@ -25,6 +25,7 @@ addons:
   apt:
     packages:
       - libgmp-dev
+      - ghc
       # this installs an older version of cabal which doesn't support new-build
       #- cabal-install
 
@@ -40,11 +41,11 @@ install:
 # Build dependencies (stack)
 - stack --no-terminal --install-ghc test --only-dependencies
 # Build dependencies (cabal)
-- stack exec -- cabal update
-- stack exec -- cabal new-build --only-dependencies
+- ~/.local/bin/cabal update
+- ~/.local/bin/cabal new-build --only-dependencies
 
 script:
 # Build the package, its tests, and its docs and run the tests (stack)
 - stack --no-terminal test --haddock --no-haddock-deps
 # Build the package (cabal)
-- stack exec -- cabal new-build
+- ~/.local/bin/cabal new-build
