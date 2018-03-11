@@ -41,8 +41,8 @@ commonSeparators = do
     f <- lastSep Option.FieldDelimiter defaultFieldSeparator
     return (r, f)
   where
-    lastSep opt def = fromMaybe def <$> consumeLast opt consumeSep
-    consumeSep = fmap Delimiter . Option.consumeDelimiter
+    lastSep opt def = fromMaybe def <$> consumeLast opt separatorConsumer
+    separatorConsumer = Delimiter <$> Option.delimiterConsumer
 
 
 -- | The input delimiters have already been parsed, but we still need to
@@ -50,7 +50,7 @@ commonSeparators = do
 -- 
 -- >>> :{
 -- let test = testP $ do { c <- commonSeparators
---                       ; _ <- consumeExtra consumeString  -- skip expr
+--                       ; _ <- consumeExtra stringConsumer  -- skip expr
 --                       ; i <- inputSpec c
 --                       ; lift $ print $ inputSource i
 --                       ; lift $ print $ inputFormat i
@@ -77,7 +77,7 @@ inputSpec :: (Functor m, Monad m)
 inputSpec (rSep, fSep) = InputSpec <$> source <*> format
   where
     source = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra stringConsumer
         return $ case r of
           Nothing -> UseStdin
           Just f  -> InputFile f
@@ -116,8 +116,8 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
     sink = return UseStdout
     format = OutputFormat <$> record <*> field
-    record = fromMaybe r' <$> consumeLast Option.OutputRecordDelimiter Option.consumeDelimiter
-    field = fromMaybe f' <$> consumeLast Option.OutputFieldDelimiter Option.consumeDelimiter
+    record = fromMaybe r' <$> consumeLast Option.OutputRecordDelimiter Option.delimiterConsumer
+    field = fromMaybe f' <$> consumeLast Option.OutputFieldDelimiter Option.delimiterConsumer
     r' = fromSeparator r
     f' = fromSeparator f
 
@@ -150,12 +150,12 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
                     <*> expr
   where
     contextDir = do
-      maybeDir <- consumeLast Option.ContextDirectory consumeString
+      maybeDir <- consumeLast Option.ContextDirectory stringConsumer
       case maybeDir of
         Nothing -> liftIO findContextFromCurrDirOrDefault
         Just dir -> return dir
     expr = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra stringConsumer
         case r of
           Just e  -> if all isSpace e
                       then fail "user expression cannot be empty"
