@@ -38,3 +38,6 @@ install:
 script:
 # Build the package, its tests, and its docs and run the tests
 - stack --no-terminal test --haddock --no-haddock-deps
+# Also make sure it builds with cabal
+- cabal update
+- cabal new-build
