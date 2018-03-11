@@ -40,11 +40,11 @@ install:
 # Build dependencies (stack)
 - stack --no-terminal --install-ghc test --only-dependencies
 # Build dependencies (cabal)
-- cabal update
-- ~/.local/bin/cabal new-build --only-dependencies
+- stack exec -- cabal update
+- stack exec -- cabal new-build --only-dependencies
 
 script:
 # Build the package, its tests, and its docs and run the tests (stack)
 - stack --no-terminal test --haddock --no-haddock-deps
 # Build the package (cabal)
-- ~/.local/bin/cabal new-build
+- stack exec -- cabal new-build
