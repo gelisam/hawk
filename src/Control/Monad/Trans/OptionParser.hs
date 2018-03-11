@@ -159,9 +159,9 @@ runOptionParserT = runOptionParserWith shortName longName helpMsg optionType
 --
 -- >>> :{
 -- testP ["--cowbell","-s"] (const flag) $ do
---   { c <- consumeLast "cowbell"   False consumeFlag
---   ; g <- consumeLast "guitar"    False consumeFlag
---   ; s <- consumeLast "saxophone" False consumeFlag
+--   { c <- fromMaybe False <$> consumeLast "cowbell"   consumeFlag
+--   ; g <- fromMaybe False <$> consumeLast "guitar"    consumeFlag
+--   ; s <- fromMaybe False <$> consumeLast "saxophone" consumeFlag
 --   ; return (c, g, s)
 --   }
 -- :}
@@ -218,7 +218,7 @@ flag = Flag
 -- | True if the given flag appears.
 --
 -- >>> let tp = const flag
--- >>> let consumeCowbell = consumeLast "cowbell" False consumeFlag :: OptionParser String Bool
+-- >>> let consumeCowbell = fromMaybe False <$> consumeLast "cowbell" consumeFlag :: OptionParser String Bool
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- True
@@ -244,7 +244,7 @@ string = Setting "str"
 -- | The value assigned to the option, interpreted as a string.
 --
 -- >>> let tp = const string
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
+-- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" consumeString :: OptionParser String String
 --
 -- >>> testP ["--cowbell", "extra"] tp consumeCowbell
 -- "extra"
@@ -281,7 +281,7 @@ optional Flag = error "optional flag doesn't make sense"
 --   assigned. Must be used to consume `optional` options.
 --
 -- >>> let tp = const (optional string)
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" $ consumeOptional "<default>" consumeString :: OptionParser String String
+-- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" $ fromMaybe "<default>" <$> consumeOptional consumeString :: OptionParser String String
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
@@ -292,7 +292,7 @@ optional Flag = error "optional flag doesn't make sense"
 -- >>> testP ["-s"] tp consumeCowbell
 -- "<none>"
 --
--- >>> testP ["-c"] tp $ consumeLast "cowbell" "<none>" consumeString
+-- >>> testP ["-c"] tp $ fromMaybe "<none>" <$> consumeLast "cowbell" consumeString
 -- *** Exception: please use consumeOptional to consume optional options
 consumeOptional :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
 consumeOptional defaultValue _ Nothing = return defaultValue
@@ -320,7 +320,7 @@ readable = Setting
 -- | The value assigned to the option, interpreted by `read`.
 --
 -- >>> let tp = const (readable "unit")
--- >>> let consumeCowbell = consumeLast "cowbell" () consumeReadable :: OptionParser String ()
+-- >>> let consumeCowbell = fromMaybe () <$> consumeLast "cowbell" consumeReadable :: OptionParser String ()
 --
 -- >>> testP ["--cowbell=()"] tp consumeCowbell >>= print
 -- ()
@@ -348,7 +348,7 @@ int = readable "int"
 -- (see the source)
 --
 -- >>> let tp = const int
--- >>> let consumeCowbell = consumeLast "cowbell" (-1) consumeInt :: OptionParser String Int
+-- >>> let consumeCowbell = fromMaybe (-1) <$> consumeLast "cowbell" consumeInt :: OptionParser String Int
 --
 -- >>> testP ["--cowbell=42"] tp consumeCowbell
 -- 42
@@ -376,7 +376,7 @@ filePath = Setting "path"
 --
 -- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
 -- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
--- >>> let consumeLastInputDir = consumeLast "input-dir" "error" :: OptionConsumer IO String -> OptionParserT String IO String
+-- >>> let consumeLastInputDir = fromMaybe "error" <$> consumeLast "input-dir" :: OptionConsumer IO String -> OptionParserT String IO String
 -- >>> let consumeExistingDir    = consumeLastInputDir (consumeFilePath dirExists)
 -- >>> let consumeNotExistingDir = consumeLastInputDir (consumeFilePath dirDoesntExist)
 -- >>> testIO ["--input-dir=."] inputDir consumeExistingDir
@@ -411,14 +411,14 @@ consumeAll o consume = OptionParserT $ do
     matching_options <- state $ partition $ (== o) . fst
     lift . lift $ mapM (consume . snd) matching_options
 
--- | The last occurence of a given option, or a default value if the option
---   isn't specified.
+-- | The last occurence of a given option, or Nothing if the option isn't
+--   specified.
 --
--- It is an error to consume the same value twice (we currently return the
--- default value).
+-- If 'consumeAll' is called twice on the same option, the second call returns
+-- Nothing.
 --
 -- >>> let tp = const string
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
+-- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" consumeString :: OptionParser String String
 --
 -- >>> :{
 -- testP ["--cowbell=foo", "--cowbell", "bar"] tp $ do
@@ -429,10 +429,12 @@ consumeAll o consume = OptionParserT $ do
 -- :}
 -- ("bar","<none>")
 consumeLast :: (Eq o, Monad m)
-            => o -> a -> OptionConsumer m a -> OptionParserT o m a
-consumeLast o defaultValue consume = do
+            => o -> OptionConsumer m a -> OptionParserT o m (Maybe a)
+consumeLast o consume = do
     xs <- consumeAll o consume
-    return $ last $ defaultValue : xs
+    if null xs
+      then return Nothing
+      else return $ Just $ last xs
 
 
 -- | For use with mutually-exclusive flags.

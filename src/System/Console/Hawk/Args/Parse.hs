@@ -4,6 +4,7 @@ module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
 import Data.Char                                 (isSpace)
+import Data.Maybe
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser
@@ -40,7 +41,7 @@ commonSeparators = do
     f <- lastSep Option.FieldDelimiter defaultFieldSeparator
     return (r, f)
   where
-    lastSep opt def = consumeLast opt def consumeSep
+    lastSep opt def = fromMaybe def <$> consumeLast opt consumeSep
     consumeSep = fmap Delimiter . Option.consumeDelimiter
 
 
@@ -115,8 +116,8 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
     sink = return UseStdout
     format = OutputFormat <$> record <*> field
-    record = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
-    field = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
+    record = fromMaybe r' <$> consumeLast Option.OutputRecordDelimiter Option.consumeDelimiter
+    field = fromMaybe f' <$> consumeLast Option.OutputFieldDelimiter Option.consumeDelimiter
     r' = fromSeparator r
     f' = fromSeparator f
 
@@ -149,10 +150,10 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
                     <*> expr
   where
     contextDir = do
-      dir <- consumeLast Option.ContextDirectory "" consumeString
-      if null dir
-        then liftIO findContextFromCurrDirOrDefault
-        else return dir
+      maybeDir <- consumeLast Option.ContextDirectory consumeString
+      case maybeDir of
+        Nothing -> liftIO findContextFromCurrDirOrDefault
+        Just dir -> return dir
     expr = do
         r <- consumeExtra consumeString
         case r of
