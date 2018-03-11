@@ -442,13 +442,13 @@ consumeLast o optionConsumer = do
 
 -- | For use with mutually-exclusive flags.
 consumeExclusive :: (Option o, Functor m, Monad m)
-                 => [(o, a)] -> a -> OptionParserT o m a
+                 => [(o, a)] -> OptionParserT o m (Maybe a)
 consumeExclusive = consumeExclusiveWith longName
 
 -- | A version of `consumeExclusive` which doesn't use the Option typeclass.
 --
 -- >>> let tp = const flag
--- >>> let consume = consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] (-1) :: OptionParser String Int
+-- >>> let consume = fromMaybe (-1) <$> consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] :: OptionParser String Int
 --
 -- >>> testP ["-s"] tp consume
 -- 2
@@ -461,13 +461,13 @@ consumeExclusive = consumeExclusiveWith longName
 -- *** Exception: ExitFailure 1
 consumeExclusiveWith :: (Eq o, Functor m, Monad m)
                      => (o -> String)
-                     -> [(o, a)] -> a -> OptionParserT o m a
-consumeExclusiveWith longName' assoc defaultValue = do
+                     -> [(o, a)] -> OptionParserT o m (Maybe a)
+consumeExclusiveWith longName' assoc = do
     oss <- forM (map fst assoc) $ \o ->
       map (const o) <$> consumeAll o flagConsumer
     case concat oss of
-      []  -> return defaultValue
-      [o] -> return $ fromMaybe defaultValue $ lookup o assoc
+      []  -> return Nothing
+      [o] -> return $ lookup o assoc
       os  -> fail msg
         where
           n = length os

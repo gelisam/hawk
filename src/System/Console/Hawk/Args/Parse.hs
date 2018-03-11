@@ -219,7 +219,7 @@ parseArgs args = runOptionParserT options parser args
   where
     parser = do
         lift $ return ()  -- silence a warning
-        cmd <- consumeExclusive assoc eval
+        cmd <- fromMaybe eval <$> consumeExclusive assoc
         c <- commonSeparators
         cmd c
     assoc = [ (Option.Help,    help)
