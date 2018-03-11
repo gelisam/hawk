@@ -48,8 +48,8 @@ parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
     _          -> s
 
 -- | Almost like a string, except escape sequences are interpreted.
-delimiterConsumer :: (Functor m, Monad m) => OptionConsumerT m ByteString
-delimiterConsumer = parseDelimiter <$> optionalConsumer "" stringConsumer
+delimiterConsumer :: (Functor m, Monad m) => OptionConsumerT m (Maybe ByteString)
+delimiterConsumer = fmap parseDelimiter <$> optionalConsumer stringConsumer
 
 instance Option HawkOption where
   shortName Apply                 = 'a'

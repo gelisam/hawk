@@ -196,10 +196,7 @@ runOptionParserWith shortName' longName' helpMsg' optionType'
 
 -- | Try to parse a setting of a particular type.
 --
--- The input will never be Nothing unless the optionType is optional, and even
--- then optionalConsumer will get rid of it for you. Yet we still need the type
--- of the input to be `Maybe String` in order for optionalConsumer itself to be
--- a valid OptionConsumerT.
+-- The input will never be Nothing unless the optionType is optional.
 newtype OptionConsumerT m a = OptionConsumerT
   { runOptionConsumerT :: Maybe String -> UncertainT m a
   } deriving Functor
@@ -280,11 +277,11 @@ optional (Setting tp) = OptionalSetting tp
 optional (OptionalSetting _) = error "double optional"
 optional Flag = error "optional flag doesn't make sense"
 
--- | The value assigned to an option, or a default value if no value was
---   assigned. Must be used to consume `optional` options.
+-- | The value assigned to an option, or Nothing if no value was assigned.
+--   Must be used to consume `optional` options.
 --
 -- >>> let tp = const (optional string)
--- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" $ fromMaybe "<default>" <$> optionalConsumer stringConsumer :: OptionParser String String
+-- >>> let consumeCowbell = fmap (fromMaybe "<none>") $ consumeLast "cowbell" $ fromMaybe "<default>" <$> optionalConsumer stringConsumer :: OptionParser String String
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
@@ -297,10 +294,10 @@ optional Flag = error "optional flag doesn't make sense"
 --
 -- >>> testP ["-c"] tp $ fromMaybe "<none>" <$> consumeLast "cowbell" stringConsumer
 -- *** Exception: please use optionalConsumer to consume optional options
-optionalConsumer :: Monad m => a -> OptionConsumerT m a -> OptionConsumerT m a
-optionalConsumer defaultValue optionConsumer = OptionConsumerT $ \case
-  Nothing -> return defaultValue
-  o -> runOptionConsumerT optionConsumer o
+optionalConsumer :: Monad m => OptionConsumerT m a -> OptionConsumerT m (Maybe a)
+optionalConsumer optionConsumer = OptionConsumerT $ \case
+  Nothing -> return Nothing
+  o -> Just <$> runOptionConsumerT optionConsumer o
 
 
 -- | A helper for defining custom options types.

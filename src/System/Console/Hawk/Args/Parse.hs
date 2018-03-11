@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, PackageImports #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, ScopedTypeVariables #-}
 -- | In which Hawk's command-line arguments are structured into a `HawkSpec`.
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
@@ -34,15 +34,18 @@ type CommonSeparators = (Separator, Separator)
 -- 
 -- >>> test ["-D|", "-d,"]
 -- (Delimiter "|",Delimiter ",")
-commonSeparators :: (Functor m, Monad m)
+commonSeparators :: forall m. (Functor m, Monad m)
                  => OptionParserT HawkOption m CommonSeparators
 commonSeparators = do
-    r <- lastSep Option.RecordDelimiter defaultRecordSeparator
-    f <- lastSep Option.FieldDelimiter defaultFieldSeparator
+    r <- consumeLastSeparator Option.RecordDelimiter defaultRecordSeparator
+    f <- consumeLastSeparator Option.FieldDelimiter  defaultFieldSeparator
     return (r, f)
   where
-    lastSep opt def = fromMaybe def <$> consumeLast opt separatorConsumer
-    separatorConsumer = Delimiter <$> Option.delimiterConsumer
+    consumeLastSeparator :: HawkOption -> Separator -> OptionParserT HawkOption m Separator
+    consumeLastSeparator opt def = fromMaybe def <$> consumeLast opt separatorConsumer
+
+    separatorConsumer :: OptionConsumerT m Separator
+    separatorConsumer = maybe Whitespace Delimiter <$> Option.delimiterConsumer
 
 
 -- | The input delimiters have already been parsed, but we still need to
@@ -110,14 +113,21 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
-outputSpec :: (Functor m, Monad m)
+outputSpec :: forall m. (Functor m, Monad m)
            => CommonSeparators -> OptionParserT HawkOption m OutputSpec
 outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
+    sink :: OptionParserT HawkOption m OutputSink
     sink = return UseStdout
+
+    format :: OptionParserT HawkOption m OutputFormat
     format = OutputFormat <$> record <*> field
-    record = fromMaybe r' <$> consumeLast Option.OutputRecordDelimiter Option.delimiterConsumer
-    field = fromMaybe f' <$> consumeLast Option.OutputFieldDelimiter Option.delimiterConsumer
+
+    record, field :: OptionParserT HawkOption m Delimiter
+    record = fmap (fromMaybe r') $ consumeLast Option.OutputRecordDelimiter $ fromMaybe "" <$> Option.delimiterConsumer
+    field  = fmap (fromMaybe f') $ consumeLast Option.OutputFieldDelimiter  $ fromMaybe "" <$> Option.delimiterConsumer
+
+    r', f' :: Delimiter
     r' = fromSeparator r
     f' = fromSeparator f
 
