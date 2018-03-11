@@ -74,10 +74,15 @@ splitAtSeparator (Delimiter d) = Search.split d
 
 
 outputRows :: Rows a => OutputSpec -> a -> IO ()
-outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
+outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
-    B.putStr s
-    hFlush stdout
+    case out of
+        UseStdout           -> do B.putStr s; hFlush stdout
+        OutputFile f ""     -> do B.writeFile f s; hFlush stdout
+        OutputFile f backup -> do
+            copyFile f backup
+            B.writeFile f s;
+            hFlush stdout
   where
     join' = join (B.fromStrict $ recordDelimiter spec)
     toRows = repr (B.fromStrict $ fieldDelimiter spec)
@@ -85,6 +90,7 @@ outputRows (OutputSpec _ spec) x = ignoringBrokenPipe $ do
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
+    copyFile i o = do f <- B.readFile i; B.writeFile o f
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
 ignoringBrokenPipe :: IO () -> IO ()
