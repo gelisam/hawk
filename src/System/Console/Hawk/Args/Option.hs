@@ -27,7 +27,7 @@ options = enumFrom minBound
 
 
 delimiter :: OptionType
-delimiter = nullable (Setting "delim")
+delimiter = optional (Setting "delim")
 
 -- | Interpret escape sequences, but don't worry if they're invalid.
 -- 
@@ -49,7 +49,7 @@ parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
 
 -- | Almost like a string, except escape sequences are interpreted.
 consumeDelimiter :: (Functor m, Monad m) => OptionConsumer m ByteString
-consumeDelimiter = fmap parseDelimiter . consumeNullable "" consumeString
+consumeDelimiter = fmap parseDelimiter . consumeOptional "" consumeString
 
 instance Option HawkOption where
   shortName Apply                 = 'a'

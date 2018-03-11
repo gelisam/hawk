@@ -43,11 +43,11 @@ class Eq a => Option a where
 --   support for boolean flags and optional arguments.
 --
 -- To maintain the illusion of precise types, please use combining functions
--- such as `nullable int` instead.
+-- such as `optional int` instead.
 data OptionType
     = Flag                   -- Bool, no argument
     | Setting String         -- mandatory String argument
-    | NullableSetting String -- optional String argument
+    | OptionalSetting String -- optional String argument
   deriving (Show, Eq)
 
 
@@ -110,7 +110,7 @@ optDescrWith shortName' longName' helpMsg' optionType'
     argDescr = case optionType' o of
         Flag               -> GetOpt.NoArg (o, Just "")
         Setting tp         -> GetOpt.ReqArg (\s -> (o, Just s)) tp
-        NullableSetting tp -> GetOpt.OptArg (\ms -> (o, ms)) tp
+        OptionalSetting tp -> GetOpt.OptArg (\ms -> (o, ms)) tp
 
 
 -- | The part of your --help which describes each possible option.
@@ -122,7 +122,7 @@ optionsHelp = optionsHelpWith shortName longName helpMsg optionType
 -- >>> :{
 -- let { tp "cowbell"   = flag
 --     ; tp "guitar"    = string
---     ; tp "saxophone" = nullable int
+--     ; tp "saxophone" = optional int
 --     }
 -- :}
 --
@@ -196,9 +196,9 @@ runOptionParserWith shortName' longName' helpMsg' optionType'
 
 -- | Try to parse a setting of a particular type.
 --
--- The input will never be Nothing unless the optionType is nullable, and even
--- then consumeNullable will get rid of it for you. Yet we still need the type
--- of the input to be `Maybe String` in order for consumeNullable itself to be
+-- The input will never be Nothing unless the optionType is optional, and even
+-- then consumeOptional will get rid of it for you. Yet we still need the type
+-- of the input to be `Maybe String` in order for consumeOptional itself to be
 -- a valid OptionConsumer.
 type OptionConsumer m a = Maybe String -> UncertainT m a
 
@@ -260,28 +260,28 @@ string = Setting "str"
 -- *** Exception: ExitFailure 1
 consumeString :: Monad m => OptionConsumer m String
 consumeString (Just s) = return s
-consumeString Nothing = error "please use consumeNullable to consume nullable options"
+consumeString Nothing = error "please use consumeOptional to consume optional options"
 
 
 -- | Specifies that the value of the option may be omitted.
 --
--- >>> let tp = const (nullable string)
+-- >>> let tp = const (optional string)
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
 -- Options:
 --   -c[str]  --cowbell[=str]    adds more cowbell.
 --   -g[str]  --guitar[=str]     adds more guitar.
 --   -s[str]  --saxophone[=str]  adds more saxophone.
-nullable :: OptionType -> OptionType
-nullable (Setting tp) = NullableSetting tp
-nullable (NullableSetting _) = error "double nullable"
-nullable Flag = error "nullable flag doesn't make sense"
+optional :: OptionType -> OptionType
+optional (Setting tp) = OptionalSetting tp
+optional (OptionalSetting _) = error "double optional"
+optional Flag = error "optional flag doesn't make sense"
 
 -- | The value assigned to an option, or a default value if no value was
---   assigned. Must be used to consume `nullable` options.
+--   assigned. Must be used to consume `optional` options.
 --
--- >>> let tp = const (nullable string)
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" $ consumeNullable "<default>" consumeString :: OptionParser String String
+-- >>> let tp = const (optional string)
+-- >>> let consumeCowbell = consumeLast "cowbell" "<none>" $ consumeOptional "<default>" consumeString :: OptionParser String String
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
@@ -293,10 +293,10 @@ nullable Flag = error "nullable flag doesn't make sense"
 -- "<none>"
 --
 -- >>> testP ["-c"] tp $ consumeLast "cowbell" "<none>" consumeString
--- *** Exception: please use consumeNullable to consume nullable options
-consumeNullable :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
-consumeNullable nullValue _ Nothing = return nullValue
-consumeNullable _ consume o = consume o
+-- *** Exception: please use consumeOptional to consume optional options
+consumeOptional :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
+consumeOptional defaultValue _ Nothing = return defaultValue
+consumeOptional _ consume o = consume o
 
 
 -- | A helper for defining custom options types.
