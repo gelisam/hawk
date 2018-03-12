@@ -1,0 +1,76 @@
+name:           haskell-awk
+version:        1.1.1
+github:         gelisam/hawk
+author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
+maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
+synopsis:       Transform text from the command-line using Haskell expressions.
+description:    Hawk is a command line utility to process streams of text
+                using Haskell code. It is intended to be used in a UNIX
+                pipeline. It offers a configuration system to personalize
+                imported modules and a way to represent values on the console.
+category:       Console
+license:        Apache-2.0
+license-file:   LICENSE
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+ghc-options: -Wall
+dependencies:
+  - base >=4.6.0.1
+  - bytestring
+  - containers
+  - stringsearch >=0.3.6.4
+
+library:
+  source-dirs: runtime
+
+executables:
+  hawk:
+    main:        Main.hs
+    dependencies:
+      - directory
+      - exceptions >=0.1
+      - extra
+      - filelock
+      - filepath
+      - haskell-awk
+      - haskell-src-exts >=1.16.0 && < 1.18
+      - hint >=0.3.3.5
+      - mtl >=2.1.2
+      - network >=2.3.1.0
+      - process
+      - template-haskell
+      - time
+      - transformers >=0.3.0.0
+    source-dirs: src
+
+tests:
+  reference:
+    source-dirs:
+      - src
+      - tests
+    main:                 RunTests.hs
+    dependencies:
+      - aeson
+      - directory
+      - doctest >=0.3.0
+      - easy-file
+      - exceptions >=0.1
+      - extra
+      - filelock
+      - filepath
+      - haskell-awk
+      - haskell-src-exts >=1.14.0 && < 1.18
+      - hint >=0.3.3.5
+      - hspec >=0.2.0
+      - HUnit >=1.1
+      - mtl >=2.1.2
+      - network >=2.3.1.0
+      - process
+      - template-haskell
+      - temporary >=1.0
+      - test-framework >=0.1
+      - test-framework-hunit >=0.2.0
+      - time
+      - transformers >=0.3.0.0
