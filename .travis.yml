@@ -29,6 +29,10 @@ addons:
       # this installs an older version of cabal which doesn't support new-build
       #- cabal-install
 
+env:
+- BUILD=stack
+- BUILD=cabal
+
 before_install:
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
@@ -39,13 +43,13 @@ before_install:
 
 install:
 # Build dependencies (stack)
-- stack --no-terminal --install-ghc test --only-dependencies
+- if [ "$BUILD" == "stack" ]; then stack --no-terminal --install-ghc test --only-dependencies ;fi
 # Build dependencies (cabal)
-- ~/.local/bin/cabal update
-- ~/.local/bin/cabal new-build --only-dependencies
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update ;fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build --only-dependencies ;fi
 
 script:
 # Build the package, its tests, and its docs and run the tests (stack)
-- stack --no-terminal test --haddock --no-haddock-deps
+- if [ "$BUILD" == "stack" ]; then stack --no-terminal test --haddock --no-haddock-deps ;fi
 # Build the package (cabal)
-- ~/.local/bin/cabal new-build
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build ;fi
