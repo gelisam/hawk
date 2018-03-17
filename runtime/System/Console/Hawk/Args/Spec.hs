@@ -35,7 +35,10 @@ data InputSource
 
 data OutputSink
     = UseStdout
-    | OutputFile FilePath FilePath
+    | OutputFile
+        { outputFile :: String
+        , backupFile :: Maybe String
+        }
   deriving (Show, Eq)
 
 data InputFormat

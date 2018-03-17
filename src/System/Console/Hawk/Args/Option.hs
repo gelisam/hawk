@@ -75,7 +75,7 @@ instance Option HawkOption where
   longName RecordDelimiter       = "record-delimiter"
   longName OutputFieldDelimiter  = "output-field-delim"
   longName OutputRecordDelimiter = "output-record-delim"
-  longName InPlaceEdit           = "in-place-edit"
+  longName InPlaceEdit           = "in-place"
   longName InputFile             = "file"
   longName Version               = "version"
   longName Help                  = "help"
@@ -87,7 +87,8 @@ instance Option HawkOption where
   helpMsg RecordDelimiter            = ["default '\\n'"]
   helpMsg OutputFieldDelimiter       = ["default <field-delim>"]
   helpMsg OutputRecordDelimiter      = ["default <record-delim>"]
-  helpMsg InPlaceEdit                = ["edit file in place <backup-suffix>"]
+  helpMsg InPlaceEdit                = ["overwrite <file>, optionally creating"
+                                       ,"a backup copy at <file><suffix>"]
   helpMsg InputFile                  = ["input file for in place editing"]
   helpMsg Version                    = ["print version and exit"]
   helpMsg Help                       = ["this help"]
