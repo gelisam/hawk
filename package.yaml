@@ -45,32 +45,32 @@ executables:
       - transformers >=0.3.0.0
     source-dirs: src
 
-tests:
-  reference:
-    source-dirs:
-      - src
-      - tests
-    main:                 RunTests.hs
-    dependencies:
-      - aeson
-      - directory
-      - doctest >=0.3.0
-      - easy-file
-      - exceptions >=0.1
-      - extra
-      - filelock
-      - filepath
-      - haskell-awk
-      - haskell-src-exts >=1.14.0 && < 1.18
-      - hint >=0.3.3.5
-      - hspec >=0.2.0
-      - HUnit >=1.1
-      - mtl >=2.1.2
-      - network >=2.3.1.0
-      - process
-      - template-haskell
-      - temporary >=1.0
-      - test-framework >=0.1
-      - test-framework-hunit >=0.2.0
-      - time
-      - transformers >=0.3.0.0
+#tests:
+#  reference:
+#    source-dirs:
+#      - src
+#      - tests
+#    main:                 RunTests.hs
+#    dependencies:
+#      - aeson
+#      - directory
+#      - doctest >=0.3.0
+#      - easy-file
+#      - exceptions >=0.1
+#      - extra
+#      - filelock
+#      - filepath
+#      - haskell-awk
+#      - haskell-src-exts >=1.14.0 && < 1.18
+#      - hint >=0.3.3.5
+#      - hspec >=0.2.0
+#      - HUnit >=1.1
+#      - mtl >=2.1.2
+#      - network >=2.3.1.0
+#      - process
+#      - template-haskell
+#      - temporary >=1.0
+#      - test-framework >=0.1
+#      - test-framework-hunit >=0.2.0
+#      - time
+#      - transformers >=0.3.0.0
