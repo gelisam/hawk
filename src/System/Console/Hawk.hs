@@ -64,7 +64,7 @@ myRunUncertainIO e = runUncertainIO . clarifyErrors e
           (Left errorMsg, _) | fromWrapperCode errorMsg -> do
             -- try again without the wrapper code
             let contextDir = userContextDirectory (contextSpec exprSpec)
-            runHawkInterpreter $ do
+            runHawkInterpreter contextDir $ do
               applyContext contextDir
               interpret annotatedExpr
                         (as :: ())  -- not the right type, but it should
@@ -119,7 +119,7 @@ processCanonicalExpr :: ContextSpec
                      -> UncertainT IO ()
 processCanonicalExpr c i o e = do
     let contextDir = userContextDirectory c
-    processRuntime <- runHawkInterpreter $ do
+    processRuntime <- runHawkInterpreter contextDir $ do
       applyContext contextDir
       interpretExpr (runCanonicalExpr e)
     lift $ runHawkIO $ processRuntime hawkRuntime

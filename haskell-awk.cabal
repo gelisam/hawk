@@ -54,6 +54,7 @@ Executable hawk
                   , directory
                   , exceptions >=0.1
                   , extra
+                  , filelock
                   , filepath
                   , haskell-awk
                   , haskell-src-exts >=1.16.0 && < 1.18
@@ -94,6 +95,7 @@ Library
 --                      , easy-file
 --                      , exceptions >=0.1
 --                      , extra
+--                      , filelock
 --                      , filepath
 --                      , haskell-awk
 --                      , haskell-src-exts >=1.14.0 && < 1.18
