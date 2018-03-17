@@ -18,6 +18,9 @@ import Control.Concurrent
 import System.Console.Hawk.Lock
 
 -- $setup
+-- >>> import System.Directory
+-- >>> let cxtDir = "tmp"
+-- >>> createDirectoryIfMissing False cxtDir
 -- >>> :{
 --   let par body1 body2 = do
 --         done1 <- newEmptyMVar
@@ -40,8 +43,9 @@ printDelayed (x:xs) = do threadDelay 10000
 --   other instances of hawk.
 -- 
 -- In the ideal case, nobody else is trying to use `withLock`.
+-- Perform all tests with context directory as current directory
 -- 
--- >>> withLock print3
+-- >>> withLock cxtDir print3
 -- 1
 -- 2
 -- 3
@@ -60,7 +64,7 @@ printDelayed (x:xs) = do threadDelay 10000
 -- 
 -- By using `withLock`, we serialize the execution of the two critical sections.
 -- 
--- >>> withLock print3 `par` withLock print3
+-- >>> withLock cxtDir print3 `par` withLock cxtDir print3
 -- 1
 -- 2
 -- 3
@@ -71,33 +75,14 @@ printDelayed (x:xs) = do threadDelay 10000
 -- There is a verbose version of `withLock` which makes it easy to see when
 -- two instances are trying to enter `withLock` at the same time.
 -- 
--- >>> withTestLock print3
+-- >>> withTestLock cxtDir print3
 -- ** LOCKED **
 -- 1
 -- 2
 -- 3
 -- ** UNLOCKED **
 -- 
--- >>> withTestLock print3 `par` withTestLock print3
--- ** LOCKED **
--- 1
--- 2
--- 3
--- ** UNLOCKED **
--- ** LOCKED **
--- 1
--- 2
--- 3
--- ** UNLOCKED **
--- 
--- Here is a variant of the previous test which tests a race condition in which
--- instance 1 releases the lock immediately after instance 2 notices that the
--- lock is busy, but before instance 2 begins waiting for the lock to be released.
--- 
--- This test case has been covered with filelock, the second process will be blocked
--- at any point if the first process is running.
--- 
--- >>> withTestLock print3 `par` (threadDelay 15000 >> withTestLock print3)
+-- >>> withTestLock cxtDir print3 `par` withTestLock cxtDir print3
 -- ** LOCKED **
 -- 1
 -- 2

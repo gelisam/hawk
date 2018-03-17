@@ -20,32 +20,20 @@ module System.Console.Hawk.Lock
     , withTestLock
     ) where
 
-import System.Directory ( doesFileExist, removeFile )
-import Control.Monad ( when )
 import System.FileLock ( SharedExclusive( Exclusive ), withFileLock )
+import System.FilePath ( (</>) )
 
 -- | Create a temporary file to indicate to other hawk process
 --  not to run until this process is unblocked
-withLock :: IO a -> IO a
-withLock action = withFileLock lockfile Exclusive (const action) >>= cleanup
+withLock :: FilePath -> IO a -> IO a
+withLock ctxDir action = withFileLock tempFile Exclusive (const action)
+    where tempFile = ctxDir </> "lock.tmp"
 
 -- | withLock but with additional messages
-withTestLock :: IO a -> IO a
-withTestLock action = do
-    result <- withFileLock lockfile Exclusive $ \_ -> do
-        putStrLn "** LOCKED **"
-        res <- action
-        putStrLn "** UNLOCKED **"
-        return res
-    cleanup result
-
--- A temporary file - to be deleted after unlock
-lockfile :: FilePath
-lockfile = "lock"
-
--- check in-case another process deletes filelock
-cleanup :: a -> IO a
-cleanup result = do
-    fileExists <- doesFileExist lockfile
-    when fileExists $ removeFile lockfile
-    return result
+withTestLock :: FilePath -> IO a -> IO a
+withTestLock ctxDir action = withFileLock tempFile Exclusive $ \_ -> do
+    putStrLn "** LOCKED **"
+    res <- action
+    putStrLn "** UNLOCKED **"
+    return res
+    where tempFile = ctxDir </> "lock.tmp"
