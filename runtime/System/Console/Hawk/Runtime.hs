@@ -88,9 +88,9 @@ outputRows :: Rows a => OutputSpec -> a -> IO ()
 outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
     case out of
-        UseStdout                       -> do B.putStr s; hFlush stdout
-        OutputFile f Nothing            -> B.writeFile f s
-        OutputFile f (Just backup)      -> do
+        UseStdout                             -> do B.putStr s; hFlush stdout
+        OutputFile (FileSink f Nothing)       -> B.writeFile f s
+        OutputFile (FileSink f (Just backup)) -> do
             copyFile f backup
             B.writeFile f s
   where

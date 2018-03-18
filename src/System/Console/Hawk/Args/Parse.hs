@@ -4,8 +4,8 @@ module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
 import Data.Char                                 (isSpace)
-import Data.Maybe                                (isNothing, fromJust)
 import "mtl" Control.Monad.Trans
+import System.FilePath ((<.>))
 
 import Control.Monad.Trans.OptionParser
 import Control.Monad.Trans.Uncertain
@@ -23,7 +23,7 @@ import           System.Console.Hawk.Context.Dir
 data CommonOptions = CommonOptions
     { record :: Separator
     , field :: Separator
-    , inputFile :: Maybe String
+    , inputFile :: Maybe FilePath
     }
 
 -- | Extract '-D', '-d', and input file.
@@ -81,7 +81,7 @@ commonOptions = do
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
           => CommonOptions -> OptionParserT HawkOption m InputSpec
-inputSpec options = InputSpec <$> source <*> format
+inputSpec opts = InputSpec <$> source <*> format
   where
     source = return $ maybe UseStdin InputFile file
     format = return streamFormat
@@ -89,9 +89,9 @@ inputSpec options = InputSpec <$> source <*> format
                  | otherwise           = Records rSep recordFormat
     recordFormat | fSep == Delimiter "" = RawRecord
                  | otherwise           = Fields fSep
-    rSep = record options
-    fSep = field options
-    file = inputFile options
+    rSep = record opts
+    fSep = field opts
+    file = inputFile opts
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
@@ -120,29 +120,29 @@ inputSpec options = InputSpec <$> source <*> format
 -- TODO: write test cases for in-place edit
 outputSpec :: (Functor m, Monad m)
            => CommonOptions -> OptionParserT HawkOption m OutputSpec
-outputSpec options = OutputSpec <$> sink <*> format
+outputSpec opts = OutputSpec <$> sink <*> format
   where
     sink = do
         -- TODO: refactor with upcoming consumeNullable changes
         backupSuffix <- consumeLast Option.InPlaceEdit "" $
                             consumeNullable "<none>" consumeString
-        if isNothing file
-            then if null backupSuffix
+        case file of
+            Nothing -> if null backupSuffix
                 then return UseStdout
                 else fail "in-place edit requires input file"
-            else if null backupSuffix
+            Just file' -> if null backupSuffix
                 then return UseStdout
                 else if backupSuffix == "<none>"
-                    then return $ OutputFile file' Nothing
-                    else return $ OutputFile file' $ Just $ file' ++ backupSuffix
+                    then return $ OutputFile $ FileSink file' Nothing
+                    else return $ OutputFile $ FileSink file'
+                        (Just $ file' <.> backupSuffix)
 
     format = OutputFormat <$> record' <*> field'
     record' = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
     field' = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
-    r' = fromSeparator $ record options
-    f' = fromSeparator $ field options
-    file = inputFile options
-    file' = (fromJust file)
+    r' = fromSeparator $ record opts
+    f' = fromSeparator $ field opts
+    file = inputFile opts
 
 
 -- | The information we need in order to evaluate a user expression:

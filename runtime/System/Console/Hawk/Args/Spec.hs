@@ -33,12 +33,15 @@ data InputSource
     | InputFile FilePath
   deriving (Show, Eq)
 
+data FileSink = FileSink
+    { outputFile :: FilePath
+    , backupFile :: Maybe FilePath
+    }
+  deriving (Show, Eq)
+
 data OutputSink
     = UseStdout
-    | OutputFile
-        { outputFile :: String
-        , backupFile :: Maybe String
-        }
+    | OutputFile FileSink
   deriving (Show, Eq)
 
 data InputFormat
