@@ -8,7 +8,6 @@ module System.Console.Hawk.Runtime
 
 import Control.Applicative
 import Control.Exception
-import Data.ByteString.Char8 as BS
 import Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Search as Search
 import GHC.IO.Exception
@@ -21,28 +20,18 @@ import System.Console.Hawk.Runtime.Base
 
 data SomeRows = forall a. Rows a => SomeRows a
 
--- Separate the lazy and strict versions so we don't get blocked
 processTable :: HawkRuntime -> ([[B.ByteString]] -> SomeRows) -> HawkIO ()
 processTable runtime f = HawkIO $ do
-    xss <- getTable (inputSpec runtime) $ case o of
-            UseStdout -> False
-            _ -> True
+    xss <- getTable (inputSpec runtime)
     case f xss of
-        SomeRows x -> outputRows out x
-    where out@(OutputSpec o _) = outputSpec runtime
+      SomeRows x -> outputRows (outputSpec runtime) x
 
-getTable :: InputSpec -> Bool -> IO [[B.ByteString]]
-getTable spec strict = splitIntoTable' <$> getInputString'
+
+getTable :: InputSpec -> IO [[B.ByteString]]
+getTable spec = splitIntoTable' <$> getInputString'
   where
     splitIntoTable' = splitIntoTable (inputFormat spec)
-    getInputString' = if strict
-        then do
-            s <- getInputStringStrict (inputSource spec)
-            return $ fromStrict s
-        else getInputString (inputSource spec)
-
-getInputStringStrict :: InputSource -> IO BS.ByteString
-getInputStringStrict (InputFile f) = BS.readFile f
+    getInputString' = getInputString (inputSource spec)
 
 getInputString :: InputSource -> IO B.ByteString
 getInputString NoInput = return B.empty
@@ -88,7 +77,7 @@ outputRows :: Rows a => OutputSpec -> a -> IO ()
 outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
     case out of
-        UseStdout                             -> do B.putStr s; hFlush stdout
+        UseStdout                             -> B.putStr s >> hFlush stdout
         OutputFile (FileSink f Nothing)       -> B.writeFile f s
         OutputFile (FileSink f (Just backup)) -> do
             copyFile f backup
@@ -100,7 +89,7 @@ outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
-    copyFile i o = do f <- B.readFile i; B.writeFile o f
+    copyFile i o = B.readFile i >>= \f -> B.writeFile o f
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
 ignoringBrokenPipe :: IO () -> IO ()
