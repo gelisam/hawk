@@ -11,7 +11,6 @@ import Data.Typeable
 
 import System.Console.Hawk.Args.Spec
 
-
 data HawkRuntime = HawkRuntime
     { inputSpec :: InputSpec
     , outputSpec :: OutputSpec
@@ -21,3 +20,8 @@ data HawkRuntime = HawkRuntime
 -- reexport IO under a unique name
 newtype HawkIO a = HawkIO { runHawkIO :: IO a }
   deriving Typeable
+
+-- For redirecting stdout to a temporary file
+tmp :: FilePath
+tmp = "tmp"
+

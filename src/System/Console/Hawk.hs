@@ -22,6 +22,8 @@ module System.Console.Hawk
 import Control.Monad.Trans
 import Data.List
 import Language.Haskell.Interpreter
+import System.Directory (renameFile)
+import System.FilePath ((<.>))
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr.Eval
@@ -50,8 +52,12 @@ processSpec :: HawkSpec -> IO ()
 processSpec Help          = help
 processSpec Version       = putStrLn versionString
 processSpec (Eval  e   o) = myRunUncertainIO e $ processEvalSpec  (contextSpec e)   o (userExpr e)
-processSpec (Apply e i o) = myRunUncertainIO e $ processApplySpec (contextSpec e) i o (userExpr e)
-processSpec (Map   e i o) = myRunUncertainIO e $ processMapSpec   (contextSpec e) i o (userExpr e)
+processSpec (Apply e i o) = myRunUncertainIO e (processApplySpec (contextSpec e) i o (userExpr e)) >> overwrite o
+processSpec (Map   e i o) = myRunUncertainIO e (processMapSpec   (contextSpec e) i o (userExpr e)) >> overwrite o
+
+-- | Overwrites the input file with the temporary output file if it exists
+overwrite (OutputSpec (OutputFile (FileSink f _)) _) = renameFile (f <.> tmp) f
+overwrite _ = return ()
 
 -- | A version of `runUncertainIO` which detects poor error messages and improves them.
 myRunUncertainIO :: ExprSpec -> UncertainT IO () -> IO ()

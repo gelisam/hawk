@@ -77,6 +77,7 @@ Library
     build-depends: base >=4.6.0.1
                  , bytestring
                  , containers
+                 , filepath
                  , stringsearch >=0.3.6.4
     Default-Language: Haskell98
 

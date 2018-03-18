@@ -12,11 +12,11 @@ import Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Search as Search
 import GHC.IO.Exception
 import System.IO
+import System.FilePath ((<.>))
 
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Representable
 import System.Console.Hawk.Runtime.Base
-
 
 data SomeRows = forall a. Rows a => SomeRows a
 
@@ -78,10 +78,10 @@ outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     let s = join' (toRows x)
     case out of
         UseStdout                             -> B.putStr s >> hFlush stdout
-        OutputFile (FileSink f Nothing)       -> B.writeFile f s
+        OutputFile (FileSink f Nothing)       -> B.writeFile (f <.> tmp) s
         OutputFile (FileSink f (Just backup)) -> do
             copyFile f backup
-            B.writeFile f s
+            B.writeFile (f <.> tmp) s
   where
     join' = join (B.fromStrict $ recordDelimiter spec)
     toRows = repr (B.fromStrict $ fieldDelimiter spec)
@@ -89,6 +89,7 @@ outputRows (OutputSpec out spec) x = ignoringBrokenPipe $ do
     join :: B.ByteString -> [B.ByteString] -> B.ByteString
     join "\n" = B.unlines
     join sep  = B.intercalate sep
+
     copyFile i o = B.readFile i >>= \f -> B.writeFile o f
 
 -- Don't fret if stdout is closed early, that is the way of shell pipelines.
