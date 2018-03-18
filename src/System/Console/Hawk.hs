@@ -19,10 +19,11 @@ module System.Console.Hawk
   ) where
 
 
+import Control.Monad (when)
 import Control.Monad.Trans
 import Data.List
 import Language.Haskell.Interpreter
-import System.Directory (renameFile)
+import System.Directory (doesFileExist, renameFile)
 import System.FilePath ((<.>))
 
 import Control.Monad.Trans.Uncertain
@@ -56,7 +57,11 @@ processSpec (Apply e i o) = myRunUncertainIO e (processApplySpec (contextSpec e)
 processSpec (Map   e i o) = myRunUncertainIO e (processMapSpec   (contextSpec e) i o (userExpr e)) >> overwrite o
 
 -- | Overwrites the input file with the temporary output file if it exists
-overwrite (OutputSpec (OutputFile (FileSink f _)) _) = renameFile (f <.> tmp) f
+overwrite :: OutputSpec -> IO ()
+overwrite (OutputSpec (OutputFile (FileSink f _)) _) = do
+    fe <- doesFileExist tmpFile
+    when fe $ renameFile tmpFile f
+    where tmpFile = f <.> tmp
 overwrite _ = return ()
 
 -- | A version of `runUncertainIO` which detects poor error messages and improves them.
