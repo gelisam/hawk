@@ -5,6 +5,7 @@ module System.Console.Hawk.Args.Parse (parseArgs) where
 import Control.Applicative
 import Data.Char                                 (isSpace)
 import "mtl" Control.Monad.Trans
+import System.FilePath ((<.>))
 
 import Control.Monad.Trans.OptionParser
 import Control.Monad.Trans.Uncertain
@@ -17,12 +18,19 @@ import           System.Console.Hawk.Context.Dir
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
 
 
--- | (record separator, field separator)
-type CommonSeparators = (Separator, Separator)
+-- | Record separator, field separator, and input file
+--   is common to both output and input option parsing
+data CommonOptions = CommonOptions
+    { record :: Separator
+    , field :: Separator
+    , inputFile :: Maybe FilePath
+    }
 
--- | Extract '-D' and '-d'. We perform this step separately because those two
---   delimiters are used by both the input and output specs.
+-- | Extract '-D', '-d', and input file.
+--   We perform this step separately because those three
+--   options are used by both the input and output specs.
 -- 
+-- TODO: UPDATE TEST CASES
 -- >>> let test = testP commonSeparators
 -- 
 -- >>> test []
@@ -33,16 +41,16 @@ type CommonSeparators = (Separator, Separator)
 -- 
 -- >>> test ["-D|", "-d,"]
 -- (Delimiter "|",Delimiter ",")
-commonSeparators :: (Functor m, Monad m)
-                 => OptionParserT HawkOption m CommonSeparators
-commonSeparators = do
+commonOptions :: (Functor m, Monad m)
+                 => OptionParserT HawkOption m CommonOptions
+commonOptions = do
     r <- lastSep Option.RecordDelimiter defaultRecordSeparator
     f <- lastSep Option.FieldDelimiter defaultFieldSeparator
-    return (r, f)
+    file <- consumeLast Option.InputFile "" $ consumeNullable "" consumeString
+    return $ CommonOptions r f $ if null file then Nothing else Just file
   where
     lastSep opt def = consumeLast opt def consumeSep
     consumeSep = fmap Delimiter . Option.consumeDelimiter
-
 
 -- | The input delimiters have already been parsed, but we still need to
 --   interpret them and to determine the input source.
@@ -72,19 +80,18 @@ commonSeparators = do
 -- InputFile "/etc/passwd"
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
-          => CommonSeparators -> OptionParserT HawkOption m InputSpec
-inputSpec (rSep, fSep) = InputSpec <$> source <*> format
+          => CommonOptions -> OptionParserT HawkOption m InputSpec
+inputSpec opts = InputSpec <$> source <*> format
   where
-    source = do
-        r <- consumeExtra consumeString
-        return $ case r of
-          Nothing -> UseStdin
-          Just f  -> InputFile f
+    source = return $ maybe UseStdin InputFile file
     format = return streamFormat
     streamFormat | rSep == Delimiter "" = RawStream
-                 | otherwise            = Records rSep recordFormat
+                 | otherwise           = Records rSep recordFormat
     recordFormat | fSep == Delimiter "" = RawRecord
-                 | otherwise            = Fields fSep
+                 | otherwise           = Fields fSep
+    rSep = record opts
+    fSep = field opts
+    file = inputFile opts
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
@@ -109,16 +116,33 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
+--
+-- TODO: write test cases for in-place edit
 outputSpec :: (Functor m, Monad m)
-           => CommonSeparators -> OptionParserT HawkOption m OutputSpec
-outputSpec (r, f) = OutputSpec <$> sink <*> format
+           => CommonOptions -> OptionParserT HawkOption m OutputSpec
+outputSpec opts = OutputSpec <$> sink <*> format
   where
-    sink = return UseStdout
-    format = OutputFormat <$> record <*> field
-    record = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
-    field = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
-    r' = fromSeparator r
-    f' = fromSeparator f
+    sink = do
+        -- TODO: refactor with upcoming consumeNullable changes
+        backupSuffix <- consumeLast Option.InPlaceEdit "" $
+                            consumeNullable "<none>" consumeString
+        case file of
+            Nothing -> if null backupSuffix
+                then return UseStdout
+                else fail "in-place edit requires input file"
+            Just file' -> if null backupSuffix
+                then return UseStdout
+                else if backupSuffix == "<none>"
+                    then return $ OutputFile $ FileSink file' Nothing
+                    else return $ OutputFile $ FileSink file'
+                        (Just $ file' <.> backupSuffix)
+
+    format = OutputFormat <$> record' <*> field'
+    record' = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
+    field' = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
+    r' = fromSeparator $ record opts
+    f' = fromSeparator $ field opts
+    file = inputFile opts
 
 
 -- | The information we need in order to evaluate a user expression:
@@ -209,15 +233,15 @@ parseArgs args = runOptionParserT options parser args
     parser = do
         lift $ return ()  -- silence a warning
         cmd <- consumeExclusive assoc eval
-        c <- commonSeparators
+        c <- commonOptions
         cmd c
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
             , (Option.Apply,   apply)
             , (Option.Map,     map')
             ]
-    
-    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonSeparators
+
+    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonOptions
                                      -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version
