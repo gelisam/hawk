@@ -1,71 +1,14 @@
 -- | Easier access to haskell-src-exts's SrcLoc values.
 module Language.Haskell.Exts.Location where
 
-import Control.Monad
 import Control.Monad.Trans.Writer
 import Data.Semigroup
+import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts.Syntax
 
 
--- | Many haskell-src-exts datastructures contain a SrcLoc,
---   this provides a uniform way to access them.
-class Location a where
-  location :: a -> Maybe SrcLoc
-
-instance Location SrcLoc where
-  location = Just
-
-instance Location Module where
-  location (Module loc _ _ _ _ _ _) = Just loc
-
-instance Location ModulePragma where
-  location (LanguagePragma  loc _)   = Just loc
-  location (OptionsPragma   loc _ _) = Just loc
-  location (AnnModulePragma loc _)   = Just loc
-
-instance Location ImportDecl where
-  location = Just . importLoc
-
-instance Location Decl where
-  location (TypeDecl         loc _ _ _)         = Just loc
-  location (TypeFamDecl      loc _ _ _)         = Just loc
-  location (DataDecl         loc _ _ _ _ _ _)   = Just loc
-  location (GDataDecl        loc _ _ _ _ _ _ _) = Just loc
-  location (DataFamDecl      loc _ _ _ _)       = Just loc
-  location (TypeInsDecl      loc _ _)           = Just loc
-  location (DataInsDecl      loc _ _ _ _)       = Just loc
-  location (GDataInsDecl     loc _ _ _ _ _)     = Just loc
-  location (ClassDecl        loc _ _ _ _ _)     = Just loc
-  location (InstDecl         loc _ _ _ _ _ _)   = Just loc
-  location (DerivDecl        loc _ _ _ _ _)     = Just loc
-  location (InfixDecl        loc _ _ _)         = Just loc
-  location (DefaultDecl      loc _)             = Just loc
-  location (SpliceDecl       loc _)             = Just loc
-  location (TypeSig          loc _ _)           = Just loc
-  location (FunBind matches) = location matches
-  location (PatBind          loc _ _ _)         = Just loc
-  location (ForImp           loc _ _ _ _ _)     = Just loc
-  location (ForExp           loc _ _ _ _)       = Just loc
-  location (RulePragmaDecl   loc _)             = Just loc
-  location (DeprPragmaDecl   loc _)             = Just loc
-  location (WarnPragmaDecl   loc _)             = Just loc
-  location (InlineSig        loc _ _ _)         = Just loc
-  location (InlineConlikeSig loc _ _)           = Just loc
-  location (SpecSig          loc _ _ _)         = Just loc
-  location (SpecInlineSig    loc _ _ _ _)       = Just loc
-  location (InstSig          loc _ _ _ _)       = Just loc
-  location (AnnPragma        loc _)             = Just loc
-
-instance Location Match where
-  location (Match loc _ _ _ _ _) = Just loc
-
-instance Location a => Location (Maybe a) where
-  location = join . fmap location
-
-instance Location a => Location [a] where
-  -- the earliest location.
-  location = fmap getMin . getOption . execWriter . mapM_ located
-
+-- TODO: haskell-src-exts now supports SrcSpanInfo, which is more informative
+-- than SrcLoc, should we switch?
 
 -- | A value obtained from a particular location in the source code.
 -- 
@@ -73,9 +16,13 @@ instance Location a => Location [a] where
 -- haskell-src-exts provides.
 type Located a = Writer (Option (Min SrcLoc)) a
 
-located :: Location a => a -> Located a
-located x = do
-    tell $ Option $ fmap Min $ location x
+located :: SrcLoc -> Located ()
+located srcLoc | srcLoc == noLoc = tell $ Option $ Nothing
+               | otherwise       = tell $ Option $ Just $ Min srcLoc
+
+annotated :: (Annotated ast, SrcInfo si) => ast si -> Located (ast si)
+annotated x = do
+    located $ getPointLoc $ ann x
     return x
 
 runLocated :: Located a -> (a, Maybe SrcLoc)

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
@@ -14,36 +14,41 @@ import Data.HaskellSource
 import Language.Haskell.Exts.Location
 
 
-locatedExtensions :: [ModulePragma] -> Located [ExtensionName]
-locatedExtensions = fmap go . located
+locatedExtensions :: forall si. SrcInfo si
+                  => [ModulePragma si] -> Located [ExtensionName]
+locatedExtensions = fmap go . traverse annotated
   where
-    go :: [ModulePragma] -> [ExtensionName]
+    go :: [ModulePragma si] -> [ExtensionName]
     go = concatMap extNames
 
-    extNames :: ModulePragma -> [ExtensionName]
+    extNames :: ModulePragma si -> [ExtensionName]
     extNames (LanguagePragma _ exts) = map prettyPrint exts
     extNames  OptionsPragma{}        = []  -- TODO: accept "-XExtName"
     extNames _                       = []
 
-locatedImports :: [ImportDecl] -> Located [QualifiedModule]
-locatedImports = fmap go . located
+locatedImports :: forall si. SrcInfo si
+               => [ImportDecl si] -> Located [QualifiedModule]
+locatedImports = fmap go . traverse annotated
   where
-    go :: [ImportDecl] -> [QualifiedModule]
+    go :: [ImportDecl si] -> [QualifiedModule]
     go = map qualify
 
-    qualify :: ImportDecl -> QualifiedModule
+    qualify :: ImportDecl si -> QualifiedModule
     qualify decl = (fullName decl, qualifiedName decl)
 
-    fullName :: ImportDecl -> String
+    fullName :: ImportDecl si -> String
     fullName = prettyPrint . importModule
 
-    qualifiedName :: ImportDecl -> Maybe String
+    qualifiedName :: ImportDecl si -> Maybe String
     qualifiedName = fmap prettyPrint . importAs
 
-locatedModule :: SrcLoc -> HaskellSource -> ModuleName -> Located (Maybe String)
-locatedModule srcLoc source (ModuleName mName) = case moduleLine of
+locatedModule :: forall si. SrcInfo si
+              => si -> HaskellSource -> Maybe (ModuleHead si) -> Located (Maybe String)
+locatedModule srcInfo source maybeModuleHead = case moduleLine of
     Nothing -> return Nothing
-    Just line -> located (srcLoc {srcLine = line}) >> return (Just mName)
+    Just line -> do
+      located ((getPointLoc srcInfo) {srcLine = line})
+      return (moduleName <$> maybeModuleHead)
   where
     isModuleDecl :: Either B.ByteString String -> Bool
     isModuleDecl (Left xs) = "module " `B.isPrefixOf` xs
@@ -51,6 +56,9 @@ locatedModule srcLoc source (ModuleName mName) = case moduleLine of
 
     moduleLine :: Maybe Int
     moduleLine = fmap index2line $ findIndex isModuleDecl source
+
+    moduleName :: ModuleHead si -> String
+    moduleName (ModuleHead _ (ModuleName _ name) _ _) = name
 
 
 -- line numbers start at 1, list indices start at 0.
@@ -125,19 +133,27 @@ readModule f = do
     s <- lift $ readSource f
     r <- lift $ parseFile f
     case r of
-      ParseOk (Module srcLoc moduleDecl pragmas _ _ imports decls)
-        -> return $ go s srcLoc pragmas moduleDecl imports decls
+      ParseOk (Module srcInfo moduleDecl pragmas imports decls)
+        -> return $ go s srcInfo pragmas moduleDecl imports decls
       ParseFailed loc err -> multilineFail msg
         where
           -- we start with a newline to match ghc's errors
           msg = printf "\n%s:%d:%d: %s" (srcFilename loc) (srcLine loc) (srcColumn loc) err
   where
-    go source srcLoc pragmas moduleDecl imports decls = HaskellModule {..}
+    go :: SrcInfo si
+       => HaskellSource
+       -> si
+       -> [ModulePragma si]
+       -> Maybe (ModuleHead si)
+       -> [ImportDecl si]
+       -> [Decl si]
+       -> HaskellModule
+    go source srcInfo pragmas moduleDecl imports decls = HaskellModule {..}
       where
         (languageExtensions,      _) = runLocated (locatedExtensions pragmas)
-        (moduleName,      moduleLoc) = runLocated (locatedModule srcLoc source moduleDecl)
+        (moduleName,      moduleLoc) = runLocated (locatedModule srcInfo source moduleDecl)
         (importedModules, importLoc) = runLocated (locatedImports imports)
-        (_,                 declLoc) = runLocated (located decls)
+        (_,                 declLoc) = runLocated (traverse annotated decls)
 
         sourceParts = splitSource [moduleLoc, importLoc, declLoc] source
         [pragmaSource, moduleSource, importSource, codeSource] = sourceParts
