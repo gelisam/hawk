@@ -3,9 +3,8 @@ module Language.Haskell.Exts.Location where
 
 import Control.Monad
 import Control.Monad.Trans.Writer
+import Data.Semigroup
 import Language.Haskell.Exts.Syntax
-
-import Data.Monoid.Ord
 
 
 -- | Many haskell-src-exts datastructures contain a SrcLoc,
@@ -65,21 +64,21 @@ instance Location a => Location (Maybe a) where
 
 instance Location a => Location [a] where
   -- the earliest location.
-  location = getMinPriority . execWriter . mapM_ located
+  location = fmap getMin . getOption . execWriter . mapM_ located
 
 
 -- | A value obtained from a particular location in the source code.
 -- 
 -- The location only indicates the beginning of a range, because that's what
 -- haskell-src-exts provides.
-type Located a = Writer (MinPriority SrcLoc) a
+type Located a = Writer (Option (Min SrcLoc)) a
 
 located :: Location a => a -> Located a
 located x = do
-    tell $ MinPriority $ location x
+    tell $ Option $ fmap Min $ location x
     return x
 
 runLocated :: Located a -> (a, Maybe SrcLoc)
 runLocated = go . runWriter
   where
-    go (x, p) = (x, getMinPriority p)
+    go (x, p) = (x, fmap getMin $ getOption $ p)
