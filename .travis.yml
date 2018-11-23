@@ -31,7 +31,7 @@ addons:
 
 env:
 - BUILD=stack
-- BUILD=cabal
+#- BUILD=cabal
 
 before_install:
 # Download and unpack the stack executable
