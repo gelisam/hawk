@@ -19,19 +19,22 @@ cache:
   directories:
   - $HOME/.stack
   - $HOME/.cabal
+  - dist-newstyle
+  - .stack-work
 
 # Ensure necessary system libraries are present
-addons:
-  apt:
-    packages:
-      - libgmp-dev
-      - ghc
+#addons:
+  #apt:
+    #packages:
+      # this installs the system version of ghc; we install ghc using stack instead
+      #- libgmp-dev
+      #- ghc
       # this installs an older version of cabal which doesn't support new-build
       #- cabal-install
 
 env:
 - BUILD=stack
-#- BUILD=cabal
+- BUILD=cabal
 
 before_install:
 # Download and unpack the stack executable
@@ -40,6 +43,8 @@ before_install:
 - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 # Install a recent version of cabal which supports new-build
 - stack install cabal-install
+# Make sure stack and cabal use the same ghc version
+- export PATH="$(stack path --compiler-bin):$PATH"
 
 install:
 # Build dependencies (stack)
