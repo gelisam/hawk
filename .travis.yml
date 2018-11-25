@@ -33,7 +33,11 @@ cache:
       #- cabal-install
 
 env:
+# if this build fails and you need to bump the lts, remember
+# to also bump the lower bounds in package.yaml to match the
+# versions provided by that new lts!
 - BUILD=stack RESOLVER="lts-7.0"
+
 - BUILD=stack RESOLVER="lts-12.19"
 - BUILD=cabal
 
