@@ -39,7 +39,7 @@ env:
 - BUILD=stack RESOLVER="lts-7.0"
 
 - BUILD=stack RESOLVER="lts-12.19"
-- BUILD=cabal
+- BUILD=cabal RESOLVER="lts-12.19"
 
 before_install:
 # Download and unpack the stack executable
