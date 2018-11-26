@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings, PackageImports #-}
+{-# LANGUAGE OverloadedStrings, PackageImports, ScopedTypeVariables #-}
 -- | In which Hawk's command-line arguments are structured into a `HawkSpec`.
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
 import Control.Applicative
 import Data.Char                                 (isSpace)
+import Data.Maybe
 import "mtl" Control.Monad.Trans
 
 import Control.Monad.Trans.OptionParser
@@ -33,15 +34,18 @@ type CommonSeparators = (Separator, Separator)
 -- 
 -- >>> test ["-D|", "-d,"]
 -- (Delimiter "|",Delimiter ",")
-commonSeparators :: (Functor m, Monad m)
+commonSeparators :: forall m. (Functor m, Monad m)
                  => OptionParserT HawkOption m CommonSeparators
 commonSeparators = do
-    r <- lastSep Option.RecordDelimiter defaultRecordSeparator
-    f <- lastSep Option.FieldDelimiter defaultFieldSeparator
+    r <- consumeLastSeparator Option.RecordDelimiter defaultRecordSeparator
+    f <- consumeLastSeparator Option.FieldDelimiter  defaultFieldSeparator
     return (r, f)
   where
-    lastSep opt def = consumeLast opt def consumeSep
-    consumeSep = fmap Delimiter . Option.consumeDelimiter
+    consumeLastSeparator :: HawkOption -> Separator -> OptionParserT HawkOption m Separator
+    consumeLastSeparator opt def = fromMaybe def <$> consumeLast opt separatorConsumer
+
+    separatorConsumer :: OptionConsumerT m Separator
+    separatorConsumer = maybe Whitespace Delimiter <$> Option.delimiterConsumer
 
 
 -- | The input delimiters have already been parsed, but we still need to
@@ -49,7 +53,7 @@ commonSeparators = do
 -- 
 -- >>> :{
 -- let test = testP $ do { c <- commonSeparators
---                       ; _ <- consumeExtra consumeString  -- skip expr
+--                       ; _ <- consumeExtra stringConsumer  -- skip expr
 --                       ; i <- inputSpec c
 --                       ; lift $ print $ inputSource i
 --                       ; lift $ print $ inputFormat i
@@ -76,7 +80,7 @@ inputSpec :: (Functor m, Monad m)
 inputSpec (rSep, fSep) = InputSpec <$> source <*> format
   where
     source = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra stringConsumer
         return $ case r of
           Nothing -> UseStdin
           Just f  -> InputFile f
@@ -109,14 +113,21 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- >>> test ["-o\t", "-d,", "-O|"]
 -- UseStdout
 -- ("|","\t")
-outputSpec :: (Functor m, Monad m)
+outputSpec :: forall m. (Functor m, Monad m)
            => CommonSeparators -> OptionParserT HawkOption m OutputSpec
 outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
+    sink :: OptionParserT HawkOption m OutputSink
     sink = return UseStdout
+
+    format :: OptionParserT HawkOption m OutputFormat
     format = OutputFormat <$> record <*> field
-    record = consumeLast Option.OutputRecordDelimiter r' Option.consumeDelimiter
-    field = consumeLast Option.OutputFieldDelimiter f' Option.consumeDelimiter
+
+    record, field :: OptionParserT HawkOption m Delimiter
+    record = fmap (fromMaybe r') $ consumeLast Option.OutputRecordDelimiter $ fromMaybe "" <$> Option.delimiterConsumer
+    field  = fmap (fromMaybe f') $ consumeLast Option.OutputFieldDelimiter  $ fromMaybe "" <$> Option.delimiterConsumer
+
+    r', f' :: Delimiter
     r' = fromSeparator r
     f' = fromSeparator f
 
@@ -149,12 +160,12 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
                     <*> expr
   where
     contextDir = do
-      dir <- consumeLast Option.ContextDirectory "" consumeString
-      if null dir
-        then liftIO findContextFromCurrDirOrDefault
-        else return dir
+      maybeDir <- consumeLast Option.ContextDirectory stringConsumer
+      case maybeDir of
+        Nothing -> liftIO findContextFromCurrDirOrDefault
+        Just dir -> return dir
     expr = do
-        r <- consumeExtra consumeString
+        r <- consumeExtra stringConsumer
         case r of
           Just e  -> if all isSpace e
                       then fail "user expression cannot be empty"
@@ -208,7 +219,7 @@ parseArgs args = runOptionParserT options parser args
   where
     parser = do
         lift $ return ()  -- silence a warning
-        cmd <- consumeExclusive assoc eval
+        cmd <- fromMaybe eval <$> consumeExclusive assoc
         c <- commonSeparators
         cmd c
     assoc = [ (Option.Help,    help)

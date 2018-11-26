@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports, RankNTypes #-}
+{-# LANGUAGE DeriveFunctor, LambdaCase, PackageImports, RankNTypes #-}
 -- | A typeclass- and monad-based interface for GetOpt,
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
@@ -43,11 +43,11 @@ class Eq a => Option a where
 --   support for boolean flags and optional arguments.
 --
 -- To maintain the illusion of precise types, please use combining functions
--- such as `nullable int` instead.
+-- such as `optional int` instead.
 data OptionType
     = Flag                   -- Bool, no argument
     | Setting String         -- mandatory String argument
-    | NullableSetting String -- optional String argument
+    | OptionalSetting String -- optional String argument
   deriving (Show, Eq)
 
 
@@ -110,7 +110,7 @@ optDescrWith shortName' longName' helpMsg' optionType'
     argDescr = case optionType' o of
         Flag               -> GetOpt.NoArg (o, Just "")
         Setting tp         -> GetOpt.ReqArg (\s -> (o, Just s)) tp
-        NullableSetting tp -> GetOpt.OptArg (\ms -> (o, ms)) tp
+        OptionalSetting tp -> GetOpt.OptArg (\ms -> (o, ms)) tp
 
 
 -- | The part of your --help which describes each possible option.
@@ -122,7 +122,7 @@ optionsHelp = optionsHelpWith shortName longName helpMsg optionType
 -- >>> :{
 -- let { tp "cowbell"   = flag
 --     ; tp "guitar"    = string
---     ; tp "saxophone" = nullable int
+--     ; tp "saxophone" = optional int
 --     }
 -- :}
 --
@@ -159,9 +159,9 @@ runOptionParserT = runOptionParserWith shortName longName helpMsg optionType
 --
 -- >>> :{
 -- testP ["--cowbell","-s"] (const flag) $ do
---   { c <- consumeLast "cowbell"   False consumeFlag
---   ; g <- consumeLast "guitar"    False consumeFlag
---   ; s <- consumeLast "saxophone" False consumeFlag
+--   { c <- fromMaybe False <$> consumeLast "cowbell"   flagConsumer
+--   ; g <- fromMaybe False <$> consumeLast "guitar"    flagConsumer
+--   ; s <- fromMaybe False <$> consumeLast "saxophone" flagConsumer
 --   ; return (c, g, s)
 --   }
 -- :}
@@ -196,11 +196,10 @@ runOptionParserWith shortName' longName' helpMsg' optionType'
 
 -- | Try to parse a setting of a particular type.
 --
--- The input will never be Nothing unless the optionType is nullable, and even
--- then consumeNullable will get rid of it for you. Yet we still need the type
--- of the input to be `Maybe String` in order for consumeNullable itself to be
--- a valid OptionConsumer.
-type OptionConsumer m a = Maybe String -> UncertainT m a
+-- The input will never be Nothing unless the optionType is optional.
+newtype OptionConsumerT m a = OptionConsumerT
+  { runOptionConsumerT :: Maybe String -> UncertainT m a
+  } deriving Functor
 
 
 -- | Specifies that the option cannot be assigned a value.
@@ -218,15 +217,15 @@ flag = Flag
 -- | True if the given flag appears.
 --
 -- >>> let tp = const flag
--- >>> let consumeCowbell = consumeLast "cowbell" False consumeFlag :: OptionParser String Bool
+-- >>> let consumeCowbell = fromMaybe False <$> consumeLast "cowbell" flagConsumer :: OptionParser String Bool
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- True
 --
 -- >>> testP ["--saxophone"] tp consumeCowbell
 -- False
-consumeFlag :: Monad m => OptionConsumer m Bool
-consumeFlag _ = return True
+flagConsumer :: Monad m => OptionConsumerT m Bool
+flagConsumer = OptionConsumerT $ \_ -> return True
 
 
 -- | Specifies that the option must be assigned a String value.
@@ -244,7 +243,7 @@ string = Setting "str"
 -- | The value assigned to the option, interpreted as a string.
 --
 -- >>> let tp = const string
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
+-- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" stringConsumer :: OptionParser String String
 --
 -- >>> testP ["--cowbell", "extra"] tp consumeCowbell
 -- "extra"
@@ -258,30 +257,31 @@ string = Setting "str"
 -- >>> testP ["-c"] tp consumeCowbell
 -- error: option `-c' requires an argument str
 -- *** Exception: ExitFailure 1
-consumeString :: Monad m => OptionConsumer m String
-consumeString (Just s) = return s
-consumeString Nothing = error "please use consumeNullable to consume nullable options"
+stringConsumer :: Monad m => OptionConsumerT m String
+stringConsumer = OptionConsumerT $ \case
+  Just s -> return s
+  Nothing -> error "please use optionalConsumer to consume optional options"
 
 
 -- | Specifies that the value of the option may be omitted.
 --
--- >>> let tp = const (nullable string)
+-- >>> let tp = const (optional string)
 -- >>> testH tp
 -- Usage: more [option]... <song.mp3>
 -- Options:
 --   -c[str]  --cowbell[=str]    adds more cowbell.
 --   -g[str]  --guitar[=str]     adds more guitar.
 --   -s[str]  --saxophone[=str]  adds more saxophone.
-nullable :: OptionType -> OptionType
-nullable (Setting tp) = NullableSetting tp
-nullable (NullableSetting _) = error "double nullable"
-nullable Flag = error "nullable flag doesn't make sense"
+optional :: OptionType -> OptionType
+optional (Setting tp) = OptionalSetting tp
+optional (OptionalSetting _) = error "double optional"
+optional Flag = error "optional flag doesn't make sense"
 
--- | The value assigned to an option, or a default value if no value was
---   assigned. Must be used to consume `nullable` options.
+-- | The value assigned to an option, or Nothing if no value was assigned.
+--   Must be used to consume `optional` options.
 --
--- >>> let tp = const (nullable string)
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" $ consumeNullable "<default>" consumeString :: OptionParser String String
+-- >>> let tp = const (optional string)
+-- >>> let consumeCowbell = fmap (fromMaybe "<none>") $ consumeLast "cowbell" $ fromMaybe "<default>" <$> optionalConsumer stringConsumer :: OptionParser String String
 --
 -- >>> testP ["-cs"] tp consumeCowbell
 -- "s"
@@ -292,11 +292,12 @@ nullable Flag = error "nullable flag doesn't make sense"
 -- >>> testP ["-s"] tp consumeCowbell
 -- "<none>"
 --
--- >>> testP ["-c"] tp $ consumeLast "cowbell" "<none>" consumeString
--- *** Exception: please use consumeNullable to consume nullable options
-consumeNullable :: Monad m => a -> OptionConsumer m a -> OptionConsumer m a
-consumeNullable nullValue _ Nothing = return nullValue
-consumeNullable _ consume o = consume o
+-- >>> testP ["-c"] tp $ fromMaybe "<none>" <$> consumeLast "cowbell" stringConsumer
+-- *** Exception: please use optionalConsumer to consume optional options
+optionalConsumer :: Monad m => OptionConsumerT m a -> OptionConsumerT m (Maybe a)
+optionalConsumer optionConsumer = OptionConsumerT $ \case
+  Nothing -> return Nothing
+  o -> Just <$> runOptionConsumerT optionConsumer o
 
 
 -- | A helper for defining custom options types.
@@ -320,7 +321,7 @@ readable = Setting
 -- | The value assigned to the option, interpreted by `read`.
 --
 -- >>> let tp = const (readable "unit")
--- >>> let consumeCowbell = consumeLast "cowbell" () consumeReadable :: OptionParser String ()
+-- >>> let consumeCowbell = fromMaybe () <$> consumeLast "cowbell" readConsumer :: OptionParser String ()
 --
 -- >>> testP ["--cowbell=()"] tp consumeCowbell >>= print
 -- ()
@@ -328,9 +329,9 @@ readable = Setting
 -- >>> testP ["--cowbell=foo"] tp consumeCowbell >>= print
 -- error: "foo" is not a valid value for this option.
 -- *** Exception: ExitFailure 1
-consumeReadable :: (Read a, Monad m) => OptionConsumer m a
-consumeReadable o = do
-    s <- consumeString o
+readConsumer :: (Read a, Monad m) => OptionConsumerT m a
+readConsumer = OptionConsumerT $ \o -> do
+    s <- runOptionConsumerT stringConsumer o
     case reads s of
       [(x, "")] -> return x
       _ -> fail $ printf "%s is not a valid value for this option." $ show s
@@ -348,12 +349,12 @@ int = readable "int"
 -- (see the source)
 --
 -- >>> let tp = const int
--- >>> let consumeCowbell = consumeLast "cowbell" (-1) consumeInt :: OptionParser String Int
+-- >>> let consumeCowbell = fromMaybe (-1) <$> consumeLast "cowbell" intConsumer :: OptionParser String Int
 --
 -- >>> testP ["--cowbell=42"] tp consumeCowbell
 -- 42
-consumeInt :: Monad m => OptionConsumer m Int
-consumeInt = consumeReadable
+intConsumer :: Monad m => OptionConsumerT m Int
+intConsumer = readConsumer
 
 
 -- | The value assigned to the option, interpreted as a path (String)
@@ -376,7 +377,7 @@ filePath = Setting "path"
 --
 -- >>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
 -- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
--- >>> let consumeLastInputDir = consumeLast "input-dir" "error" :: OptionConsumer IO String -> OptionParserT String IO String
+-- >>> let consumeLastInputDir = fromMaybe "error" <$> consumeLast "input-dir" :: OptionConsumerT IO String -> OptionParserT String IO String
 -- >>> let consumeExistingDir    = consumeLastInputDir (consumeFilePath dirExists)
 -- >>> let consumeNotExistingDir = consumeLastInputDir (consumeFilePath dirDoesntExist)
 -- >>> testIO ["--input-dir=."] inputDir consumeExistingDir
@@ -384,9 +385,11 @@ filePath = Setting "path"
 -- >>> testIO ["--input-dir=."] inputDir consumeNotExistingDir
 -- error: . exists
 -- *** Exception: ExitFailure 1
-consumeFilePath :: MonadIO m
-                => (FilePath -> UncertainT m FilePath) -> OptionConsumer m String
-consumeFilePath check input = consumeString input >>= check
+filePathConsumer :: MonadIO m
+                 => (FilePath -> UncertainT m FilePath) -> OptionConsumerT m String
+filePathConsumer check = OptionConsumerT $ \o -> do
+  filePath_ <- runOptionConsumerT stringConsumer o
+  check filePath_
 
 
 -- | All the occurences of a given option.
@@ -395,7 +398,7 @@ consumeFilePath check input = consumeString input >>= check
 -- empty list).
 --
 -- >>> let tp = const string
--- >>> let consumeCowbell = consumeAll "cowbell" consumeString :: OptionParser String [String]
+-- >>> let consumeCowbell = consumeAll "cowbell" stringConsumer :: OptionParser String [String]
 --
 -- >>> :{
 -- testP ["--cowbell=foo", "--cowbell", "bar"] tp $ do
@@ -406,19 +409,19 @@ consumeFilePath check input = consumeString input >>= check
 -- :}
 -- (["foo","bar"],[])
 consumeAll :: (Eq o, Monad m)
-           => o -> OptionConsumer m a -> OptionParserT o m [a]
-consumeAll o consume = OptionParserT $ do
+           => o -> OptionConsumerT m a -> OptionParserT o m [a]
+consumeAll o optionConsumer = OptionParserT $ do
     matching_options <- state $ partition $ (== o) . fst
-    lift . lift $ mapM (consume . snd) matching_options
+    lift . lift $ mapM (runOptionConsumerT optionConsumer . snd) matching_options
 
--- | The last occurence of a given option, or a default value if the option
---   isn't specified.
+-- | The last occurence of a given option, or Nothing if the option isn't
+--   specified.
 --
--- It is an error to consume the same value twice (we currently return the
--- default value).
+-- If 'consumeAll' is called twice on the same option, the second call returns
+-- Nothing.
 --
 -- >>> let tp = const string
--- >>> let consumeCowbell = consumeLast "cowbell" "<none>" consumeString :: OptionParser String String
+-- >>> let consumeCowbell = fromMaybe "<none>" <$> consumeLast "cowbell" stringConsumer :: OptionParser String String
 --
 -- >>> :{
 -- testP ["--cowbell=foo", "--cowbell", "bar"] tp $ do
@@ -429,21 +432,23 @@ consumeAll o consume = OptionParserT $ do
 -- :}
 -- ("bar","<none>")
 consumeLast :: (Eq o, Monad m)
-            => o -> a -> OptionConsumer m a -> OptionParserT o m a
-consumeLast o defaultValue consume = do
-    xs <- consumeAll o consume
-    return $ last $ defaultValue : xs
+            => o -> OptionConsumerT m a -> OptionParserT o m (Maybe a)
+consumeLast o optionConsumer = do
+    xs <- consumeAll o optionConsumer
+    if null xs
+      then return Nothing
+      else return $ Just $ last xs
 
 
 -- | For use with mutually-exclusive flags.
 consumeExclusive :: (Option o, Functor m, Monad m)
-                 => [(o, a)] -> a -> OptionParserT o m a
+                 => [(o, a)] -> OptionParserT o m (Maybe a)
 consumeExclusive = consumeExclusiveWith longName
 
 -- | A version of `consumeExclusive` which doesn't use the Option typeclass.
 --
 -- >>> let tp = const flag
--- >>> let consume = consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] (-1) :: OptionParser String Int
+-- >>> let consume = fromMaybe (-1) <$> consumeExclusiveWith id [("cowbell",0),("guitar",1),("saxophone",2)] :: OptionParser String Int
 --
 -- >>> testP ["-s"] tp consume
 -- 2
@@ -456,13 +461,13 @@ consumeExclusive = consumeExclusiveWith longName
 -- *** Exception: ExitFailure 1
 consumeExclusiveWith :: (Eq o, Functor m, Monad m)
                      => (o -> String)
-                     -> [(o, a)] -> a -> OptionParserT o m a
-consumeExclusiveWith longName' assoc defaultValue = do
+                     -> [(o, a)] -> OptionParserT o m (Maybe a)
+consumeExclusiveWith longName' assoc = do
     oss <- forM (map fst assoc) $ \o ->
-      map (const o) <$> consumeAll o consumeFlag
+      map (const o) <$> consumeAll o flagConsumer
     case concat oss of
-      []  -> return defaultValue
-      [o] -> return $ fromMaybe defaultValue $ lookup o assoc
+      []  -> return Nothing
+      [o] -> return $ lookup o assoc
       os  -> fail msg
         where
           n = length os
@@ -473,7 +478,7 @@ consumeExclusiveWith longName' assoc defaultValue = do
 -- | The next non-option argument.
 --
 -- >>> let tp = const flag
--- >>> let consume = consumeExtra consumeString :: OptionParser String (Maybe String)
+-- >>> let consume = consumeExtra stringConsumer :: OptionParser String (Maybe String)
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
 -- Just "song.mp3"
@@ -484,34 +489,34 @@ consumeExclusiveWith longName' assoc defaultValue = do
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume >> consume)
 -- Nothing
 consumeExtra :: (Functor m, Monad m)
-             => OptionConsumer m a -> OptionParserT o m (Maybe a)
-consumeExtra consume = OptionParserT $ do
+             => OptionConsumerT m a -> OptionParserT o m (Maybe a)
+consumeExtra optionConsumer = OptionParserT $ do
     extra_options <- lift get
     case extra_options of
       [] -> return Nothing
       (x:xs) -> do
         lift $ put xs
-        fmap Just $ lift . lift $ consume $ Just x
+        fmap Just $ lift . lift $ runOptionConsumerT optionConsumer $ Just x
 
 -- | All remaining non-option arguments.
 --
 -- >>> let tp = const flag
--- >>> let consume = consumeExtras consumeString :: OptionParser String [String]
+-- >>> let consume = consumeExtras stringConsumer :: OptionParser String [String]
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp consume
 -- ["song.mp3","jazz.mp3"]
 --
--- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consumeExtra consumeString >> consume)
+-- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consumeExtra stringConsumer >> consume)
 -- ["jazz.mp3"]
 --
 -- >>> testP ["-cs", "song.mp3", "jazz.mp3"] tp (consume >> consume)
 -- []
 consumeExtras :: (Functor m, Monad m)
-              => OptionConsumer m a -> OptionParserT o m [a]
-consumeExtras consume = fmap reverse $ go []
+              => OptionConsumerT m a -> OptionParserT o m [a]
+consumeExtras optionConsumer = fmap reverse $ go []
   where
     go xs = do
-        r <- consumeExtra consume
+        r <- consumeExtra optionConsumer
         case r of
           Nothing -> return xs
           Just x  -> go (x:xs)
