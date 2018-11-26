@@ -55,5 +55,5 @@ wrapErrors (Left e) = fail $ errorString e
 wrapErrors (Right x) = return x
 
 
-runHawkInterpreter :: InterpreterT IO a -> UncertainT IO a
-runHawkInterpreter = wrapErrorsM . withLock . Sandbox.runHawkInterpreter
+runHawkInterpreter :: FilePath -> InterpreterT IO a -> UncertainT IO a
+runHawkInterpreter cxtDir = wrapErrorsM . withLock cxtDir . Sandbox.runHawkInterpreter
