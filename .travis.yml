@@ -56,10 +56,12 @@ install:
 - if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal --install-ghc test --only-dependencies ;fi
 # Build dependencies (cabal)
 - if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update ;fi
-- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build --only-dependencies ;fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal sandbox init ;fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install --enable-tests --only-dependencies ;fi
 
 script:
 # Build the package, its tests, and its docs and run the tests (stack)
 - if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal test --haddock --no-haddock-deps ;fi
-# Build the package (cabal)
-- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build ;fi
+# Build the package, its tests, and run the tests (cabal)
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install --enable-tests ;fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal test ;fi
