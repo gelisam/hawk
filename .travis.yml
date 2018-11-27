@@ -57,6 +57,7 @@ install:
 # Build the package and its tests (cabal)
 - if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update; fi
 - if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal sandbox init; fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install happy; fi
 - if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install --enable-tests; fi
 
 script:
