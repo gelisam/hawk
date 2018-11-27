@@ -52,14 +52,16 @@ before_install:
 - export PATH="$(stack --resolver="$RESOLVER" path --compiler-bin):$PATH"
 
 install:
-# Build dependencies (stack)
-- if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal --install-ghc test --only-dependencies ;fi
-# Build dependencies (cabal)
-- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update ;fi
-- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build --only-dependencies ;fi
+# Build the package, and its tests and its docs (stack)
+- if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal --install-ghc test --no-run-tests --haddock --no-haddock-deps; fi
+# Build the package and its tests (cabal)
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update; fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal sandbox init; fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install happy; fi
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal install --enable-tests; fi
 
 script:
-# Build the package, its tests, and its docs and run the tests (stack)
-- if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal test --haddock --no-haddock-deps ;fi
-# Build the package (cabal)
-- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal new-build ;fi
+# Run the tests (stack)
+- if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal test; fi
+# Run the tests (cabal)
+- if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal test; fi

@@ -45,32 +45,33 @@ executables:
       - transformers >= 0.5.2.0
     source-dirs: src
 
-#tests:
-#  reference:
-#    source-dirs:
-#      - src
-#      - tests
-#    main:                 RunTests.hs
-#    dependencies:
-#      - aeson
-#      - directory
-#      - doctest >=0.3.0
-#      - easy-file
-#      - exceptions >=0.1
-#      - extra
-#      - filelock
-#      - filepath
-#      - haskell-awk
-#      - haskell-src-exts >=1.14.0 && < 1.18
-#      - hint >=0.3.3.5
-#      - hspec >=0.2.0
-#      - HUnit >=1.1
-#      - mtl >=2.1.2
-#      - network >=2.3.1.0
-#      - process
-#      - template-haskell
-#      - temporary >=1.0
-#      - test-framework >=0.1
-#      - test-framework-hunit >=0.2.0
-#      - time
-#      - transformers >=0.3.0.0
+# TODO: set the lower bounds to the lts-7.0 versions
+tests:
+  reference:
+    source-dirs:
+      - src
+      - tests
+    main:                 RunTests.hs
+    dependencies:
+      - aeson >= 0.11.2.1
+      - directory >= 1.2.6.2
+      - doctest >= 0.11.0
+      - easy-file >= 0.2.1
+      - exceptions >= 0.8.3
+      - extra >= 1.4.10
+      - filelock >= 0.1.0.1
+      - filepath >= 1.4.1.0
+      - haskell-awk >= 1.1.1
+      - haskell-src-exts >= 1.20.3
+      - hint >= 0.6.0
+      - hspec >= 2.2.3
+      - HUnit >= 1.3.1.2
+      - mtl >= 2.2.1
+      - network >= 2.6.3.1
+      - process >= 1.4.2.0
+      - template-haskell >= 2.11.0.0
+      - temporary >= 1.2.0.4
+      - test-framework >= 0.8.1.1
+      - test-framework-hunit >= 0.3.0.2
+      - time >= 1.6.0.1
+      - transformers >= 0.5.2.0
