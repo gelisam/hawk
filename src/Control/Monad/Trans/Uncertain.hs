@@ -32,7 +32,7 @@ instance Monad m => Monad (UncertainT m) where
   UncertainT mx >>= f = UncertainT (mx >>= f')
     where
       f' = unUncertainT . f
-  fail s = UncertainT (fail s)
+  fail s = UncertainT (throwE s)
 
 instance MonadTrans UncertainT where
   lift = UncertainT . lift . lift
