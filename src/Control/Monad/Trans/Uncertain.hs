@@ -5,7 +5,7 @@ module Control.Monad.Trans.Uncertain where
 import Control.Applicative
 import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Identity
-import "transformers" Control.Monad.Trans.Error hiding (Error)
+import "transformers" Control.Monad.Trans.Except
 import "transformers" Control.Monad.Trans.Writer
 import System.Exit
 import System.IO
@@ -16,7 +16,7 @@ type Warning = String
 type Error = String
 
 newtype UncertainT m a = UncertainT
-  { unUncertainT :: ErrorT Error (WriterT [Warning] m) a }
+  { unUncertainT :: ExceptT Error (WriterT [Warning] m) a }
 
 type Uncertain a = UncertainT Identity a
 
@@ -80,10 +80,10 @@ multilineFail = fail . multilineMsg
 
 
 mapUncertainT :: (forall a. m a -> m' a) -> UncertainT m b -> UncertainT m' b
-mapUncertainT f = UncertainT . (mapErrorT . mapWriterT) f . unUncertainT
+mapUncertainT f = UncertainT . (mapExceptT . mapWriterT) f . unUncertainT
 
 runUncertainT :: UncertainT m a -> m (Either Error a, [Warning])
-runUncertainT = runWriterT . runErrorT . unUncertainT
+runUncertainT = runWriterT . runExceptT . unUncertainT
 
 uncertainT :: Monad m => (Either Error a, [Warning]) -> UncertainT m a
 uncertainT (Left  e, warnings) = mapM_ warn warnings >> fail e
