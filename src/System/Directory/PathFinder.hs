@@ -5,12 +5,13 @@ module System.Directory.PathFinder where
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.List
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.List
+import ListT (ListT)
 import System.Directory
 import System.FilePath
+import qualified ListT
 
 import System.Directory.Extra
 
@@ -22,7 +23,7 @@ runPathFinder :: PathFinder -> FilePath -> IO (Maybe FilePath)
 runPathFinder p pwd = runMaybeT (execStateT p pwd)
 
 runMultiPathFinder :: MultiPathFinder -> FilePath -> IO [FilePath]
-runMultiPathFinder p pwd = runListT (execStateT p pwd)
+runMultiPathFinder p pwd = ListT.toList (execStateT p pwd)
 
 
 basenameIs :: MonadPlus m => String -> StateT FilePath m ()
@@ -52,5 +53,6 @@ relativePath rel = do
 someChild :: MultiPathFinder
 someChild = do
     pwd <- get
-    child <- lift $ ListT $ getDirectoryContents pwd
+    childs <- liftIO $ getDirectoryContents pwd
+    child <- lift $ ListT.fromFoldable childs
     put (pwd </> child)
