@@ -2,7 +2,6 @@
 -- | In which Hawk's command-line arguments are structured into a `HawkSpec`.
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
-import Control.Applicative
 import Data.Char                                 (isSpace)
 import Data.Maybe
 import "mtl" Control.Monad.Trans

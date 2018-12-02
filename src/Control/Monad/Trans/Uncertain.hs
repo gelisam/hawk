@@ -2,7 +2,6 @@
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
-import Control.Applicative
 import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Identity
 import "transformers" Control.Monad.Trans.Except

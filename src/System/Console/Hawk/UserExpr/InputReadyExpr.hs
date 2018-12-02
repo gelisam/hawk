@@ -3,7 +3,6 @@ module System.Console.Hawk.UserExpr.InputReadyExpr where
 
 import qualified Data.ByteString.Lazy.Char8 as B
 
-import Control.Applicative
 import Data.HaskellExpr
 import Data.HaskellExpr.Base
 import System.Console.Hawk.Runtime

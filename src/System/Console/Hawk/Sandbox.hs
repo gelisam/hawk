@@ -25,7 +25,6 @@ module System.Console.Hawk.Sandbox
     , runHawkInterpreter
     ) where
 
-import Control.Applicative
 import Control.Monad
 import Data.List.Extra (wordsBy)
 import Data.Maybe

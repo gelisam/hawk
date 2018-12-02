@@ -13,8 +13,6 @@ import System.Directory
 import System.FilePath
 import qualified ListT
 
-import System.Directory.Extra
-
 
 type PathFinder = StateT FilePath (MaybeT IO) ()
 type MultiPathFinder = StateT FilePath (ListT IO) ()
