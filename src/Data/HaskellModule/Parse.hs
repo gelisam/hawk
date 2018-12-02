@@ -135,6 +135,8 @@ readModule f = do
     case r of
       ParseOk (Module srcInfo moduleDecl pragmas imports decls)
         -> return $ go s srcInfo pragmas moduleDecl imports decls
+      ParseOk (XmlPage   {}) -> fail "The XmlSyntax extension is not supported"
+      ParseOk (XmlHybrid {}) -> fail "The XmlSyntax extension is not supported"
       ParseFailed loc err -> multilineFail msg
         where
           -- we start with a newline to match ghc's errors
