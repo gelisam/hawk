@@ -1,5 +1,5 @@
 -- | Tests which require particular prelude files.
-module System.Console.Hawk.PreludeTests () where
+module System.Console.Hawk.PreludeTests where
 
 import System.FilePath
 
