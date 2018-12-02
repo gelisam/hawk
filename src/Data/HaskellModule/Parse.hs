@@ -58,7 +58,7 @@ locatedModule srcInfo source maybeModuleHead = case moduleLine of
     moduleLine = fmap index2line $ findIndex isModuleDecl source
 
     moduleName :: ModuleHead si -> String
-    moduleName (ModuleHead _ (ModuleName _ name) _ _) = name
+    moduleName (ModuleHead _ (ModuleName _ name_) _ _) = name_
 
 
 -- line numbers start at 1, list indices start at 0.
