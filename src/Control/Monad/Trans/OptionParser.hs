@@ -15,6 +15,7 @@ import Control.Monad.Trans.Uncertain
 
 -- $setup
 --
+-- >>> import Data.Maybe
 -- >>> :{
 -- let testH tp = do { putStrLn "Usage: more [option]... <song.mp3>"
 --                   ; putStr $ optionsHelpWith head

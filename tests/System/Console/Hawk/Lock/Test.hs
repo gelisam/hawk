@@ -17,6 +17,7 @@ module System.Console.Hawk.Lock.Test where
 import Control.Concurrent
 
 -- $setup
+-- >>> import System.Console.Hawk.Lock
 -- >>> import System.Directory
 -- >>> let cxtDir = "tmp"
 -- >>> createDirectoryIfMissing False cxtDir
