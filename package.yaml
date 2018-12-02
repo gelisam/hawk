@@ -62,7 +62,7 @@ tests:
       - extra >= 1.4.10
       - filelock >= 0.1.0.1
       - filepath >= 1.4.1.0
-      - haskell-awk >= 1.1.1
+      - haskell-awk
       - haskell-src-exts >= 1.20.3
       - hint >= 0.6.0
       - hspec >= 2.2.3

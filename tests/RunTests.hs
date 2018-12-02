@@ -12,7 +12,6 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-import Control.Applicative
 import Data.List
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Test as HawkTest
@@ -31,8 +30,8 @@ substSuffix oldSuffix newSuffix xs | oldSuffix `isSuffixOf` xs = prefix ++ newSu
 substSuffix _ _ xs = xs
 
 -- make sure doctest can see the source of Hawk and the generated Paths_haskell_awk.hs
-doctest' :: String -> IO ()
-doctest' file = do
+doctest' :: [String] -> IO ()
+doctest' files = do
     exePath <- dropExtension <$> getExecutablePath
     
     let srcPath = "src"
@@ -43,25 +42,25 @@ doctest' file = do
     let includeSrc      = printf "-i%s" srcPath
     let includeAutogen  = printf "-i%s" autogenPath
     
-    doctest [includeSrc, includeAutogen, file]
+    doctest (includeSrc:includeAutogen:files)
 
 main :: IO ()
 main = do
-    doctest' "tests/System/Console/Hawk/Lock/Test.hs"
-    doctest' "src/Data/Cache.hs"
-    doctest' "src/Data/HaskellSource.hs"
-    doctest' "src/Data/HaskellModule.hs"
-    doctest' "src/Data/HaskellModule/Parse.hs"
-    doctest' "src/System/Console/Hawk.hs"
-    doctest' "tests/System/Console/Hawk/PreludeTests.hs"
-    doctest' "tests/Data/HaskellModule/Parse/Test.hs"
-    doctest' "src/System/Console/Hawk/Args/Option.hs"
-    doctest' "src/System/Console/Hawk/Args/Parse.hs"
-    doctest' "src/System/Console/Hawk/UserPrelude.hs"
-    doctest' "src/System/Console/Hawk/UserPrelude/Extend.hs"
-    doctest' "src/System/Directory/Extra.hs"
-    doctest' "src/Control/Monad/Trans/Uncertain.hs"
-    doctest' "src/Control/Monad/Trans/OptionParser.hs"
+    doctest' ["src/System/Console/Hawk/Lock.hs", "tests/System/Console/Hawk/Lock/Test.hs"]
+    doctest' ["src/Data/Cache.hs"]
+    doctest' ["src/Data/HaskellSource.hs"]
+    doctest' ["src/Data/HaskellModule.hs"]
+    doctest' ["src/Data/HaskellModule/Parse.hs"]
+    doctest' ["src/System/Console/Hawk.hs"]
+    doctest' ["tests/System/Console/Hawk/PreludeTests.hs"]
+    doctest' ["tests/Data/HaskellModule/Parse/Test.hs"]
+    doctest' ["src/System/Console/Hawk/Args/Option.hs"]
+    doctest' ["src/System/Console/Hawk/Args/Parse.hs"]
+    doctest' ["src/System/Console/Hawk/UserPrelude.hs"]
+    doctest' ["src/System/Console/Hawk/UserPrelude/Extend.hs"]
+    doctest' ["src/System/Directory/Extra.hs"]
+    doctest' ["src/Control/Monad/Trans/Uncertain.hs"]
+    doctest' ["src/Control/Monad/Trans/OptionParser.hs"]
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec

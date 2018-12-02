@@ -3,13 +3,11 @@
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
 
-import Control.Applicative
 import Control.Monad
 import "mtl" Control.Monad.Identity
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.List
-import Data.Maybe
 import qualified System.Console.GetOpt as GetOpt
 import Text.Printf
 
@@ -17,6 +15,7 @@ import Control.Monad.Trans.Uncertain
 
 -- $setup
 --
+-- >>> import Data.Maybe
 -- >>> :{
 -- let testH tp = do { putStrLn "Usage: more [option]... <song.mp3>"
 --                   ; putStr $ optionsHelpWith head

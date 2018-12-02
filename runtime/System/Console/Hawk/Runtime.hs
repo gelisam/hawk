@@ -6,7 +6,6 @@ module System.Console.Hawk.Runtime
   , processTable
   ) where
 
-import Control.Applicative
 import Control.Exception
 import Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Search as Search

@@ -1,7 +1,6 @@
 -- | In which the user prelude is massaged into the form hint needs.
 module System.Console.Hawk.UserPrelude where
 
-import Control.Applicative
 import Control.Monad.Trans.Class
 import Data.ByteString as B
 import Text.Printf

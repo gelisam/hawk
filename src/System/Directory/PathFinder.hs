@@ -13,7 +13,8 @@ import System.Directory
 import System.FilePath
 import qualified ListT
 
-import System.Directory.Extra
+-- $setup
+-- >>> import qualified ListT
 
 
 type PathFinder = StateT FilePath (MaybeT IO) ()
