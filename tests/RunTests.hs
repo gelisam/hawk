@@ -12,7 +12,6 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-import Control.Applicative
 import Data.List
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Test as HawkTest

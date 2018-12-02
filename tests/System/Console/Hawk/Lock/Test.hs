@@ -15,7 +15,6 @@
 module System.Console.Hawk.Lock.Test where
 
 import Control.Concurrent
-import System.Console.Hawk.Lock
 
 -- $setup
 -- >>> import System.Directory
