@@ -1,5 +1,4 @@
-resolver: lts-12.19
+resolver: lts-8.0
 packages:
 - .
-extra-deps:
-- haskell-src-exts-1.20.3
+extra-deps: []

@@ -17,7 +17,7 @@ extra-source-files:
 
 ghc-options: -Wall
 dependencies:
-  - base >= 4.9.0.0
+  - base >= 4.9.1.0
   - bytestring >= 0.10.8.1
   - containers >= 0.5.7.1
   - stringsearch >= 0.3.6.6
@@ -30,23 +30,22 @@ executables:
   hawk:
     main:        Main.hs
     dependencies:
-      - directory >= 1.2.6.2
+      - directory >= 1.3.0.0
       - exceptions >= 0.8.3
-      - extra >= 1.4.10
+      - extra >= 1.5.1
       - filelock >= 0.1.0.1
-      - filepath >= 1.4.1.0
+      - filepath >= 1.4.1.1
       - haskell-awk
-      - haskell-src-exts >= 1.20.3
+      - haskell-src-exts >= 1.18.2
       - hint >= 0.6.0
       - mtl >= 2.2.1
       - network >= 2.6.3.1
-      - process >= 1.4.2.0
-      - template-haskell >= 2.11.0.0
+      - process >= 1.4.3.0
+      - template-haskell >= 2.11.1.0
       - time >= 1.6.0.1
       - transformers >= 0.5.2.0
     source-dirs: src
 
-# TODO: set the lower bounds to the lts-7.0 versions
 tests:
   reference:
     source-dirs:
@@ -54,23 +53,23 @@ tests:
       - tests
     main:                 RunTests.hs
     dependencies:
-      - aeson >= 0.11.2.1
-      - directory >= 1.2.6.2
-      - doctest >= 0.11.0
+      - aeson >= 1.0.2.1
+      - directory >= 1.3.0.0
+      - doctest >= 0.11.1
       - easy-file >= 0.2.1
       - exceptions >= 0.8.3
-      - extra >= 1.4.10
+      - extra >= 1.5.1
       - filelock >= 0.1.0.1
-      - filepath >= 1.4.1.0
+      - filepath >= 1.4.1.1
       - haskell-awk
-      - haskell-src-exts >= 1.20.3
+      - haskell-src-exts >= 1.18.2
       - hint >= 0.6.0
-      - hspec >= 2.2.3
-      - HUnit >= 1.3.1.2
+      - hspec >= 2.4.1
+      - HUnit >= 1.5.0.0
       - mtl >= 2.2.1
       - network >= 2.6.3.1
-      - process >= 1.4.2.0
-      - template-haskell >= 2.11.0.0
+      - process >= 1.4.3.0
+      - template-haskell >= 2.11.1.0
       - temporary >= 1.2.0.4
       - test-framework >= 0.8.1.1
       - test-framework-hunit >= 0.3.0.2
