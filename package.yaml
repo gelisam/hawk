@@ -46,7 +46,6 @@ executables:
       - transformers >= 0.5.2.0
     source-dirs: src
 
-# TODO: set the lower bounds to the lts-7.0 versions
 tests:
   reference:
     source-dirs:
