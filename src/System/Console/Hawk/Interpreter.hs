@@ -10,6 +10,7 @@ import Language.Haskell.Interpreter
 
 import Control.Monad.Trans.Uncertain
 import qualified System.Console.Hawk.Context as Context
+import qualified System.Console.Hawk.Context.Dir as Context
 import qualified System.Console.Hawk.Sandbox as Sandbox
 import System.Console.Hawk.UserPrelude.Defaults
 import System.Console.Hawk.Lock
@@ -56,4 +57,6 @@ wrapErrors (Right x) = return x
 
 
 runHawkInterpreter :: FilePath -> InterpreterT IO a -> UncertainT IO a
-runHawkInterpreter cxtDir = wrapErrorsM . withLock cxtDir . Sandbox.runHawkInterpreter
+runHawkInterpreter cxtDir body = do
+  Context.createDefaultContextDir cxtDir
+  wrapErrorsM . withLock cxtDir . Sandbox.runHawkInterpreter $ body

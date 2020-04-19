@@ -15,7 +15,6 @@ import Control.Monad.Trans.Uncertain
 import Control.Monad.Trans.State.Persistent
 import Data.Cache
 import qualified Data.HaskellModule as M
-import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Context.Paths
 import System.Console.Hawk.UserPrelude
 import System.Console.Hawk.Version
@@ -29,12 +28,11 @@ data Context = Context
   } deriving (Eq, Read, Show)
 
 -- | Obtains a Context, either from the cache or from the user prelude.
--- 
--- Must be called inside a `withLock` block, otherwise the cache file
--- might get accessed by two instances of Hawk at once.
+--
+-- Must be called inside a `runHawkInterpreter contextDir` block so that the
+-- context folder is initialized. TODO: use the types to enforce this.
 getContext :: FilePath -> UncertainT IO Context
 getContext contextDir = do
-    createDefaultContextDir paths
     key <- lift $ getKey preludeFile
     
     -- skip `newContext` if the cached copy is still good.
