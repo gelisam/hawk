@@ -53,10 +53,9 @@ For more details, see the
 
 ## Installation
 
-To install the stable version, simply use `cabal install haskell-awk` (_not_
-`cabal install hawk`, that's another unrelated package) and
-add `~/.cabal/bin` (or your sandbox's `bin` folder) to your PATH. You should
-be ready to use Hawk:
+To install hawk, clone this repository, run `stack install`, and add `~/.local/bin` to your PATH. Alternatively, you can also use cabal, but only v1-style is currently supported: run `cabal v1-sandbox init && cabal v1-install`, and add `/.../.cabal-sandbox/bin` to your PATH.
+
+You should be ready to use Hawk:
 
 ```bash
 > hawk '[1..3]'
@@ -65,8 +64,6 @@ be ready to use Hawk:
 3
 ```
 
-To install the development version, clone this repository and use `cabal
-install` to compile Hawk and its dependencies.
 The first run will create a default configuration file into
 `~/.hawk/prelude.hs` if it doesn't exist.
 
