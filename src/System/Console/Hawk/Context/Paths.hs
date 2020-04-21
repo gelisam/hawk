@@ -18,6 +18,9 @@ data ContextPaths = ContextPaths
   , cachedPreludePath :: FilePath
   } deriving (Eq, Read, Show)
 
+-- TODO: if we're always using the same relative paths, we could make illegal
+-- states unrepresentable by making ContextPaths = contextDir and turning the
+-- accessors into functions
 mkContextPaths :: FilePath -> ContextPaths
 mkContextPaths contextDir = ContextPaths
     { contextDirPath       = contextDir

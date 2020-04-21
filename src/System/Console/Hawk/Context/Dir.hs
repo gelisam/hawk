@@ -18,15 +18,15 @@ import System.Directory.Extra
 
 
 -- | Create a default context
-createDefaultContextDir :: ContextPaths -> UncertainT IO ()
-createDefaultContextDir paths = do
+createDefaultContextDir :: FilePath -> UncertainT IO ()
+createDefaultContextDir contextDir = do
     _ <- checkContextDir contextDir
     liftIO $ do
       createDirectoryIfMissing True contextDir
       preludeExists <- doesFileExist preludeFile
       unless preludeExists $ writeFile preludeFile defaultPrelude
   where
-    contextDir = contextDirPath paths
+    paths = mkContextPaths contextDir
     preludeFile = originalPreludePath paths
 
 -- | Find a project context
