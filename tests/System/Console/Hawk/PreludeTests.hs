@@ -40,9 +40,8 @@ testEval flags expr = test flags expr ""
 -- 
 -- The first example from the README:
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-d:", "-m"] "head" "passwd"
--- --root
+-- >>> test ["-d:", "-m"] "head" "passwd"
+-- root
 -- 
 -- 
 -- The second example, which adds `takeLast` to the user prelude:

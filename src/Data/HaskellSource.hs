@@ -98,6 +98,6 @@ compileFileWithArgs args f = do
     (exitCode, out, err) <- lift $ readProcessWithExitCode "ghc" args' ""
     case (exitCode, out ++ err) of
       (ExitSuccess, [])  -> return ()
-      (ExitSuccess, msg) -> multilineWarn msg
+      (ExitSuccess, msg) -> return ()  -- TODO: output warnings via 'multilineWarn msg'?
       (_          , [])  -> fail $ printf "could not compile %s" (show f)
       (_          , msg) -> multilineFail msg
