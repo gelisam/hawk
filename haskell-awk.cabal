@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bcacd2aa8c8f2833883ef40650dfeb2d10a1b206875c1afe2cd869374f59bd93
+-- hash: 94e3674a4d82477d1a2be2f59f778634f8853c51472991c45072c7a35d1a1a22
 
 name:           haskell-awk
 version:        1.1.1
@@ -38,7 +38,7 @@ library
       runtime
   ghc-options: -Wall
   build-depends:
-      base >=4.9.1.0
+      base >=4.9.1.0 && <4.12.0.0
     , bytestring >=0.10.8.1
     , containers >=0.5.7.1
     , list-t >=1
@@ -87,7 +87,7 @@ executable hawk
       src
   ghc-options: -Wall
   build-depends:
-      base >=4.9.1.0
+      base >=4.9.1.0 && <4.12.0.0
     , bytestring >=0.10.8.1
     , containers >=0.5.7.1
     , directory >=1.3.0.0
@@ -161,7 +161,7 @@ test-suite reference
   build-depends:
       HUnit >=1.5.0.0
     , aeson >=1.0.2.1
-    , base >=4.9.1.0
+    , base >=4.9.1.0 && <4.12.0.0
     , bytestring >=0.10.8.1
     , containers >=0.5.7.1
     , directory >=1.3.0.0
