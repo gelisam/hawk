@@ -1,0 +1,189 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: bcacd2aa8c8f2833883ef40650dfeb2d10a1b206875c1afe2cd869374f59bd93
+
+name:           haskell-awk
+version:        1.1.1
+synopsis:       Transform text from the command-line using Haskell expressions.
+description:    Hawk is a command line utility to process streams of text using Haskell code. It is intended to be used in a UNIX pipeline. It offers a configuration system to personalize imported modules and a way to represent values on the console.
+category:       Console
+homepage:       https://github.com/gelisam/hawk#readme
+bug-reports:    https://github.com/gelisam/hawk/issues
+author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
+maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/gelisam/hawk
+
+library
+  exposed-modules:
+      System.Console.Hawk.Args.Spec
+      System.Console.Hawk.Representable
+      System.Console.Hawk.Runtime
+      System.Console.Hawk.Runtime.Base
+  other-modules:
+      Paths_haskell_awk
+  hs-source-dirs:
+      runtime
+  ghc-options: -Wall
+  build-depends:
+      base >=4.9.1.0
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , list-t >=1
+    , stringsearch >=0.3.6.6
+  default-language: Haskell2010
+
+executable hawk
+  main-is: Main.hs
+  other-modules:
+      Control.Monad.Trans.OptionParser
+      Control.Monad.Trans.State.Persistent
+      Control.Monad.Trans.Uncertain
+      Data.Cache
+      Data.HaskellExpr
+      Data.HaskellExpr.Base
+      Data.HaskellExpr.Eval
+      Data.HaskellModule
+      Data.HaskellModule.Base
+      Data.HaskellModule.Parse
+      Data.HaskellSource
+      Language.Haskell.Exts.Location
+      System.Console.Hawk
+      System.Console.Hawk.Args
+      System.Console.Hawk.Args.Option
+      System.Console.Hawk.Args.Parse
+      System.Console.Hawk.Context
+      System.Console.Hawk.Context.Base
+      System.Console.Hawk.Context.Dir
+      System.Console.Hawk.Context.Paths
+      System.Console.Hawk.Help
+      System.Console.Hawk.Interpreter
+      System.Console.Hawk.Lock
+      System.Console.Hawk.Runtime.HaskellExpr
+      System.Console.Hawk.Sandbox
+      System.Console.Hawk.UserExpr.CanonicalExpr
+      System.Console.Hawk.UserExpr.InputReadyExpr
+      System.Console.Hawk.UserExpr.OriginalExpr
+      System.Console.Hawk.UserPrelude
+      System.Console.Hawk.UserPrelude.Defaults
+      System.Console.Hawk.UserPrelude.Extend
+      System.Console.Hawk.Version
+      System.Directory.Extra
+      System.Directory.PathFinder
+      Paths_haskell_awk
+  hs-source-dirs:
+      src
+  ghc-options: -Wall
+  build-depends:
+      base >=4.9.1.0
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , directory >=1.3.0.0
+    , exceptions >=0.8.3
+    , extra >=1.5.1
+    , filelock >=0.1.0.1
+    , filepath >=1.4.1.1
+    , haskell-awk
+    , haskell-src-exts >=1.18.2
+    , hint >=0.6.0
+    , list-t >=1
+    , mtl >=2.2.1
+    , network >=2.6.3.1
+    , process >=1.4.3.0
+    , stringsearch >=0.3.6.6
+    , template-haskell >=2.11.1.0
+    , time >=1.6.0.1
+    , transformers >=0.5.2.0
+  default-language: Haskell2010
+
+test-suite reference
+  type: exitcode-stdio-1.0
+  main-is: RunTests.hs
+  other-modules:
+      Control.Monad.Trans.OptionParser
+      Control.Monad.Trans.State.Persistent
+      Control.Monad.Trans.Uncertain
+      Data.Cache
+      Data.HaskellExpr
+      Data.HaskellExpr.Base
+      Data.HaskellExpr.Eval
+      Data.HaskellModule
+      Data.HaskellModule.Base
+      Data.HaskellModule.Parse
+      Data.HaskellSource
+      Language.Haskell.Exts.Location
+      Main
+      System.Console.Hawk
+      System.Console.Hawk.Args
+      System.Console.Hawk.Args.Option
+      System.Console.Hawk.Args.Parse
+      System.Console.Hawk.Context
+      System.Console.Hawk.Context.Base
+      System.Console.Hawk.Context.Dir
+      System.Console.Hawk.Context.Paths
+      System.Console.Hawk.Help
+      System.Console.Hawk.Interpreter
+      System.Console.Hawk.Lock
+      System.Console.Hawk.Runtime.HaskellExpr
+      System.Console.Hawk.Sandbox
+      System.Console.Hawk.UserExpr.CanonicalExpr
+      System.Console.Hawk.UserExpr.InputReadyExpr
+      System.Console.Hawk.UserExpr.OriginalExpr
+      System.Console.Hawk.UserPrelude
+      System.Console.Hawk.UserPrelude.Defaults
+      System.Console.Hawk.UserPrelude.Extend
+      System.Console.Hawk.Version
+      System.Directory.Extra
+      System.Directory.PathFinder
+      Data.HaskellModule.Parse.Test
+      System.Console.Hawk.Lock.Test
+      System.Console.Hawk.PreludeTests
+      System.Console.Hawk.Representable.Test
+      System.Console.Hawk.Test
+      System.Console.Hawk.TestUtils
+      Paths_haskell_awk
+  hs-source-dirs:
+      src
+      tests
+  ghc-options: -Wall
+  build-depends:
+      HUnit >=1.5.0.0
+    , aeson >=1.0.2.1
+    , base >=4.9.1.0
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , directory >=1.3.0.0
+    , doctest >=0.11.1
+    , easy-file >=0.2.1
+    , exceptions >=0.8.3
+    , extra >=1.5.1
+    , filelock >=0.1.0.1
+    , filepath >=1.4.1.1
+    , haskell-awk
+    , haskell-src-exts >=1.18.2
+    , hint >=0.6.0
+    , hspec >=2.4.1
+    , list-t >=1
+    , mtl >=2.2.1
+    , network >=2.6.3.1
+    , process >=1.4.3.0
+    , stringsearch >=0.3.6.6
+    , template-haskell >=2.11.1.0
+    , temporary >=1.2.0.4
+    , test-framework >=0.8.1.1
+    , test-framework-hunit >=0.3.0.2
+    , time >=1.6.0.1
+    , transformers >=0.5.2.0
+  default-language: Haskell2010
