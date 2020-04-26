@@ -53,6 +53,7 @@ before_install:
 
 install:
 # Build the package, and its tests and its docs (stack)
+- if [ "$BUILD" == "stack" ]; then stack --resolver="lts-10.0" install happy  # hardcoded resolver because happy no longer builds on lts-8.0
 - if [ "$BUILD" == "stack" ]; then stack --resolver="$RESOLVER" --no-terminal --install-ghc test --no-run-tests --haddock --no-haddock-deps; fi
 # Build the package and its tests (cabal)
 - if [ "$BUILD" == "cabal" ]; then ~/.local/bin/cabal update; fi
