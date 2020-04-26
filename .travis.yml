@@ -38,8 +38,8 @@ env:
 # versions provided by that new lts!
 - BUILD=stack RESOLVER="lts-8.0"
 
-- BUILD=stack RESOLVER="lts-12.19"
-- BUILD=cabal RESOLVER="lts-12.19"
+- BUILD=stack RESOLVER="lts-12.26"
+- BUILD=cabal RESOLVER="lts-12.26"
 
 before_install:
 # Download and unpack the stack executable
