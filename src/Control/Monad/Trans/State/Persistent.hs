@@ -4,6 +4,7 @@ module Control.Monad.Trans.State.Persistent where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.IO.Class
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -67,7 +68,7 @@ withPersistentState f default_s sx = do
 -- 
 -- 
 -- >>> removeFile f
-withPersistentStateT :: forall m s a. (Functor m, MonadIO m, Read s, Show s, Eq s)
+withPersistentStateT :: forall m s a. (Functor m, MonadIO m, MonadFail m, Read s, Show s, Eq s)
                      => FilePath -> s -> StateT s m a -> m a
 withPersistentStateT f default_s sx = do
     Just s <- runMaybeT (get_s <|> get_default_s)

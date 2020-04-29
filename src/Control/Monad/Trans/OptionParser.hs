@@ -4,6 +4,7 @@
 module Control.Monad.Trans.OptionParser where
 
 import Control.Monad
+import qualified Control.Monad.Fail as Fail
 import "mtl" Control.Monad.Identity
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
@@ -73,6 +74,8 @@ instance Monad m => Monad (OptionParserT o m) where
   OptionParserT mx >>= f = OptionParserT (mx >>= f')
     where
       f' = unOptionParserT . f
+
+instance Monad m => Fail.MonadFail (OptionParserT o m) where
   fail s = OptionParserT (fail s)
 
 instance MonadTrans (OptionParserT o) where
