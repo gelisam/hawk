@@ -17,7 +17,7 @@ extra-source-files:
 
 ghc-options: -Wall
 dependencies:
-  - base >= 4.9.1.0 && < 4.12.0.0
+  - base >= 4.9.1.0 && < 5
   - bytestring >= 0.10.8.1
   - containers >= 0.5.7.1
   - ghc >= 8.0.2
