@@ -97,7 +97,9 @@ testEval flags expr = test flags expr ""
 -- a3b
 -- 
 -- >>> testPrelude "default" ["-D", "-a"]       "\\x -> ('a', x, 'b')" "equation"
--- a x1*y1*z1 + x2*y2*z2 b
+-- a
+-- x1*y1*z1 + x2*y2*z2
+-- b
 -- 
 -- >>> testPrelude "default" ["-D", "-O", "-a"] "\\x -> ('a', x, 'b')" "equation"
 -- ax1*y1*z1 + x2*y2*z2b
