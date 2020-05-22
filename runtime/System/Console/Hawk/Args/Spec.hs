@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings #-}
 -- | The precisely-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Spec where
 
@@ -58,17 +58,25 @@ data OutputFormat = OutputFormat
   deriving (Show, Eq)
 
 
--- A separator is a strategy for separating a string into substrings.
--- One such strategy is to split the string on every occurrence of a
--- particular delimiter.
+-- A 'Processor' describes how to process a string; either by separating it
+-- into chunks or by leaving it as-is. When separating it into chunks, we can
+-- use whitespace as a delimiter (meaning one or more consecutive whitespace
+-- characters), or we can use a specific delimiter.
 type Delimiter = ByteString
 data Separator = Whitespace | Delimiter Delimiter
   deriving (Show, Eq)
+data Processor = DoNotSeparate | SeparateOn Separator
+  deriving (Show, Eq)
 
-fromSeparator :: Separator -> Delimiter
-fromSeparator Whitespace     = " "
-fromSeparator (Delimiter "") = " "
-fromSeparator (Delimiter d)  = d
+fromSeparator :: Delimiter -> Separator -> Delimiter
+fromSeparator def = \case
+  Whitespace  -> def
+  Delimiter d -> d
+
+fromProcessor :: Delimiter -> Processor -> Delimiter
+fromProcessor def = \case
+  DoNotSeparate -> def
+  SeparateOn s  -> fromSeparator def s
 
 
 newtype ContextSpec = ContextSpec
