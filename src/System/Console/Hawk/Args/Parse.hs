@@ -64,15 +64,13 @@ commonProcessors = do
 -- UseStdin
 -- Records (Delimiter "\n") (Fields Whitespace)
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-d", "-a", "L.reverse"]
--- --UseStdin
--- --Records (Delimiter "\n") RawRecord
+-- >>> test ["-d", "-a", "L.reverse"]
+-- UseStdin
+-- Records (Delimiter "\n") RawRecord
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-D", "-a", "B.reverse"]
--- --UseStdin
--- --RawStream
+-- >>> test ["-D", "-a", "B.reverse"]
+-- UseStdin
+-- RawStream
 -- 
 -- >>> test ["-d:", "-m", "L.head", "/etc/passwd"]
 -- InputFile "/etc/passwd"
@@ -212,12 +210,11 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 -- Records (Delimiter "\r\n") (Fields (Delimiter "\t"))
 -- ("\r\n","\t")
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
--- --Map
--- --("L.head",InputFile "file.in")
--- --RawStream
--- --("\n"," ")
+-- >>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
+-- Map
+-- ("L.head",InputFile "file.in")
+-- RawStream
+-- ("\n"," ")
 parseArgs :: (Functor m,MonadIO m) => [String] -> UncertainT m HawkSpec
 parseArgs [] = return Help
 parseArgs args = runOptionParserT options parser args
