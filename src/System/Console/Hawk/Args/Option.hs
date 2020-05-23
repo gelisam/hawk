@@ -4,9 +4,11 @@ module System.Console.Hawk.Args.Option where
 
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (pack)
+import Data.Maybe (maybe)
 import Text.Printf
 
 import Control.Monad.Trans.OptionParser
+import System.Console.Hawk.Args.Spec (Processor(DoNotSeparate, SeparateOn), Separator(Delimiter), Delimiter)
 
 
 data HawkOption
@@ -48,8 +50,18 @@ parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
     _          -> s
 
 -- | Almost like a string, except escape sequences are interpreted.
-delimiterConsumer :: (Functor m, Monad m) => OptionConsumerT m (Maybe ByteString)
-delimiterConsumer = fmap parseDelimiter <$> optionalConsumer stringConsumer
+delimiterConsumer :: Monad m
+                  => OptionConsumerT m Delimiter
+delimiterConsumer = parseDelimiter <$> stringConsumer
+
+separatorConsumer :: Monad m
+                  => OptionConsumerT m Separator
+separatorConsumer = Delimiter <$> delimiterConsumer
+
+processorConsumer :: Monad m
+                  => OptionConsumerT m Processor
+processorConsumer = maybe DoNotSeparate SeparateOn
+                <$> optionalConsumer separatorConsumer
 
 instance Option HawkOption where
   shortName Apply                 = 'a'

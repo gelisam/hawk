@@ -46,11 +46,10 @@ testEval flags expr = test flags expr ""
 -- 
 -- The second example, which adds `takeLast` to the user prelude:
 -- 
--- TODO: why is this test failing?
--- -->>> testPrelude "readme" ["-a"] "takeLast 3" "0-100"
--- --98
--- --99
--- --100
+-- >>> testPrelude "readme" ["-a"] "takeLast 3" "0-100"
+-- 98
+-- 99
+-- 100
 -- 
 -- 
 -- The last example from the README, a quick test to validate that Hawk was
@@ -76,12 +75,11 @@ testEval flags expr = test flags expr ""
 -- 
 -- Making sure that we report errors in the user expression, not our wrapper code:
 -- 
--- TODO: why is this test failing?
--- -->>> testEval [] "[[],"
--- --error: Won't compile:
--- --	user expression:1:5:
--- --    parse error (possibly incorrect indentation or mismatched brackets)
--- --*** Exception: ExitFailure 1
+-- >>> testEval [] "[[],"
+-- error: Won't compile:
+-- 	user expression:1:5: error:
+--     parse error (possibly incorrect indentation or mismatched brackets)
+-- *** Exception: ExitFailure 1
 -- 
 -- Making sure that setting line-mode or stream-mode doesn't affect the output format
 -- unless specifically requested:
@@ -97,26 +95,26 @@ testEval flags expr = test flags expr ""
 -- a3b
 -- 
 -- >>> testPrelude "default" ["-D", "-a"]       "\\x -> ('a', x, 'b')" "equation"
--- a x1*y1*z1 + x2*y2*z2 b
+-- a
+-- x1*y1*z1 + x2*y2*z2
+-- b
 -- 
 -- >>> testPrelude "default" ["-D", "-O", "-a"] "\\x -> ('a', x, 'b')" "equation"
 -- ax1*y1*z1 + x2*y2*z2b
 -- 
 -- Making sure that we don't assume the user prelude exports "map":
 -- 
--- TODO: why is this test failing?
--- -->>> testPrelude "set" ["-m"] "const $ \"hello\"" "1-3"
--- --hello
--- --hello
--- --hello
+-- >>> testPrelude "set" ["-m"] "const $ \"hello\"" "1-3"
+-- hello
+-- hello
+-- hello
 -- 
 -- Making sure that we can find "map" even with NoImplicitPrelude:
 -- 
--- TODO: why is this test failing?
--- -->>> testPrelude "noImplicitPrelude" ["-m"] "\\_ -> hello" "1-3"
--- --hello
--- --hello
--- --hello
+-- >>> testPrelude "noImplicitPrelude" ["-m"] "\\_ -> hello" "1-3"
+-- hello
+-- hello
+-- hello
 -- 
 -- Making sure sequences of whitespace count as one delimiter:
 -- 
@@ -136,19 +134,17 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 2
 -- 1
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-ad"] "L.takeWhile (/=\"7\") . L.dropWhile (/=\"3\")" "1-10"
--- --3
--- --4
--- --5
--- --6
+-- >>> test ["-ad"] "L.takeWhile (/=\"7\") . L.dropWhile (/=\"3\")" "1-10"
+-- 3
+-- 4
+-- 5
+-- 6
 -- 
--- TODO: why is this test failing?
--- -->>> testDoc "between" ["-ad"] "between \"3\" \"7\"" "1-10"
--- --3
--- --4
--- --5
--- --6
+-- >>> testDoc "between" ["-ad"] "between \"3\" \"7\"" "1-10"
+-- 3
+-- 4
+-- 5
+-- 6
 -- 
 -- >>> test ["-a"] "L.take 3" "1-10"
 -- 1
@@ -160,17 +156,14 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 6 5 4
 -- 9 8 7
 -- 
--- TODO: why is this test failing?
--- -->>> testDoc "postorder" ["-ad"] "postorder (\\x -> printf \"(%s)\" . L.intercalate \" \" . (unpack x:))" "example.in"
--- --(foo (bar1) (bar2 (baz)) (bar3))
+-- >>> testDoc "postorder" ["-ad"] "postorder (\\x -> printf \"(%s)\" . L.intercalate \" \" . (unpack x:))" "example.in"
+-- (foo (bar1) (bar2 (baz)) (bar3))
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-ad"] "sum . L.map (read . B.unpack)" "1-3"
--- --6
+-- >>> test ["-ad"] "sum . L.map (read . B.unpack)" "1-3"
+-- 6
 -- 
--- TODO: why is this test failing?
--- -->>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
--- --6
+-- >>> testDoc "conversions" ["-ad"] "sum . L.map toInt" "1-3"
+-- 6
 -- 
 -- >>> testEval [] "2 ^ 100"
 -- 1267650600228229401496703205376
@@ -209,13 +202,11 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- -->>> testDoc "aeson" ["-aD"] "show . P.parse J.json" "json"
 -- --Done "\n" Object (fromList [("code",Number 200.0),("message",String "OK")])
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-d", "-a"] "show :: [B.ByteString] -> String" "1-3"
--- --["1","2","3"]
+-- >>> test ["-d", "-a"] "show :: [B.ByteString] -> String" "1-3"
+-- ["1","2","3"]
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-d", "-D", "-a"] "show :: B.ByteString -> String" "1-3"
--- --"1\n2\n3\n"
+-- >>> test ["-d", "-D", "-a"] "show :: B.ByteString -> String" "1-3"
+-- "1\n2\n3\n"
 -- 
 -- >>> testEval [] "[[B.pack \"1\",B.pack \"2\"], [B.pack \"3\",B.pack \"4\"]]"
 -- 1 2

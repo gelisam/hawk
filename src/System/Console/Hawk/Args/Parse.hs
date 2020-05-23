@@ -17,41 +17,42 @@ import           System.Console.Hawk.Context.Dir
 -- >>> let testP parser = runUncertainIO . runOptionParserT options parser
 
 
--- | (record separator, field separator)
-type CommonSeparators = (Separator, Separator)
+-- | (record processor, field processor)
+type CommonProcessors = (Processor, Processor)
 
 -- | Extract '-D' and '-d'. We perform this step separately because those two
 --   delimiters are used by both the input and output specs.
 -- 
--- >>> let test = testP commonSeparators
+-- >>> let test = testP commonProcessors
 -- 
 -- >>> test []
--- (Delimiter "\n",Whitespace)
+-- (SeparateOn (Delimiter "\n"),SeparateOn Whitespace)
 -- 
 -- >>> test ["-D\\n", "-d\\t"]
--- (Delimiter "\n",Delimiter "\t")
+-- (SeparateOn (Delimiter "\n"),SeparateOn (Delimiter "\t"))
 -- 
 -- >>> test ["-D|", "-d,"]
--- (Delimiter "|",Delimiter ",")
-commonSeparators :: forall m. (Functor m, Monad m)
-                 => OptionParserT HawkOption m CommonSeparators
-commonSeparators = do
-    r <- consumeLastSeparator Option.RecordDelimiter defaultRecordSeparator
-    f <- consumeLastSeparator Option.FieldDelimiter  defaultFieldSeparator
+-- (SeparateOn (Delimiter "|"),SeparateOn (Delimiter ","))
+--
+-- >>> test ["-D", "-d"]
+-- (DoNotSeparate,DoNotSeparate)
+commonProcessors :: forall m. (Functor m, Monad m)
+                 => OptionParserT HawkOption m CommonProcessors
+commonProcessors = do
+    r <- consumeProcessor Option.RecordDelimiter defaultRecordSeparator
+    f <- consumeProcessor Option.FieldDelimiter  defaultFieldSeparator
     return (r, f)
   where
-    consumeLastSeparator :: HawkOption -> Separator -> OptionParserT HawkOption m Separator
-    consumeLastSeparator opt def = fromMaybe def <$> consumeLast opt separatorConsumer
-
-    separatorConsumer :: OptionConsumerT m Separator
-    separatorConsumer = maybe Whitespace Delimiter <$> Option.delimiterConsumer
+    consumeProcessor :: HawkOption -> Separator -> OptionParserT HawkOption m Processor
+    consumeProcessor opt def = fromMaybe (SeparateOn def)
+                           <$> consumeLast opt (Option.processorConsumer)
 
 
 -- | The input delimiters have already been parsed, but we still need to
 --   interpret them and to determine the input source.
 -- 
 -- >>> :{
--- let test = testP $ do { c <- commonSeparators
+-- let test = testP $ do { c <- commonProcessors
 --                       ; _ <- consumeExtra stringConsumer  -- skip expr
 --                       ; i <- inputSpec c
 --                       ; lift $ print $ inputSource i
@@ -63,22 +64,20 @@ commonSeparators = do
 -- UseStdin
 -- Records (Delimiter "\n") (Fields Whitespace)
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-d", "-a", "L.reverse"]
--- --UseStdin
--- --Records (Delimiter "\n") RawRecord
+-- >>> test ["-d", "-a", "L.reverse"]
+-- UseStdin
+-- Records (Delimiter "\n") RawRecord
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-D", "-a", "B.reverse"]
--- --UseStdin
--- --RawStream
+-- >>> test ["-D", "-a", "B.reverse"]
+-- UseStdin
+-- RawStream
 -- 
 -- >>> test ["-d:", "-m", "L.head", "/etc/passwd"]
 -- InputFile "/etc/passwd"
 -- Records (Delimiter "\n") (Fields (Delimiter ":"))
 inputSpec :: (Functor m, Monad m)
-          => CommonSeparators -> OptionParserT HawkOption m InputSpec
-inputSpec (rSep, fSep) = InputSpec <$> source <*> format
+          => CommonProcessors -> OptionParserT HawkOption m InputSpec
+inputSpec (rProc, fProc) = InputSpec <$> source <*> format
   where
     source = do
         r <- consumeExtra stringConsumer
@@ -86,16 +85,18 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
           Nothing -> UseStdin
           Just f  -> InputFile f
     format = return streamFormat
-    streamFormat | rSep == Delimiter "" = RawStream
-                 | otherwise            = Records rSep recordFormat
-    recordFormat | fSep == Delimiter "" = RawRecord
-                 | otherwise            = Fields fSep
+    streamFormat = case rProc of
+      DoNotSeparate   -> RawStream
+      SeparateOn rSep -> Records rSep recordFormat
+    recordFormat = case fProc of
+      DoNotSeparate   -> RawRecord
+      SeparateOn fSep -> Fields fSep
 
 -- | The output delimiters take priority over the input delimiters, regardless
 --   of the order in which they appear.
 -- 
 -- >>> :{
--- let test = testP $ do { c <- commonSeparators
+-- let test = testP $ do { c <- commonProcessors
 --                       ; o <- outputSpec c
 --                       ; let OutputFormat r f = outputFormat o
 --                       ; lift $ print $ outputSink o
@@ -115,7 +116,7 @@ inputSpec (rSep, fSep) = InputSpec <$> source <*> format
 -- UseStdout
 -- ("|","\t")
 outputSpec :: forall m. (Functor m, Monad m)
-           => CommonSeparators -> OptionParserT HawkOption m OutputSpec
+           => CommonProcessors -> OptionParserT HawkOption m OutputSpec
 outputSpec (r, f) = OutputSpec <$> sink <*> format
   where
     sink :: OptionParserT HawkOption m OutputSink
@@ -125,12 +126,12 @@ outputSpec (r, f) = OutputSpec <$> sink <*> format
     format = OutputFormat <$> record <*> field
 
     record, field :: OptionParserT HawkOption m Delimiter
-    record = fmap (fromMaybe r') $ consumeLast Option.OutputRecordDelimiter $ fromMaybe "" <$> Option.delimiterConsumer
-    field  = fmap (fromMaybe f') $ consumeLast Option.OutputFieldDelimiter  $ fromMaybe "" <$> Option.delimiterConsumer
+    record = fmap (fromMaybe r') $ consumeLast Option.OutputRecordDelimiter $ fromMaybe "" <$> optionalConsumer Option.delimiterConsumer
+    field  = fmap (fromMaybe f') $ consumeLast Option.OutputFieldDelimiter  $ fromMaybe "" <$> optionalConsumer Option.delimiterConsumer
 
     r', f' :: Delimiter
-    r' = fromSeparator r
-    f' = fromSeparator f
+    r' = fromProcessor defaultRecordDelimiter r
+    f' = fromProcessor defaultFieldDelimiter  f
 
 
 -- | The information we need in order to evaluate a user expression:
@@ -209,12 +210,11 @@ exprSpec = ExprSpec <$> (ContextSpec <$> contextDir)
 -- Records (Delimiter "\r\n") (Fields (Delimiter "\t"))
 -- ("\r\n","\t")
 -- 
--- TODO: why is this test failing?
--- -->>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
--- --Map
--- --("L.head",InputFile "file.in")
--- --RawStream
--- --("\n"," ")
+-- >>> test ["-D", "-O\n", "-m", "L.head", "file.in"]
+-- Map
+-- ("L.head",InputFile "file.in")
+-- RawStream
+-- ("\n"," ")
 parseArgs :: (Functor m,MonadIO m) => [String] -> UncertainT m HawkSpec
 parseArgs [] = return Help
 parseArgs args = runOptionParserT options parser args
@@ -222,7 +222,7 @@ parseArgs args = runOptionParserT options parser args
     parser = do
         lift $ return ()  -- silence a warning
         cmd <- fromMaybe eval <$> consumeExclusive assoc
-        c <- commonSeparators
+        c <- commonProcessors
         cmd c
     assoc = [ (Option.Help,    help)
             , (Option.Version, version)
@@ -230,7 +230,7 @@ parseArgs args = runOptionParserT options parser args
             , (Option.Map,     map')
             ]
     
-    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonSeparators
+    help, version, eval, apply, map' :: (Functor m,MonadIO m) => CommonProcessors
                                      -> OptionParserT HawkOption m HawkSpec
     help    _ = return Help
     version _ = return Version
