@@ -363,29 +363,27 @@ filePath = Setting "path"
 -- | The value assigned to the option if the check function doesn't fail with
 -- an error. The check functions must return a file path.
 --
--- TODO: why is this test failing?
--- -->>> import Control.Monad
--- -->>> import System.EasyFile (doesDirectoryExist)
--- -->>> let testIO args tp p = runUncertainIO $ runOptionParserWith head id (const [""]) tp ["input-dir"] p args
--- -->>> let inputDir = const filePath
--- -->>> :{
--- --  let checkDir f e d = do
--- --        c <- lift (f d)
--- --        if c then return d  :: UncertainT IO FilePath
--- --             else fail (e d)
--- --:}
+-- >>> import Control.Monad
+-- >>> import System.EasyFile (doesDirectoryExist)
+-- >>> let testIO args tp p = runUncertainIO $ runOptionParserWith head id (const [""]) tp ["input-dir"] p args
+-- >>> let inputDir = const filePath
+-- >>> :{
+--   let checkDir f e d = do
+--         c <- lift (f d)
+--         if c then return d  :: UncertainT IO FilePath
+--              else fail (e d)
+-- :}
 --
--- TODO: why is this test failing?
--- -->>> let dirExists      = checkDir doesDirectoryExist                          (++ " doesn't exist")
--- -->>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
--- -->>> let consumeLastInputDir = fromMaybe "error" <$> consumeLast "input-dir" :: OptionConsumerT IO String -> OptionParserT String IO String
--- -->>> let consumeExistingDir    = consumeLastInputDir (consumeFilePath dirExists)
--- -->>> let consumeNotExistingDir = consumeLastInputDir (consumeFilePath dirDoesntExist)
--- -->>> testIO ["--input-dir=."] inputDir consumeExistingDir
--- --"."
--- -->>> testIO ["--input-dir=."] inputDir consumeNotExistingDir
--- --error: . exists
--- --*** Exception: ExitFailure 1
+-- >>> let dirExists      = checkDir doesDirectoryExist                            (++ " doesn't exist")
+-- >>> let dirDoesntExist = checkDir (\d -> doesDirectoryExist d >>= return . not) (++ " exists")
+-- >>> let consumeLastInputDir c = fromMaybe "error" <$> consumeLast "input-dir" c
+-- >>> let consumeExistingDir    = consumeLastInputDir (filePathConsumer dirExists)
+-- >>> let consumeNotExistingDir = consumeLastInputDir (filePathConsumer dirDoesntExist)
+-- >>> testIO ["--input-dir=."] inputDir consumeExistingDir
+-- "."
+-- >>> testIO ["--input-dir=."] inputDir consumeNotExistingDir
+-- error: . exists
+-- *** Exception: ExitFailure 1
 filePathConsumer :: MonadIO m
                  => (FilePath -> UncertainT m FilePath) -> OptionConsumerT m String
 filePathConsumer check = OptionConsumerT $ \o -> do
