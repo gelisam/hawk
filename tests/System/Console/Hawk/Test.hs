@@ -29,8 +29,6 @@ run = withContextHSpec $ \itEval itApply itMap ->
         describe "Hawk" $ do
           itEval "1" `into` "1\n"
           itEval "1+1" `into` "2\n"
-          -- TODO: why is this test failing?
-          --itEval "[]" `into` ""
           itEval "[1]" `into` "1\n"
           itEval "[1,2]" `into` "1\n2\n"
           itEval "(1,2)" `into` "1\n2\n"
