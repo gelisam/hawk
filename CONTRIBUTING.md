@@ -4,7 +4,7 @@ Welcome aboard! If you're in a hurry, don't worry about these guidelines, just s
 
 ## What needs to be done?
 
-Some of the issues are marked as [easy](https://github.com/gelisam/hawk/issues?labels=easy), [medium](https://github.com/gelisam/hawk/issues?labels=medium) and [hard](https://github.com/gelisam/hawk/issues?labels=hard). Of course, all issues will be somewhat hard if you're not familar with the codebase, so feel free to ask questions via a [new issue](https://github.com/gelisam/hawk/issues/new)!
+Some of the issues are marked as [good first issue](https://github.com/gelisam/hawk/issues?q=label%3A%22good+first+issue%22), [medium](https://github.com/gelisam/hawk/issues?labels=medium) and [hard](https://github.com/gelisam/hawk/issues?labels=hard). Of course, all issues will be somewhat hard if you're not familar with the codebase, so feel free to ask questions via a [new issue](https://github.com/gelisam/hawk/issues/new)!
 
 "Easy" means you should be able to find a solution just by finding the appropriate place in the code (presumably with our help) and making a small local change.
 
