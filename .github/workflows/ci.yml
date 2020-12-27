@@ -15,19 +15,19 @@ on:
 jobs:
   stack:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           # Check that the build passes with the recommended snapshot on every
           # platform.
-          - name: stable
+          - name: stable (Linux)
             stack_yaml: "stack.yaml"
             os: ubuntu-latest
-          - name: stable
+          - name: stable (MacOS)
             stack_yaml: "stack.yaml"
             os: macos-latest
-          - name: stable
+          - name: stable (Windows)
             stack_yaml: "stack.yaml"
             os: windows-latest
 
