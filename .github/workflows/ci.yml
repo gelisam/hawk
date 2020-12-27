@@ -56,7 +56,6 @@ jobs:
         enable-stack: true
         stack-setup-ghc: true
         stack-no-global: true
-        ghc-version: ${{ matrix.ghc }}
 
     - name: Build
       run: |
@@ -76,7 +75,7 @@ jobs:
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
           - name: newest
-            ghc: latest
+            ghc: 8.4.4
             os: ubuntu-latest
 
     steps:
