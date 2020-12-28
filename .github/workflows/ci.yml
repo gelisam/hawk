@@ -53,18 +53,13 @@ jobs:
       run: |
         stack --stack-yaml=stack.yaml install happy
 
-    - name: Build 1
+    - name: Build
       run: |
         which happy
-    - name: Build 2
-      run: |
         echo $PATH
-    - name: Build 3
-      run: |
         echo $HOME
-    - name: Build 4
-      run: |
         ls ~/.local/bin
+        #stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |
