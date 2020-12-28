@@ -67,13 +67,8 @@ jobs:
     - name: Fix HSinteger-gmp
       if: matrix.os == 'macos-latest'
       run: |
-        ls /Users/runner/.stack/programs/x86_64-osx/ghc-8.4.4/lib/ghc-8.4.4
         rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
-        ls /Users/runner/.stack/programs/x86_64-osx/ghc-8.4.4/lib/ghc-8.4.4
 
     - name: Test
       run: |
-        ls /Users/runner/.stack/programs/x86_64-osx/ghc-8.4.4/lib/ghc-8.4.4
-        rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
-        ls /Users/runner/.stack/programs/x86_64-osx/ghc-8.4.4/lib/ghc-8.4.4
         stack --stack-yaml=${{ matrix.stack_yaml }} test
