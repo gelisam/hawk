@@ -45,6 +45,14 @@ jobs:
         stack-setup-ghc: true
         stack-no-global: true
 
+    # For some reason, installing happy from lts-8.0 fails unless some other
+    # version of happy is already in the PATH. So let's install a version of
+    # happy from an lts which does not have this problem.
+    - name: Install happy
+      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
+      run: |
+        stack --stack-yaml=stack.yaml install happy
+
     - name: Build
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
