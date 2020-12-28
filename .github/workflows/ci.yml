@@ -55,7 +55,11 @@ jobs:
 
     - name: Build
       run: |
-        stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+        which happy
+        echo $PATH
+        echo $HOME
+        ls ~/.local/bin
+        #stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |
