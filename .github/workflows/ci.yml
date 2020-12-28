@@ -67,8 +67,14 @@ jobs:
         stack --stack-yaml=stack.yaml install happy
 
     - name: Build
+      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
       run: |
         PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+
+    - name: Build
+      if: matrix.stack_yaml == 'stack.yaml'
+      run: |
+        stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |
