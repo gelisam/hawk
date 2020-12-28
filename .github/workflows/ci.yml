@@ -60,7 +60,8 @@ jobs:
     - name: Build
       if: matrix.stack_yaml == 'stack.yaml'
       run: |
-        ls /Users/runner/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_*_ghc-8.4.4 || true
+        ls -l /Users/runner/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_*_ghc-8.4.4 || true
+        du -sh /Users/runner/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_*_ghc-8.4.4 || true
         file /Users/runner/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_*_ghc-8.4.4 || true
         stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
 
