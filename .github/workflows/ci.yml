@@ -44,6 +44,13 @@ jobs:
         stack-setup-ghc: true
         stack-no-global: true
 
+    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc is
+    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
+    - name: Fix HSinteger-gmp
+      if: matrix.os == 'macos-latest'
+      run: |
+        rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
+
     # For some reason, installing happy from lts-8.0 fails unless some other
     # version of happy is already in the PATH. So let's install a version of
     # happy from an lts which does not have this problem.
