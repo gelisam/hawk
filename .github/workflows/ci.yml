@@ -53,6 +53,9 @@ jobs:
       run: |
         stack --stack-yaml=stack.yaml install happy
 
+    - name: Build 1
+      run: |
+        which happy
     - name: Build 2
       run: |
         echo $PATH
