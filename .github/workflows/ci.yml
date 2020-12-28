@@ -62,7 +62,7 @@ jobs:
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
 
-    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc is
+    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
     # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
     - name: Fix HSinteger-gmp
       if: matrix.os == 'macos-latest'
