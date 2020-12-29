@@ -1,4 +1,4 @@
-# Hawk [![Hackage](https://img.shields.io/hackage/v/haskell-awk.svg)](https://hackage.haskell.org/package/haskell-awk) 
+# Hawk [![Hackage](https://img.shields.io/hackage/v/haskell-awk.svg)](https://hackage.haskell.org/package/haskell-awk) [![Build Status](https://github.com/gelisam/hawk/workflows/CI/badge.svg)](https://github.com/gelisam/hawk/actions)
 
 Transform text from the command-line using Haskell expressions. Similar to [awk](http://cm.bell-labs.com/cm/cs/awkbook/index.html), but using Haskell as the text-processing language.
 
@@ -66,5 +66,3 @@ You should be ready to use Hawk:
 
 The first run will create a default configuration file into
 `~/.hawk/prelude.hs` if it doesn't exist.
-
-[![Build Status](https://secure.travis-ci.org/gelisam/hawk.png)](http://travis-ci.org/gelisam/hawk)
