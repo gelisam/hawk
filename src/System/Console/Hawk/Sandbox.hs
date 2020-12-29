@@ -36,8 +36,7 @@ import System.Environment (getEnvironment)
 import System.FilePath ((</>))
 import Text.Printf (printf)
 
--- magic self-referential module created by cabal
-import Paths_haskell_awk (getBinDir)
+import System.Console.Hawk.Path (getInstallationPath)
 
 
 data Sandbox = Sandbox
@@ -65,7 +64,7 @@ sandboxes = [dotCabal, cabalSandbox]
 -- something like (Just "/.../.cabal-sandbox")
 findSandboxPath :: Sandbox -> IO (Maybe FilePath)
 findSandboxPath sandbox = do
-    bindir <- Paths_haskell_awk.getBinDir
+    bindir <- getInstallationPath
     let sandboxPathFromBin = relativePath ".." >> sandboxPathFinder sandbox
     runPathFinder sandboxPathFromBin bindir
 
