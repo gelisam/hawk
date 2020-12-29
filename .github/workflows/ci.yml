@@ -27,9 +27,11 @@ jobs:
           - name: stable (MacOS)
             stack_yaml: "stack.yaml"
             os: macos-latest
-          - name: stable (Windows)
-            stack_yaml: "stack.yaml"
-            os: windows-latest
+
+          # Not currently running CI on Windows, see #239
+          #- name: stable (Windows)
+          #  stack_yaml: "stack.yaml"
+          #  os: windows-latest
 
           # Check that the lower bounds are still correct by building with the
           # lowest-supported version of everything, including our dependencies.
