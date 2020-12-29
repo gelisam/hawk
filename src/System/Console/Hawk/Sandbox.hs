@@ -25,6 +25,7 @@ module System.Console.Hawk.Sandbox
     , runHawkInterpreter
     ) where
 
+import Control.Applicative
 import Control.Monad
 import Data.List.Extra (wordsBy)
 import Data.Maybe
@@ -98,7 +99,8 @@ detectCabalPackageDb = do
 detectEnvPackageDbs :: Maybe [String]
 detectEnvPackageDbs = $(do
       env <- runIO getEnvironment
-      lift $ wordsBy (== ':') <$> lookup "HASKELL_PACKAGE_SANDBOXES" env
+      lift $ ((:[]) <$> lookup "HASKELL_DIST_DIR" env)
+         <|> (wordsBy (== ':') <$> lookup "HASKELL_PACKAGE_SANDBOXES" env)
     )
 
 -- prefer the env-provided list of package-dbs if there is one, otherwise
