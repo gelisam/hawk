@@ -43,7 +43,6 @@ jobs:
         enable-stack: true
         stack-setup-ghc: false
         stack-no-global: false
-        stack-setup-ghc: false
         ghc-version: 8.4.4
 
     - name: Build
