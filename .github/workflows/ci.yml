@@ -41,7 +41,7 @@ jobs:
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: false
+        stack-setup-ghc: true
         stack-no-global: false
         ghc-version: 8.4.4
 
