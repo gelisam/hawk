@@ -1,4 +1,5 @@
 resolver: lts-12.26
+system-ghc: true
 packages:
 - .
 extra-deps: []

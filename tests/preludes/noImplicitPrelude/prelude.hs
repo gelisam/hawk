@@ -1,2 +1,0 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-hello = "hello"

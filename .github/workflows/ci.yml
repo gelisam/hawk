@@ -41,21 +41,9 @@ jobs:
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: true
-        stack-no-global: true
-
-    # For some reason, installing happy from lts-8.0 fails unless some other
-    # version of happy is already in the PATH. So let's install a version of
-    # happy from an lts which does not have this problem.
-    - name: Install happy
-      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
-      run: |
-        stack --stack-yaml=stack.yaml install happy
-
-    - name: Build with happy hack
-      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
-      run: |
-        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+        stack-setup-ghc: false
+        stack-no-global: false
+        ghc-version: 8.4.4
 
     - name: Build
       if: matrix.stack_yaml == 'stack.yaml'
@@ -71,6 +59,6 @@ jobs:
 
     - name: Check executable integrity
       run: |
-        ls -l ~/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.4 --help
-        du -sh ~/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.4 --help
+        ls -l ~/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.4
+        du -sh ~/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.4
         ~/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.4 --help
