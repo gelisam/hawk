@@ -41,21 +41,9 @@ jobs:
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: true
+        stack-setup-ghc: false
         stack-no-global: false
         ghc-version: 8.4.4
-
-    - name: Build
-      if: matrix.stack_yaml == 'stack.yaml'
-      run: |
-        stack --stack-yaml=${{ matrix.stack_yaml }} build
-
-    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
-    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
-    - name: Fix HSinteger-gmp
-      if: matrix.os == 'macos-latest'
-      run: |
-        rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
 
     - name: Check executable integrity
       run: |
