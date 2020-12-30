@@ -19,25 +19,9 @@ jobs:
     strategy:
       matrix:
         include:
-          # Check that the build passes with the recommended snapshot on every
-          # platform.
-          - name: stable (Linux)
-            stack_yaml: "stack.yaml"
-            os: ubuntu-latest
           - name: stable (MacOS)
             stack_yaml: "stack.yaml"
             os: macos-latest
-
-          # Not currently running CI on Windows, see #239
-          #- name: stable (Windows)
-          #  stack_yaml: "stack.yaml"
-          #  os: windows-latest
-
-          # Check that the lower bounds are still correct by building with the
-          # lowest-supported version of everything, including our dependencies.
-          - name: oldest
-            stack_yaml: "oldest-supported-lts.yaml"
-            os: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -88,55 +72,3 @@ jobs:
     - name: Test
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} test
-
-  cabal:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          # Check that our upper bounds are correct by building with the latest
-          # version of everything. We use cabal because it uses the latest
-          # versions of our dependencies allowed by our upper bounds.
-          - name: newest
-            ghc: 8.4.4
-            os: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/main'
-
-    - uses: haskell/actions/setup@v1
-      id: setup-haskell-cabal
-      name: Setup Cabal
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
-
-    # This freeze file is regenerated on every build, so we will always test
-    # with the most recent version of our dependencies allowed by our upper
-    # bounds.
-    - name: Freeze
-      run: |
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
-        cabal freeze
-        cabal v1-sandbox init
-        cabal v1-install happy
-
-    # Only reuse the cached copy of our dependencies if our freeze file matches
-    # the cache's copy.
-    - uses: actions/cache@v2
-      name: Cache Cabal Artifacts
-      with:
-        path: |
-          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          .cabal-sandbox
-        key: ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}
-
-    - name: Build
-      run: |
-        cabal v1-install --enable-tests
-
-    - name: Test
-      run: |
-        cabal v1-test
