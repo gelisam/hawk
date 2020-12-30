@@ -34,7 +34,7 @@ jobs:
           ~/.stack
           ~/.local/bin
           .stack-work
-        key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-3
+        key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-4
 
     - uses: haskell/actions/setup@v1
       id: setup-haskell-stack
@@ -45,6 +45,9 @@ jobs:
         stack-no-global: false
         ghc-version: 8.4.4
 
+    - name: Build
+      run: |
+        stack build
     - name: Check executable integrity
       run: |
         uname -a
