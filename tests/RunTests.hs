@@ -12,55 +12,21 @@
 --   See the License for the specific language governing permissions and
 --   limitations under the License.
 
-import Data.List
-import qualified System.Console.Hawk.Representable.Test as ReprTest
-import qualified System.Console.Hawk.Test as HawkTest
-import System.FilePath
-import System.Environment
-import Text.Printf
-
+import System.Environment (unsetEnv)
 import Test.DocTest (doctest)
 import Test.Hspec (hspec)
 
+import Build_doctests (flags, module_sources, pkgs)
+import qualified System.Console.Hawk.Representable.Test as ReprTest
+import qualified System.Console.Hawk.Test as HawkTest
 
-substSuffix :: Eq a => [a] -> [a] -> [a] -> [a]
-substSuffix oldSuffix newSuffix xs | oldSuffix `isSuffixOf` xs = prefix ++ newSuffix
-  where
-    prefix = take (length xs - length oldSuffix) xs
-substSuffix _ _ xs = xs
-
--- make sure doctest can see the source of Hawk and the generated Paths_haskell_awk.hs
-doctest' :: [String] -> IO ()
-doctest' files = do
-    exePath <- dropExtension <$> getExecutablePath
-    
-    let srcPath = "src"
-    let autogenPath = substSuffix ("reference" </> "reference")
-                                  "autogen"
-                                  exePath
-    
-    let includeSrc      = printf "-i%s" srcPath
-    let includeAutogen  = printf "-i%s" autogenPath
-    
-    doctest (includeSrc:includeAutogen:files)
 
 main :: IO ()
 main = do
-    doctest' ["src/System/Console/Hawk/Lock.hs", "tests/System/Console/Hawk/Lock/Test.hs"]
-    doctest' ["src/Data/Cache.hs"]
-    doctest' ["src/Data/HaskellSource.hs"]
-    doctest' ["src/Data/HaskellModule.hs"]
-    doctest' ["src/Data/HaskellModule/Parse.hs"]
-    doctest' ["src/System/Console/Hawk.hs"]
-    doctest' ["tests/System/Console/Hawk/PreludeTests.hs"]
-    doctest' ["tests/Data/HaskellModule/Parse/Test.hs"]
-    doctest' ["src/System/Console/Hawk/Args/Option.hs"]
-    doctest' ["src/System/Console/Hawk/Args/Parse.hs"]
-    doctest' ["src/System/Console/Hawk/UserPrelude.hs"]
-    doctest' ["src/System/Console/Hawk/UserPrelude/Extend.hs"]
-    doctest' ["src/System/Directory/Extra.hs"]
-    doctest' ["src/Control/Monad/Trans/Uncertain.hs"]
-    doctest' ["src/Control/Monad/Trans/OptionParser.hs"]
+    let args = flags ++ pkgs ++ module_sources
+    unsetEnv "GHC_ENVIRONMENT" -- as explained in the cabal-doctest documentation
+    doctest $ args
+
     hspec $ do
         ReprTest.reprSpec'
         ReprTest.reprSpec

@@ -23,6 +23,12 @@ dependencies:
   - stringsearch >= 0.3.6.6
   - list-t >= 1
 
+custom-setup:
+  dependencies:
+    - base >= 4 && <5
+    - Cabal
+    - cabal-doctest >= 1 && <1.1
+
 library:
   source-dirs: runtime
 

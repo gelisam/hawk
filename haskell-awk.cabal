@@ -1,10 +1,10 @@
-cabal-version: 1.12
+cabal-version: 1.24
 
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67ff3ef7e60674ba5c34db9bfccad74aa7f9b014a1b834910959ed7a2ff35e9d
+-- hash: 000f0251d1d9b43e19e2ba02d80fa35b963bd62772b06605fbbddee739779953
 
 name:           haskell-awk
 version:        1.1.1
@@ -17,7 +17,7 @@ author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau
 maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 license:        Apache-2.0
 license-file:   LICENSE
-build-type:     Simple
+build-type:     Custom
 extra-source-files:
     README.md
     CHANGELOG.md
@@ -25,6 +25,12 @@ extra-source-files:
 source-repository head
   type: git
   location: https://github.com/gelisam/hawk
+
+custom-setup
+  setup-depends:
+      Cabal
+    , base >=4 && <5
+    , cabal-doctest >=1 && <1.1
 
 library
   exposed-modules:
