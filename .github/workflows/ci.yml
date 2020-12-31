@@ -14,16 +14,15 @@ on:
 
 jobs:
   stack:
-    name: ${{ matrix.os }} with stack-setup-ghc = ${{ matrix.stacksetupghc }}
+    name: ${{ matrix.os }} with stack-setup-ghc = false
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: ["macos-latest", "ubuntu-latest", "windows-latest"]
-        stacksetupghc: [true, false]
 
     - uses: haskell/actions/setup@v1
       id: setup-haskell-stack
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: $${ matrix.stacksetupghc }}
+        stack-setup-ghc: false
