@@ -20,6 +20,7 @@ jobs:
       matrix:
         os: ["macos-latest", "ubuntu-latest", "windows-latest"]
 
+    steps:
     - uses: haskell/actions/setup@v1
       id: setup-haskell-stack
       name: Setup Stack
