@@ -14,11 +14,11 @@ on:
 
 jobs:
   stack:
-    name: ${{ matrix.os }} with stack-setup-ghc = false
+    name: ${{ matrix.os }} with stack-setup-ghc unset
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["macos-latest", "ubuntu-latest", "windows-latest"]
+        os: ["ubuntu-latest"]
 
     steps:
     - uses: haskell/actions/setup@v1
@@ -26,4 +26,3 @@ jobs:
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: false
