@@ -16,16 +16,20 @@ import System.Environment (unsetEnv)
 import Test.DocTest (doctest)
 import Test.Hspec (hspec)
 
-import Build_doctests (flags, module_sources, pkgs)
+import qualified Build_doctests as CabalDoctest
 import qualified System.Console.Hawk.Representable.Test as ReprTest
 import qualified System.Console.Hawk.Test as HawkTest
 
 
 main :: IO ()
 main = do
-    let args = flags ++ pkgs ++ module_sources
     unsetEnv "GHC_ENVIRONMENT" -- as explained in the cabal-doctest documentation
-    doctest $ args
+    doctest $ CabalDoctest.flags
+           ++ CabalDoctest.pkgs
+           ++ CabalDoctest.module_sources
+    doctest $ CabalDoctest.flags_exe_hawk
+           ++ CabalDoctest.pkgs_exe_hawk
+           ++ CabalDoctest.module_sources_exe_hawk
 
     hspec $ do
         ReprTest.reprSpec'
