@@ -44,7 +44,7 @@ data InstallationMethod a = InstallationMethod
   }
 
 type InstallationMethodChecker = IO (Maybe PackageDbFinder)
-type PackageDbFinder = IO [String]
+type PackageDbFinder = IO [FilePath]
 
 supportedInstallationMethods :: [InstallationMethod InstallationMethodChecker]
 supportedInstallationMethods
@@ -55,26 +55,25 @@ supportedInstallationMethods
             pure $ wordsBy (== ':') haskell_package_sandboxes
     , InstallationMethod "cabal-v1" $ do
         bindir <- getInstallationPath
-        maybeDotCabal <- flip runPathFinder bindir $ do
+        maybeDotGhc <- flip runPathFinder bindir $ do
           -- "~/.cabal/bin"
           relativePath ".."
           filenameIs ".cabal"
           -- "~/.cabal"
+          relativePath ".."
+          -- "~"
+          relativePath ".ghc"
+          -- "~/.ghc"
         pure $ do
-          dotCabal <- maybeDotCabal
+          dotGhc <- maybeDotGhc
           pure $ do
-            packageDbs <- flip runMultiPathFinder dotCabal $ do
-              -- "~/.cabal"
-              relativePath ".."
-              -- "~"
-              relativePath ".ghc"
+            packageDb <- findSinglePackageDb dotGhc $ do
               -- "~/.ghc"
               someChild
               filenameMatches "" ("-" ++ VERSION_ghc)
               -- "~/.ghc/x86_64-darwin-8.4.4"
               relativePath "package.conf.d"
               -- "~/.ghc/x86_64-darwin-8.4.4/package.conf.d"
-            packageDb <- singlePackageDb "~/.ghc" packageDbs
             pure [packageDb]
     , InstallationMethod "cabal-sandbox" $ do
         bindir <- getInstallationPath
@@ -86,25 +85,25 @@ supportedInstallationMethods
         pure $ do
           cabalSandbox <- maybeCabalSandbox
           pure $ do
-            packageDbs <- flip runMultiPathFinder cabalSandbox $ do
+            packageDb <- findSinglePackageDb cabalSandbox $ do
               -- "/.../.cabal-sandbox"
               someChild
               filenameMatches "" ("-ghc-" ++ VERSION_ghc ++ "-packages.conf.d")
               -- "/.../.cabal-sandbox/x86_64-osx-ghc-8.4.4-packages.conf.d"
-            packageDb <- singlePackageDb cabalSandbox packageDbs
             pure [packageDb]
     ]
 
-singlePackageDb :: String -> [String] -> IO String
-singlePackageDb searchPath = \case
-  [] -> do
-    error $ "No package database found in " ++ searchPath
-  [x] -> do
-    pure x
-  xs -> do
-    error $ "Multiple package databases found in " ++ searchPath
-      ++ ": " ++ multiPhrase "and" xs
-      ++ ". It is ambiguous which one to use."
+findSinglePackageDb :: FilePath -> MultiPathFinder -> IO FilePath
+findSinglePackageDb searchPath multiPathFinder = do
+  runMultiPathFinder multiPathFinder searchPath >>= \case
+    [] -> do
+      error $ "No package database found in " ++ searchPath
+    [packageDb] -> do
+      pure packageDb
+    packageDbs -> do
+      error $ "Multiple package databases found in " ++ searchPath
+        ++ ": " ++ multiPhrase "and" packageDbs
+        ++ ". It is ambiguous which one to use."
 
 -- |
 -- >>> unsupportedInstallationMethodMessage
@@ -148,7 +147,7 @@ detectInstallationMethod = do
            ++ multiPhrase "and" (fmap installationMethodName installationMethods)
            ++ ". It is ambiguous which package database to use."
 
-detectPackageDbs :: IO [String]
+detectPackageDbs :: IO [FilePath]
 detectPackageDbs = do
   InstallationMethod _ findPackageDbs <- detectInstallationMethod
   findPackageDbs
