@@ -1,5 +1,5 @@
 -- | Tiny DSL for finding a path from the current path.
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, PackageImports #-}
 module System.Directory.PathFinder where
 
 import Control.Monad
@@ -8,13 +8,10 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.List
-import ListT (ListT)
+import "list-t" ListT (ListT)
 import System.Directory
 import System.FilePath
-import qualified ListT
-
--- $setup
--- >>> import qualified ListT
+import qualified "list-t" ListT
 
 
 type PathFinder = StateT FilePath (MaybeT IO) ()
@@ -27,13 +24,13 @@ runMultiPathFinder :: MultiPathFinder -> FilePath -> IO [FilePath]
 runMultiPathFinder p pwd = ListT.toList (execStateT p pwd)
 
 
-basenameIs :: MonadPlus m => String -> StateT FilePath m ()
-basenameIs s = do
+filenameIs :: MonadPlus m => String -> StateT FilePath m ()
+filenameIs s = do
     pwd <- get
     guard (takeFileName pwd == s)
 
-basenameMatches :: MonadPlus m => String -> String -> StateT FilePath m ()
-basenameMatches prefix suffix = do
+filenameMatches :: MonadPlus m => String -> String -> StateT FilePath m ()
+filenameMatches prefix suffix = do
     pwd <- get
     guard (prefix `isPrefixOf` pwd && suffix `isSuffixOf` pwd)
 

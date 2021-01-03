@@ -7,7 +7,7 @@ import Text.Printf
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellModule
-import System.Console.Hawk.Sandbox
+import System.Console.Hawk.PackageDbs
 import System.Console.Hawk.UserPrelude.Extend
 
 

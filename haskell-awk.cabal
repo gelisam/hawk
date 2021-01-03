@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3f7704ec9292499a1472785a0af1db6a5e28c39739d70740656abcbb0245eeab
+-- hash: d51ebe6e3b5f524e6462d758f207ef4c4eb1aea1fc9f97f831c71970b8483467
 
 name:           haskell-awk
 version:        1.1.1
@@ -49,6 +49,7 @@ library
       base >=4.9.1.0 && <4.12.0.0
     , bytestring >=0.10.8.1
     , containers >=0.5.7.1
+    , ghc >=8.0.2
     , list-t >=1.0.0.1
     , stringsearch >=0.3.6.6
   default-language: Haskell2010
@@ -79,8 +80,9 @@ executable hawk
       System.Console.Hawk.Help
       System.Console.Hawk.Interpreter
       System.Console.Hawk.Lock
+      System.Console.Hawk.PackageDbs
+      System.Console.Hawk.PackageDbs.TH
       System.Console.Hawk.Runtime.HaskellExpr
-      System.Console.Hawk.Sandbox
       System.Console.Hawk.UserExpr.CanonicalExpr
       System.Console.Hawk.UserExpr.InputReadyExpr
       System.Console.Hawk.UserExpr.OriginalExpr
@@ -102,6 +104,7 @@ executable hawk
     , extra >=1.5.3
     , filelock >=0.1.1.2
     , filepath >=1.4.1.1
+    , ghc >=8.0.2
     , haskell-awk
     , haskell-src-exts >=1.18.2
     , hint >=0.7.0
@@ -143,8 +146,9 @@ test-suite reference
       System.Console.Hawk.Help
       System.Console.Hawk.Interpreter
       System.Console.Hawk.Lock
+      System.Console.Hawk.PackageDbs
+      System.Console.Hawk.PackageDbs.TH
       System.Console.Hawk.Runtime.HaskellExpr
-      System.Console.Hawk.Sandbox
       System.Console.Hawk.UserExpr.CanonicalExpr
       System.Console.Hawk.UserExpr.InputReadyExpr
       System.Console.Hawk.UserExpr.OriginalExpr
@@ -178,6 +182,7 @@ test-suite reference
     , extra >=1.5.3
     , filelock >=0.1.1.2
     , filepath >=1.4.1.1
+    , ghc >=8.0.2
     , haskell-awk
     , haskell-src-exts >=1.18.2
     , hint >=0.7.0
