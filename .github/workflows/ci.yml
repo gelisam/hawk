@@ -14,6 +14,139 @@ on:
     - cron: '0 0 1 * *'
 
 jobs:
+  stack:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Check that the build passes with the recommended snapshot on every
+          # platform.
+          - name: stable (Linux)
+            stack_yaml: "stack.yaml"
+            os: ubuntu-latest
+          - name: stable (MacOS)
+            stack_yaml: "stack.yaml"
+            os: macos-latest
+
+          # Not currently running CI on Windows, see #239
+          #- name: stable (Windows)
+          #  stack_yaml: "stack.yaml"
+          #  os: windows-latest
+
+          # Check that the lower bounds are still correct by building with the
+          # lowest-supported version of everything, including our dependencies.
+          - name: oldest
+            stack_yaml: "oldest-supported-lts.yaml"
+            os: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # see https://github.com/actions/cache/issues/403
+    - name: Work around actions/cache bug
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew update && brew install gnu-tar
+        echo PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH" >> $GITHUB_ENV
+
+    - uses: actions/cache@v2
+      name: Cache Stack Artifacts
+      with:
+        path: |
+          ~/.stack
+          ~/.local/bin
+          .stack-work
+        key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-6
+
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-stack
+      name: Setup Stack
+      with:
+        enable-stack: true
+        stack-setup-ghc: true
+        stack-no-global: true
+
+    # For some reason, installing happy from lts-8.0 fails unless some other
+    # version of happy is already in the PATH. So let's install a version of
+    # happy from an lts which does not have this problem.
+    - name: Install happy
+      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
+      run: |
+        stack --stack-yaml=stack.yaml install happy
+
+    - name: Build with happy hack
+      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
+      run: |
+        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+
+    - name: Build
+      if: matrix.stack_yaml == 'stack.yaml'
+      run: |
+        stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+
+    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
+    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
+    - name: Fix HSinteger-gmp
+      if: matrix.os == 'macos-latest'
+      run: |
+        rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
+
+    - name: Test
+      run: |
+        stack --stack-yaml=${{ matrix.stack_yaml }} test
+
+  cabal-v1:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Check that our upper bounds are correct by building with the latest
+          # version of everything. We use cabal because it uses the latest
+          # versions of our dependencies allowed by our upper bounds.
+          - name: newest with cabal-v1
+            ghc: 8.4.4
+            os: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-cabal
+      name: Setup Cabal
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    # This freeze file is regenerated on every build, so we will always test
+    # with the most recent version of our dependencies allowed by our upper
+    # bounds.
+    - name: Freeze
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal freeze
+        cabal v1-sandbox init
+        cabal v1-install happy
+
+    # Only reuse the cached copy of our dependencies if our freeze file matches
+    # the cache's copy.
+    - uses: actions/cache@v2
+      name: Cache Cabal Artifacts
+      with:
+        path: |
+          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+          .cabal-sandbox
+        key: ${{ runner.os }}-cabal-v1-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Build
+      run: |
+        cabal v1-install --enable-tests
+
+    - name: Test
+      run: |
+        cabal v1-test
+
   cabal-v2:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
