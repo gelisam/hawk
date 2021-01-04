@@ -59,6 +59,13 @@ jobs:
         cabal v2-build --enable-tests
         cabal v2-install
 
+    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
+    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
+    - name: Fix HSinteger-gmp
+      if: matrix.os == 'macos-latest'
+      run: |
+        rm -f ~/.ghcup/ghc/*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
+
     - name: Test
       run: |
         cabal v2-test
