@@ -20,8 +20,9 @@ dependencies:
   - base >= 4.9.1.0 && < 4.12.0.0
   - bytestring >= 0.10.8.1
   - containers >= 0.5.7.1
-  - stringsearch >= 0.3.6.6
+  - ghc >= 8.0.2
   - list-t >= 1.0.0.1
+  - stringsearch >= 0.3.6.6
 
 custom-setup:
   dependencies:
