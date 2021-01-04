@@ -30,12 +30,12 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Writer
 import Data.Foldable
-import Data.List.Extra (wordsBy)
+import Data.List.Extra (stripSuffix, wordsBy)
 import Language.Haskell.Interpreter (InterpreterError, InterpreterT)
 import Language.Haskell.Interpreter.Unsafe (unsafeRunInterpreterWithArgs)
 import System.Directory.PathFinder
-import System.FilePath (splitDirectories)
 import Text.Printf (printf)
+import qualified System.FilePath as FilePath
 
 import System.Console.Hawk.PackageDbs.TH
 import System.Console.Hawk.Path (getInstallationPath)
@@ -57,7 +57,14 @@ supportedInstallationMethods
           pure $ do
             pure $ wordsBy (== ':') haskellPackageSandboxes
     , InstallationMethod "cabal v2-run" $ do  -- also used by cabal v2-test
+        bindir <- getInstallationPath
         maybePaths <- runMaybeT $ do
+          -- "~/.cabal/bin" might not exist yet, but "~/.cabal" does
+          let binSuffix = FilePath.pathSeparator : "bin"
+          bindirParent <- MaybeT $ pure $ stripSuffix binSuffix bindir
+          dotCabal <- MaybeT $ flip runPathFinder bindirParent $ do
+            filenameIs ".cabal"
+
           haskellDistDir <- MaybeT $ pure $$(compileTimeEnvVar "HASKELL_DIST_DIR")
           distNewstyle <- MaybeT $ flip runPathFinder haskellDistDir $ do
             -- "/.../dist-newstyle/build/x86_64-osx/ghc-8.4.4/haskell-awk-1.1.1"
@@ -72,10 +79,18 @@ supportedInstallationMethods
             relativePath ".."
             filenameIs "dist-newstyle"
             -- "/.../dist-newstyle"
-          pure (haskellDistDir, distNewstyle)
+          pure (dotCabal, haskellDistDir, distNewstyle)
         pure $ do
-          (haskellDistDir, distNewstyle) <- maybePaths
+          (dotCabal, haskellDistDir, distNewstyle) <- maybePaths
           pure $ do
+            globalPackageDb <- findSinglePackageDb dotCabal $ do
+              -- "~/.cabal"
+              relativePath "store"
+              -- "~/.cabal/store"
+              relativePath (printf "ghc-%s" VERSION_ghc)
+              -- "~/.cabal/store/ghc-8.4.4"
+              relativePath "package.db"
+              -- "~/.cabal/store/ghc-8.4.4/package.db"
             localPackageDb <- findSinglePackageDb distNewstyle $ do
               -- "/.../dist-newstyle"
               relativePath "packagedb"
@@ -86,7 +101,7 @@ supportedInstallationMethods
               -- "/.../dist-newstyle/build/x86_64-osx/ghc-8.4.4/haskell-awk-1.1.1"
               relativePath "package.conf.inplace"
               -- "/.../dist-newstyle/build/x86_64-osx/ghc-8.4.4/haskell-awk-1.1.1/package.conf.inplace"
-            pure [localPackageDb, inPlacePackageDb]
+            pure [globalPackageDb, localPackageDb, inPlacePackageDb]
     , InstallationMethod "cabal v2-install" $ do
         bindir <- getInstallationPath
         maybeDotCabal <- flip runPathFinder bindir $ do
@@ -106,7 +121,9 @@ supportedInstallationMethods
           dotCabal <- maybeDotCabal
 
           -- to distinguish between v1-install and v2-install
-          guard ("dist-newstyle" `elem` splitDirectories $$(compileTimeWorkingDirectory))
+          guard ( "dist-newstyle"
+           `elem` FilePath.splitDirectories $$(compileTimeWorkingDirectory)
+                )
 
           pure $ do
             globalPackageDb <- findSinglePackageDb dotCabal $ do
