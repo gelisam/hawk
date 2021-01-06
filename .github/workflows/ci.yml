@@ -146,7 +146,7 @@ jobs:
     - name: Build using v2-install
       if: matrix.method == 'v2-install'
       run: |
-        cabal v2-install
+        cabal v2-install --install-method=copy
     - name: Build using v2-run
       if: matrix.method == 'v2-run'
       run: |
