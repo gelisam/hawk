@@ -183,4 +183,4 @@ jobs:
       if: matrix.method == 'cabal-sandbox'
       run: |
         cabal v1-test
-        ~/.cabal/bin/hawk '2+2'
+        .cabal-sandbox/bin/hawk '2+2'
