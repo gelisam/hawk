@@ -134,6 +134,8 @@ jobs:
         path: |
           ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
           .cabal-sandbox
+          dist
+          dist-newstyle
         key: ${{ runner.os }}-cabal-${{ matrix.method }}-${{ hashFiles('cabal.project.freeze') }}
 
     - name: Build using v1-install
