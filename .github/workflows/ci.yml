@@ -100,7 +100,7 @@ jobs:
   # version of everything. We use cabal because it uses the latest
   # versions of our dependencies allowed by our upper bounds.
   cabal:
-    name: ${{ matrix.name }}
+    name: newest via ${{ matrix.method }} on ${{ runner.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
