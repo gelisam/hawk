@@ -104,9 +104,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        - ghc: ["8.4.4"]
-        - os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        - method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
+        ghc: ["8.4.4"]
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
 
     steps:
     - uses: actions/checkout@v2
