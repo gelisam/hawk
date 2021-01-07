@@ -87,18 +87,32 @@ jobs:
       if: matrix.method == 'v1-install'
       run: |
         cabal v1-test
-        ~/.cabal/bin/hawk '2+2'
-    - name: Test using v2-install
-      if: matrix.method == 'v2-install'
-      run: |
-        ~/.cabal/bin/hawk '2+2'
     - name: Test using v2-run
-      if: matrix.method == 'v2-run'
+      if: matrix.method == 'v2-run' && matrix.os != 'windows-latest'
       run: |
         cabal v2-test
-        cabal v2-run hawk -- '2+2'
     - name: Test using cabal-sandbox
       if: matrix.method == 'cabal-sandbox'
       run: |
         cabal v1-test
+
+    - name: Run installed exe
+      if: (matrix.method == 'v1-install' || matrix.method == 'v2-install') && matrix.os != 'windows-latest'
+      run: |
+        ~/.cabal/bin/hawk '2+2'
+    - name: Run installed exe on Windows
+      if: (matrix.method == 'v1-install' || matrix.method == 'v2-install') && matrix.os == 'windows-latest'
+      run: |
+        %appdata%\cabal\bin\hawk '2+2'
+    - name: Run v2-run exe
+      if: matrix.method == 'v2-run'
+      run: |
+        cabal v2-run hawk -- '2+2'
+    - name: Run cabal-sandbox exe
+      if: matrix.method == 'cabal-sandbox' && matrix.os != 'windows-latest'
+      run: |
         .cabal-sandbox/bin/hawk '2+2'
+    - name: Run cabal-sandbox exe on Windows
+      if: matrix.method == 'cabal-sandbox' && matrix.os == 'windows-latest'
+      run: |
+        .cabal-sandbox\bin\hawk '2+2'
