@@ -103,7 +103,7 @@ jobs:
     - name: Run installed exe on Windows
       if: (matrix.method == 'v1-install' || matrix.method == 'v2-install') && matrix.os == 'windows-latest'
       run: |
-        $env:APPDATA\cabal\bin\hawk '2+2'
+        & $env:APPDATA\cabal\bin\hawk '2+2'
     - name: Run v2-run exe
       if: matrix.method == 'v2-run'
       run: |
