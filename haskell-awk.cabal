@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d51ebe6e3b5f524e6462d758f207ef4c4eb1aea1fc9f97f831c71970b8483467
+-- hash: 0e7b1943d414def37e18fcfffd14dec00b62618caae514a68f03f8d6179d312a
 
 name:           haskell-awk
 version:        1.1.1
@@ -52,6 +52,9 @@ library
     , ghc >=8.0.2
     , list-t >=1.0.0.1
     , stringsearch >=0.3.6.6
+  if os(windows)
+    build-depends:
+        base <0
   default-language: Haskell2010
 
 executable hawk
@@ -116,6 +119,9 @@ executable hawk
     , template-haskell >=2.11.1.0
     , time >=1.6.0.1
     , transformers >=0.5.2.0
+  if os(windows)
+    build-depends:
+        base <0
   default-language: Haskell2010
 
 test-suite reference
@@ -198,4 +204,7 @@ test-suite reference
     , test-framework-hunit >=0.3.0.2
     , time >=1.6.0.1
     , transformers >=0.5.2.0
+  if os(windows)
+    build-depends:
+        base <0
   default-language: Haskell2010
