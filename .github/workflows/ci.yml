@@ -69,7 +69,7 @@ jobs:
     - name: Build with happy hack
       if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
       run: |
-        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Build
       if: matrix.stack_yaml == 'stack.yaml'
