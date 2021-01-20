@@ -24,6 +24,12 @@ dependencies:
   - list-t >= 1.0.0.1
   - stringsearch >= 0.3.6.6
 
+# Windows is not currently supported, see issue #248
+when:
+  - condition: os(windows)
+    dependencies:
+      - base < 0
+
 custom-setup:
   dependencies:
     - base >= 4.9.1.0 && < 4.12.0.0

@@ -1,0 +1,108 @@
+name: Installation Methods
+
+on:
+  # The installation-method-detection tests take longer to run than the rest,
+  # so let's run them less frequently (once a month instead of on every PR).
+  schedule:
+    - cron: '0 0 1 * *'
+
+  # When a PR touches the installation-method code, we obviously do want to run
+  # these tests even though they take longer. Simply uncomment this to run them,
+  # then re-comment them before merging.
+  #pull_request:
+  #  types: [opened, synchronize]
+
+jobs:
+  # the stack installation method is already covered by the regular CI tests
+  installation-methods:
+    name: newest via ${{ matrix.method }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        ghc: ["8.4.4"]
+        os: ["ubuntu-latest", "macos-latest"]
+        method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-cabal
+      name: Setup Cabal
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    # This freeze file is regenerated on every build, so we will always test
+    # with the most recent version of our dependencies allowed by our upper
+    # bounds.
+    - name: Freeze
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal freeze
+
+    # Only reuse the cached copy of our dependencies if our freeze file matches
+    # the cache's copy.
+    - uses: actions/cache@v2
+      name: Cache Cabal Artifacts
+      with:
+        path: |
+          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+          .cabal-sandbox
+          dist
+          dist-newstyle
+        key: ${{ runner.os }}-cabal-${{ matrix.method }}-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Build using v1-install
+      if: matrix.method == 'v1-install'
+      run: |
+        cabal v1-install happy
+        cabal v1-install --enable-tests
+    - name: Build using v2-install
+      if: matrix.method == 'v2-install'
+      run: |
+        cabal v2-install --install-method=copy
+    - name: Build using v2-run
+      if: matrix.method == 'v2-run'
+      run: |
+        cabal v2-build --enable-tests
+    - name: Build using cabal-sandbox
+      if: matrix.method == 'cabal-sandbox'
+      run: |
+        cabal v1-sandbox init
+        cabal v1-install happy
+        cabal v1-install --enable-tests
+
+    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
+    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
+    - name: Fix HSinteger-gmp
+      if: matrix.os == 'macos-latest'
+      run: |
+        rm -f ~/.ghcup/ghc/*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
+
+    - name: Test using v1-install
+      if: matrix.method == 'v1-install'
+      run: |
+        cabal v1-test
+    # v2-tests uses the v2-run settings, so we cannot run the tests the v2-install settings
+    - name: Test using v2-run
+      if: matrix.method == 'v2-run'
+      run: |
+        cabal v2-test
+    - name: Test using cabal-sandbox
+      if: matrix.method == 'cabal-sandbox'
+      run: |
+        cabal v1-test
+
+    - name: Run installed exe
+      if: (matrix.method == 'v1-install' || matrix.method == 'v2-install')
+      run: |
+        ~/.cabal/bin/hawk '2+2'
+    - name: Run v2-run exe
+      if: matrix.method == 'v2-run'
+      run: |
+        cabal v2-run hawk -- '2+2'
+    - name: Run cabal-sandbox exe
+      if: matrix.method == 'cabal-sandbox'
+      run: |
+        .cabal-sandbox/bin/hawk '2+2'

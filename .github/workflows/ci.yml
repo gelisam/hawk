@@ -20,22 +20,13 @@ jobs:
     strategy:
       matrix:
         include:
-          # Check that the build passes with the recommended snapshot on every
-          # platform.
-          - name: stable (Linux)
+          # Check that the build passes with the recommended snapshot.
+          - name: stable
             stack_yaml: "stack.yaml"
             os: ubuntu-latest
-          - name: stable (MacOS)
-            stack_yaml: "stack.yaml"
-            os: macos-latest
-
-          # Not currently running CI on Windows, see #239
-          #- name: stable (Windows)
-          #  stack_yaml: "stack.yaml"
-          #  os: windows-latest
 
           # Check that the lower bounds are still correct by building with the
-          # lowest-supported version of everything, including our dependencies.
+          # lowest-supported version of all our dependencies.
           - name: oldest
             stack_yaml: "oldest-supported-lts.yaml"
             os: ubuntu-latest
@@ -78,12 +69,12 @@ jobs:
     - name: Build with happy hack
       if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
       run: |
-        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Build
       if: matrix.stack_yaml == 'stack.yaml'
       run: |
-        stack --stack-yaml=${{ matrix.stack_yaml }} build --test --bench --no-run-tests --no-run-benchmarks
+        stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
 
     # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
     # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
@@ -96,7 +87,12 @@ jobs:
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} test
 
-  cabal-v1:
+    - name: Run installed exe
+      run: |
+        stack run '2+2'
+        ~/.local/bin/hawk '2+2'
+
+  cabal:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -105,60 +101,9 @@ jobs:
           # Check that our upper bounds are correct by building with the latest
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
-          - name: newest with cabal-v1
+          - name: newest
             ghc: 8.4.4
             os: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - uses: haskell/actions/setup@v1
-      id: setup-haskell-cabal
-      name: Setup Cabal
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
-
-    # This freeze file is regenerated on every build, so we will always test
-    # with the most recent version of our dependencies allowed by our upper
-    # bounds.
-    - name: Freeze
-      run: |
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
-        cabal freeze
-        cabal v1-sandbox init
-        cabal v1-install happy
-
-    # Only reuse the cached copy of our dependencies if our freeze file matches
-    # the cache's copy.
-    - uses: actions/cache@v2
-      name: Cache Cabal Artifacts
-      with:
-        path: |
-          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          .cabal-sandbox
-        key: ${{ runner.os }}-cabal-v1-${{ hashFiles('cabal.project.freeze') }}
-
-    - name: Build
-      run: |
-        cabal v1-install --enable-tests
-
-    - name: Test
-      run: |
-        cabal v1-test
-
-  cabal-v2:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          # Check that our upper bounds are correct by building with the latest
-          # version of everything. We use cabal because it uses the latest
-          # versions of our dependencies allowed by our upper bounds.
-          - name: newest with cabal-v2
-            ghc: 8.4.4
-            os: macos-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -190,7 +135,6 @@ jobs:
     - name: Build
       run: |
         cabal v2-build --enable-tests
-        cabal v2-install
 
     # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
     # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
