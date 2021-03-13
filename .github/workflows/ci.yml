@@ -59,7 +59,6 @@ jobs:
         stack-no-global: true
 
     - name: Build
-      if: matrix.stack_yaml == 'stack.yaml'
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
 
