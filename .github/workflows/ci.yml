@@ -81,7 +81,7 @@ jobs:
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
           - name: newest
-            ghc: 9.0.1
+            ghc: latest
             os: ubuntu-latest
 
     steps:
