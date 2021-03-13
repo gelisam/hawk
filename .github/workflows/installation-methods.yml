@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ghc: ["8.4.4"]
+        ghc: ["8.10.4"]
         os: ["ubuntu-latest", "macos-latest"]
         method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
 
@@ -72,13 +72,6 @@ jobs:
         cabal v1-sandbox init
         cabal v1-install happy
         cabal v1-install --enable-tests
-
-    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
-    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
-    - name: Fix HSinteger-gmp
-      if: matrix.os == 'macos-latest'
-      run: |
-        rm -f ~/.ghcup/ghc/*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
 
     - name: Test using v1-install
       if: matrix.method == 'v1-install'
