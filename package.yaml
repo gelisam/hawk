@@ -17,7 +17,7 @@ extra-source-files:
 
 ghc-options: -Wall
 dependencies:
-  - base >= 4.9.1.0 && < 5
+  - base >= 4.13.0.0 && < 5
   - bytestring >= 0.10.8.1
   - containers >= 0.5.7.1
   - ghc >= 8.0.2
@@ -32,7 +32,7 @@ when:
 
 custom-setup:
   dependencies:
-    - base >= 4.9.1.0 && < 4.12.0.0
+    - base >= 4.13.0.0 && < 5
     - Cabal >= 1.24.2.0
     - cabal-doctest >= 1.0.4
 
