@@ -4,7 +4,6 @@ module System.Console.Hawk.Args.Option where
 
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (pack)
-import Data.Maybe (maybe)
 import Text.Printf
 
 import Control.Monad.Trans.OptionParser

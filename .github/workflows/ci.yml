@@ -58,30 +58,9 @@ jobs:
         stack-setup-ghc: true
         stack-no-global: true
 
-    # For some reason, installing happy from lts-8.0 fails unless some other
-    # version of happy is already in the PATH. So let's install a version of
-    # happy from an lts which does not have this problem.
-    - name: Install happy
-      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
-      run: |
-        stack --stack-yaml=stack.yaml install happy
-
-    - name: Build with happy hack
-      if: matrix.stack_yaml == 'oldest-supported-lts.yaml'
-      run: |
-        PATH="$HOME/.local/bin:$PATH" stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
-
     - name: Build
-      if: matrix.stack_yaml == 'stack.yaml'
       run: |
         stack --stack-yaml=${{ matrix.stack_yaml }} install --test --bench --no-run-tests --no-run-benchmarks
-
-    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
-    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
-    - name: Fix HSinteger-gmp
-      if: matrix.os == 'macos-latest'
-      run: |
-        rm -f ~/.stack/programs/x86_64-osx/ghc-*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
 
     - name: Test
       run: |
@@ -102,7 +81,7 @@ jobs:
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
           - name: newest
-            ghc: 8.4.4
+            ghc: latest
             os: ubuntu-latest
 
     steps:
@@ -135,13 +114,6 @@ jobs:
     - name: Build
       run: |
         cabal v2-build --enable-tests
-
-    # For some reason, the HSinteger-gmp-1.0.2.0.o file which comes with ghc-8.4.4 is
-    # corrupted, and builds fail unless it is deleted. Apparently it is not needed?
-    - name: Fix HSinteger-gmp
-      if: matrix.os == 'macos-latest'
-      run: |
-        rm -f ~/.ghcup/ghc/*/lib/ghc-*/integer-gmp-*/HSinteger-gmp-*.o
 
     - name: Test
       run: |

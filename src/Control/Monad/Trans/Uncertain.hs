@@ -2,6 +2,7 @@
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
+import qualified Control.Monad.Fail as Fail
 import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Identity
 import "transformers" Control.Monad.Trans.Except
@@ -31,6 +32,8 @@ instance Monad m => Monad (UncertainT m) where
   UncertainT mx >>= f = UncertainT (mx >>= f')
     where
       f' = unUncertainT . f
+
+instance Monad m => Fail.MonadFail (UncertainT m) where
   fail s = UncertainT (throwE s)
 
 instance MonadTrans UncertainT where
