@@ -30,11 +30,19 @@ jobs:
     - uses: actions/checkout@v2
 
     - uses: haskell/actions/setup@v1
+      if: matrix.method == 'v1-install'
       id: setup-haskell-cabal
       name: Setup Cabal
       with:
         ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
+        cabal-version: 3.2
+    - uses: haskell/actions/setup@v1
+      if: matrix.method != 'v1-install'
+      id: setup-haskell-cabal
+      name: Setup Cabal
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: latest
 
     # This freeze file is regenerated on every build, so we will always test
     # with the most recent version of our dependencies allowed by our upper
