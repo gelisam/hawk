@@ -1,9 +1,6 @@
 name: Installation Methods
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-
   # The installation-method-detection tests take longer to run than the rest,
   # so let's run them less frequently (once a month instead of on every PR).
   schedule:
