@@ -1,10 +1,12 @@
-{-# LANGUAGE DeriveFunctor, LambdaCase, PackageImports, RankNTypes #-}
+{-# LANGUAGE CPP, DeriveFunctor, LambdaCase, PackageImports, RankNTypes #-}
 -- | A typeclass- and monad-based interface for GetOpt,
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
 
 import Control.Monad
+#if MIN_VERSION_base(4,13,0)
 import qualified Control.Monad.Fail as Fail
+#endif
 import "mtl" Control.Monad.Identity
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
@@ -74,8 +76,10 @@ instance Monad m => Monad (OptionParserT o m) where
   OptionParserT mx >>= f = OptionParserT (mx >>= f')
     where
       f' = unOptionParserT . f
+#if MIN_VERSION_base(4,13,0)
 
 instance Monad m => Fail.MonadFail (OptionParserT o m) where
+#endif
   fail s = OptionParserT (fail s)
 
 instance MonadTrans (OptionParserT o) where

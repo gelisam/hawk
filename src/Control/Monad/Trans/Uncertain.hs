@@ -1,8 +1,10 @@
-{-# LANGUAGE PackageImports, RankNTypes #-}
+{-# LANGUAGE CPP, PackageImports, RankNTypes #-}
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
+#if MIN_VERSION_base(4,13,0)
 import qualified Control.Monad.Fail as Fail
+#endif
 import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Identity
 import "transformers" Control.Monad.Trans.Except
@@ -32,8 +34,10 @@ instance Monad m => Monad (UncertainT m) where
   UncertainT mx >>= f = UncertainT (mx >>= f')
     where
       f' = unUncertainT . f
+#if MIN_VERSION_base(4,13,0)
 
 instance Monad m => Fail.MonadFail (UncertainT m) where
+#endif
   fail s = UncertainT (throwE s)
 
 instance MonadTrans UncertainT where
