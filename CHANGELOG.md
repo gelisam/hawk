@@ -1,5 +1,14 @@
 # What's new?
 
+## New in 1.2
+
+* Added support for ghc-9.0.1, ghc-8.10 and ghc-8.8, dropped support for ghc-8.6 and below.
+* Drop support for Windows. Please contact us if you would like us to re-enable it.
+* Error messages use the correct column number.
+* The flag `-d` without an argument no longer implies `-o` without an argument. That is, when using whitespace to delimit words in the input, we now also use whitespace to delimit words in the output, we no longer use the empty string as a delimiter.
+* Hawk can now be installed using either stack, cabal-v1, cabal-v2, or cabal-sandbox.
+* Hawk no longer suspiciously opens a port; we now use files for locking, not a unix socket.
+
 ## New in 1.1.1
 
 GHC 7.10 compatibility.
