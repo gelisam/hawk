@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a22085194bf1d461b71a6785ca1923f50d473b93a43c2ddcc004b87ba38b163f
+-- hash: 9f5339833fcdabb1bac451e961d7e0b7c39c1b0655d5cf3cd966d21e705c4be0
 
 name:           haskell-awk
 version:        1.1.1
@@ -113,7 +113,6 @@ executable hawk
     , hint >=0.9.0.3
     , list-t >=1.0.4
     , mtl >=2.2.2
-    , network >=3.1.1.1
     , process >=1.6.9.0
     , stringsearch >=0.3.6.6
     , template-haskell >=2.15.0.0
@@ -195,7 +194,6 @@ test-suite reference
     , hspec >=2.7.6
     , list-t >=1.0.4
     , mtl >=2.2.2
-    , network >=3.1.1.1
     , process >=1.6.9.0
     , stringsearch >=0.3.6.6
     , template-haskell >=2.15.0.0
