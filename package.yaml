@@ -14,6 +14,8 @@ license-file:   LICENSE
 extra-source-files:
 - README.md
 - CHANGELOG.md
+- tests/inputs/*
+- tests/preludes/*/prelude.hs
 
 ghc-options: -Wall
 dependencies:
@@ -63,7 +65,7 @@ tests:
     source-dirs:
       - src
       - tests
-    main:                 RunTests.hs
+    main: RunTests.hs
     dependencies:
       - aeson >= 1.4.7.1
       - attoparsec >= 0.13.2.4
