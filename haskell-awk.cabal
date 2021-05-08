@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7dd381c447e05d6cb34cf285e92876a4733dfdf88c0f8caf7e5a6b5945fca4fd
+-- hash: 4379120def2ce83e1aa60e6d6f0342f0af4a0b42b1c9e8a7e625ddd90eb78a63
 
 name:           haskell-awk
 version:        1.2
@@ -21,6 +21,24 @@ build-type:     Custom
 extra-source-files:
     README.md
     CHANGELOG.md
+    tests/inputs/0-100
+    tests/inputs/1-10
+    tests/inputs/1-12
+    tests/inputs/1-3
+    tests/inputs/1-6
+    tests/inputs/1-9
+    tests/inputs/1-9commas
+    tests/inputs/1-9tabs
+    tests/inputs/equation
+    tests/inputs/example.in
+    tests/inputs/json
+    tests/inputs/passwd
+    tests/preludes/default/prelude.hs
+    tests/preludes/moduleName/prelude.hs
+    tests/preludes/moduleNamedMain/prelude.hs
+    tests/preludes/noImplicitPrelude/prelude.hs
+    tests/preludes/readme/prelude.hs
+    tests/preludes/set/prelude.hs
 
 source-repository head
   type: git
