@@ -34,7 +34,7 @@ While Hawk and awk have similar use cases, the philosophy behind the two is very
 different. Awk uses a specialized language designed to concisely express many text transformations,
 while Hawk uses the general-purpose language Haskell, which is also known for being concise, among other things.
 There are many standard command-line tools that can be easily approximated using
-[short Haskell expressions](http://www.haskell.org/haskellwiki/Simple_Unix_tools).
+[short Haskell expressions](https://wiki.haskell.org/Simple_Unix_tools).
 
 Another important difference is that while awk one-liners are self-contained, Hawk encourages the use of libraries and user-defined functions. By adding function definitions, module imports and language pragmas to Hawk's user-configurable [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude), those functions, libraries and language extensions become available to Hawk one-liners.
 For instance, we could add a `takeLast` function extracting the last `n` elements from a list, and use it to (inefficiently) approximate `tail`:
@@ -49,7 +49,7 @@ For instance, we could add a `takeLast` function extracting the last `n` element
 
 For more details, see the
 [presentation](http://melrief.github.io/HawkPresentation/#/) and the
-[documentation](doc/README.md).
+[documentation](https://github.com/gelisam/hawk/tree/master/doc/README.md).
 
 ## Installation
 
