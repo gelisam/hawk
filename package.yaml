@@ -1,5 +1,5 @@
 name:           haskell-awk
-version:        1.2
+version:        1.2.0.1
 github:         gelisam/hawk
 author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 maintainer:     Samuel Gélineau <gelisam@gmail.com>, Jens Petersen <juhpetersen@gmail.com>

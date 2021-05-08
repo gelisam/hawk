@@ -4,10 +4,10 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7e4b35a68e9b4e35f1816b332b38dee87a35e50686a9df0584dbaa839cdb0fb1
+-- hash: 0fcd125f6eb5643d27494a833b86935666790bf4871f9a0edab91b1a8860ccfa
 
 name:           haskell-awk
-version:        1.2
+version:        1.2.0.1
 synopsis:       Transform text from the command-line using Haskell expressions.
 description:    Hawk is a command line utility to process streams of text using Haskell code. It is intended to be used in a UNIX pipeline. It offers a configuration system to personalize imported modules and a way to represent values on the console.
 category:       Console
