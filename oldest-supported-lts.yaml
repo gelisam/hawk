@@ -1,4 +1,5 @@
 resolver: lts-9.0
 packages:
 - .
-extra-deps: []
+extra-deps:
+  - cabal-doctest-1.0.4

@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0fcd125f6eb5643d27494a833b86935666790bf4871f9a0edab91b1a8860ccfa
+-- hash: 7517e27fc1a323df0f63f63937abf935ca1ecdd5376effed8078a1c1dd86928a
 
 name:           haskell-awk
 version:        1.2.0.1
@@ -48,7 +48,7 @@ custom-setup
   setup-depends:
       Cabal >=1.24.2.0
     , base >=4.9 && <5
-    , cabal-doctest >=1.0.2
+    , cabal-doctest >=1.0.4
 
 library
   exposed-modules:
