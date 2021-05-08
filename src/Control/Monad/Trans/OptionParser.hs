@@ -3,11 +3,15 @@
 --   designed to look as if the options had more precise types than String.
 module Control.Monad.Trans.OptionParser where
 
-import Control.Monad
-#if MIN_VERSION_base(4,13,0)
-import qualified Control.Monad.Fail as Fail
+import Prelude hiding (fail)
+
+import Control.Monad hiding (fail)
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (MonadFail, fail)
+#else
+import Prelude (MonadFail, fail)
 #endif
-import "mtl" Control.Monad.Identity
+import "mtl" Control.Monad.Identity hiding (fail)
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.List
@@ -76,9 +80,9 @@ instance Monad m => Monad (OptionParserT o m) where
   OptionParserT mx >>= f = OptionParserT (mx >>= f')
     where
       f' = unOptionParserT . f
-#if MIN_VERSION_base(4,13,0)
+#if MIN_VERSION_base(4,12,0)
 
-instance Monad m => Fail.MonadFail (OptionParserT o m) where
+instance Monad m => MonadFail (OptionParserT o m) where
 #endif
   fail s = OptionParserT (fail s)
 
@@ -370,7 +374,7 @@ filePath = Setting "path"
 -- | The value assigned to the option if the check function doesn't fail with
 -- an error. The check functions must return a file path.
 --
--- >>> import Control.Monad
+-- >>> import Control.Monad hiding (fail)
 -- >>> import System.EasyFile (doesDirectoryExist)
 -- >>> let testIO args tp p = runUncertainIO $ runOptionParserWith head id (const [""]) tp ["input-dir"] p args
 -- >>> let inputDir = const filePath

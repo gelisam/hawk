@@ -4,6 +4,9 @@ module Control.Monad.Trans.State.Persistent where
 
 import Control.Applicative
 import Control.Monad
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (MonadFail)
+#endif
 import Control.Monad.IO.Class
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -68,7 +71,7 @@ withPersistentState f default_s sx = do
 --
 -- >>> removeFile f
 withPersistentStateT :: forall m s a. (Functor m, MonadIO m,
-#if MIN_VERSION_base(4,13,0)
+#if MIN_VERSION_base(4,12,0)
                                        MonadFail m,
 #endif
                                        Read s, Show s, Eq s)

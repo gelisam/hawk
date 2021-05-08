@@ -2,11 +2,15 @@
 -- | A computation which may raise warnings or fail in error.
 module Control.Monad.Trans.Uncertain where
 
-#if MIN_VERSION_base(4,13,0)
-import qualified Control.Monad.Fail as Fail
+import Prelude hiding (fail)
+
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (MonadFail, fail)
+#else
+import Prelude (MonadFail, fail)
 #endif
 import "mtl" Control.Monad.Trans
-import "mtl" Control.Monad.Identity
+import "mtl" Control.Monad.Identity hiding (fail)
 import "transformers" Control.Monad.Trans.Except
 import "transformers" Control.Monad.Trans.Writer
 import System.Exit
@@ -34,9 +38,9 @@ instance Monad m => Monad (UncertainT m) where
   UncertainT mx >>= f = UncertainT (mx >>= f')
     where
       f' = unUncertainT . f
-#if MIN_VERSION_base(4,13,0)
+#if MIN_VERSION_base(4,12,0)
 
-instance Monad m => Fail.MonadFail (UncertainT m) where
+instance Monad m => MonadFail (UncertainT m) where
 #endif
   fail s = UncertainT (throwE s)
 

@@ -20,7 +20,7 @@ dependencies:
   - base >= 4.9 && < 5
   - bytestring >= 0.10.6
   - containers >= 0.5.7
-  - ghc (> 8.0 && < 8.5) || > 8.8
+  - ghc > 8.0
   - list-t >= 0.4
 
 # Windows is not currently supported, see issue #248

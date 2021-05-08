@@ -1,7 +1,14 @@
-{-# LANGUAGE OverloadedStrings, PackageImports, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, OverloadedStrings, PackageImports, ScopedTypeVariables #-}
 -- | In which Hawk's command-line arguments are structured into a `HawkSpec`.
 module System.Console.Hawk.Args.Parse (parseArgs) where
 
+import Prelude hiding (fail)
+
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import Data.Char                                 (isSpace)
 import Data.Maybe
 import "mtl" Control.Monad.Trans

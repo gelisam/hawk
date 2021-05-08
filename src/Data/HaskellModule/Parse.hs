@@ -1,7 +1,14 @@
-{-# LANGUAGE OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables #-}
 -- | In which a Haskell module is deconstructed into extensions and imports.
 module Data.HaskellModule.Parse (readModule) where
 
+import Prelude hiding (fail)
+
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import "mtl" Control.Monad.Trans
 import qualified Data.ByteString.Char8 as B
 import Data.List
