@@ -53,7 +53,7 @@ For more details, see the
 
 ## Installation
 
-To install hawk, clone this repository, run `stack install`, and add `~/.local/bin` to your PATH. Alternatively, you can also use cabal, but only v1-style is currently supported: run `cabal v1-sandbox init && cabal v1-install`, and add `/.../.cabal-sandbox/bin` to your PATH.
+To install hawk, either run `stack install haskell-awk` or `cabal install haskell-awk`.
 
 You should be ready to use Hawk:
 
