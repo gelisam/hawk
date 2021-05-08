@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6eb7495d07ed97512f1c4161b59f59a2da447bba79e684418e34af5a402a7a55
+-- hash: 8055a45acebe773a9c182a0fd25b0e5e021c85646f5add40627fbfeaa247c3f4
 
 name:           haskell-awk
 version:        1.2
@@ -14,13 +14,31 @@ category:       Console
 homepage:       https://github.com/gelisam/hawk#readme
 bug-reports:    https://github.com/gelisam/hawk/issues
 author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
-maintainer:     Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
+maintainer:     Samuel Gélineau <gelisam@gmail.com>, Jens Petersen <juhpetersen@gmail.com>
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Custom
 extra-source-files:
     README.md
     CHANGELOG.md
+    tests/inputs/0-100
+    tests/inputs/1-10
+    tests/inputs/1-12
+    tests/inputs/1-3
+    tests/inputs/1-6
+    tests/inputs/1-9
+    tests/inputs/1-9commas
+    tests/inputs/1-9tabs
+    tests/inputs/equation
+    tests/inputs/example.in
+    tests/inputs/json
+    tests/inputs/passwd
+    tests/preludes/default/prelude.hs
+    tests/preludes/moduleName/prelude.hs
+    tests/preludes/moduleNamedMain/prelude.hs
+    tests/preludes/noImplicitPrelude/prelude.hs
+    tests/preludes/readme/prelude.hs
+    tests/preludes/set/prelude.hs
 
 source-repository head
   type: git

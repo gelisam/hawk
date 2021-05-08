@@ -117,4 +117,11 @@ jobs:
 
     - name: Test
       run: |
-        cabal v2-test
+        rm -rf dist-newstyle/sdist sdist
+        cabal sdist
+        cp -r dist-newstyle/sdist .
+        cd sdist
+        tar xzvf *.tar.gz
+        rm -rf *.tar.gz
+        cd *
+        cabal test
