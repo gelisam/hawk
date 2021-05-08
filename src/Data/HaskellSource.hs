@@ -1,9 +1,17 @@
+{-# LANGUAGE CPP #-}
 -- | A representation of Haskell source code.
 -- 
 -- Unlike haskell-src-exts, our goal is not to reconstruct detailed semantics,
 -- but to preserve original line numbers (if applicable).
 module Data.HaskellSource where
 
+import Prelude hiding (fail)
+
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import Control.Monad.Trans.Class
 import Data.ByteString.Char8 as B
 import System.Directory

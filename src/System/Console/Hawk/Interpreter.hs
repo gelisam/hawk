@@ -1,10 +1,18 @@
+{-# LANGUAGE CPP #-}
 -- | A wrapper around the hint library, specialized for Hawk usage.
 module System.Console.Hawk.Interpreter
   ( applyContext
   , runHawkInterpreter
   ) where
 
-import Control.Monad
+import Prelude hiding (fail)
+
+import Control.Monad hiding (fail)
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import Data.List
 import Language.Haskell.Interpreter
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,13 @@ module System.Console.Hawk
   ( processArgs
   ) where
 
+import Prelude hiding (fail)
 
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import Control.Monad.Trans
 import Data.List
 import Language.Haskell.Interpreter

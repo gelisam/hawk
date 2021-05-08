@@ -1,5 +1,5 @@
+{-# LANGUAGE CPP #-}
 module System.Console.Hawk.UserExpr.CanonicalExpr where
-
 
 import qualified Data.ByteString.Lazy.Char8 as B
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE CPP, PackageImports #-}
 -- | About the directory in which the context is persited.
 module System.Console.Hawk.Context.Dir
   ( createDefaultContextDir
@@ -6,7 +6,14 @@ module System.Console.Hawk.Context.Dir
   , checkContextDir
   ) where
 
-import Control.Monad
+import Prelude hiding (fail)
+
+import Control.Monad hiding (fail)
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (fail)
+#else
+import Prelude (fail)
+#endif
 import "mtl" Control.Monad.Trans
 import System.Directory
 import System.FilePath

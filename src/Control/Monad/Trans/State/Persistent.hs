@@ -1,9 +1,12 @@
-{-# LANGUAGE PackageImports, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, PackageImports, ScopedTypeVariables #-}
 -- | In which the state of a State monad is persisted to disk.
 module Control.Monad.Trans.State.Persistent where
 
 import Control.Applicative
 import Control.Monad
+#if MIN_VERSION_base(4,12,0)
+import Control.Monad.Fail (MonadFail)
+#endif
 import Control.Monad.IO.Class
 import "mtl" Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -19,18 +22,18 @@ import System.IO
 
 
 -- | Read and write the cache to a file. Not atomic.
--- 
+--
 -- >>> :{
 -- do { exists <- doesFileExist f
 --    ; when exists $ removeFile f
 --    }
 -- :}
--- 
+--
 -- >>> withPersistentState f 0 $ modify (+1) >> get
 -- 1
 -- >>> withPersistentState f 0 $ modify (+1) >> get
 -- 2
--- 
+--
 -- >>> removeFile f
 withPersistentState :: forall s a. (Read s, Show s, Eq s)
                     => FilePath -> s -> State s a -> IO a
@@ -41,33 +44,37 @@ withPersistentState f default_s sx = do
     sTx = mapStateT (return . runIdentity) sx
 
 -- | A monad-transformer version of `withPersistentState`.
--- 
+--
 -- >>> :{
 -- do { exists <- doesFileExist f
 --    ; when exists $ removeFile f
 --    }
 -- :}
--- 
+--
 -- >>> withPersistentStateT f 0 $ lift (putStrLn "hello") >> modify (+1) >> get
 -- hello
 -- 1
 -- >>> withPersistentStateT f 0 $ lift (putStrLn "hello") >> modify (+1) >> get
 -- hello
 -- 2
--- 
--- 
+--
+--
 -- If the contents of the file has been corrupted, revert to the default value.
--- 
+--
 -- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
 -- hello
 -- ".."
 -- >>> withPersistentStateT f "." $ lift (putStrLn "hello") >> modify (++".") >> get
 -- hello
 -- "..."
--- 
--- 
+--
+--
 -- >>> removeFile f
-withPersistentStateT :: forall m s a. (Functor m, MonadIO m, MonadFail m, Read s, Show s, Eq s)
+withPersistentStateT :: forall m s a. (Functor m, MonadIO m,
+#if MIN_VERSION_base(4,12,0)
+                                       MonadFail m,
+#endif
+                                       Read s, Show s, Eq s)
                      => FilePath -> s -> StateT s m a -> m a
 withPersistentStateT f default_s sx = do
     Just s <- runMaybeT (get_s <|> get_default_s)
@@ -80,7 +87,7 @@ withPersistentStateT f default_s sx = do
     get_s = do
         exists <- liftIO $ doesFileExist f
         guard exists
-        
+
         -- close the file even if the parsing fails
         Just s <- liftIO $ withFile f ReadMode $ \h -> do
           file_contents <- hGetContents h
@@ -88,14 +95,14 @@ withPersistentStateT f default_s sx = do
             [(s, "")] -> return (Just s)
             _         -> return Nothing
         return s
-    
+
     get_default_s :: MaybeT m s
     get_default_s = return default_s
 
 
 -- | Combine consecutive StateT transformers into a single StateT, so the state
 --   can be persisted to a single file.
--- 
+--
 -- >>> let sx = modify (+10)       :: StateT Int (State Int) ()
 -- >>> let tx = lift $ modify (*2) :: StateT Int (State Int) ()
 -- >>> execState (withCombinedState $ sx >> tx) (1, 2)
