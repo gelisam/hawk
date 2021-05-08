@@ -7,7 +7,7 @@ import Prelude hiding (fail)
 #if MIN_VERSION_base(4,12,0)
 import Control.Monad.Fail (MonadFail, fail)
 #else
-import Prelude (MonadFail, fail)
+import Prelude (fail)
 #endif
 import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Identity hiding (fail)
