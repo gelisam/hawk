@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4379120def2ce83e1aa60e6d6f0342f0af4a0b42b1c9e8a7e625ddd90eb78a63
+-- hash: 7e4b35a68e9b4e35f1816b332b38dee87a35e50686a9df0584dbaa839cdb0fb1
 
 name:           haskell-awk
 version:        1.2
@@ -46,9 +46,9 @@ source-repository head
 
 custom-setup
   setup-depends:
-      Cabal >=1.22
-    , base >=4.8 && <5
-    , cabal-doctest >=1.0.3
+      Cabal >=1.24.2.0
+    , base >=4.9 && <5
+    , cabal-doctest >=1.0.2
 
 library
   exposed-modules:
@@ -65,10 +65,10 @@ library
   ghc-options: -Wall
   build-depends:
       base >=4.9 && <5
-    , bytestring >=0.10.6
-    , containers >=0.5.7
-    , ghc >8.0
-    , list-t >=0.4
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , ghc >=8.0.2
+    , list-t >=1
     , stringsearch >=0.3.6.6
   if os(windows)
     build-depends:
@@ -118,21 +118,21 @@ executable hawk
   ghc-options: -Wall
   build-depends:
       base >=4.9 && <5
-    , bytestring >=0.10.6
-    , containers >=0.5.7
-    , directory >=1.2
-    , extra >=1.4
-    , filelock >=0.1
-    , filepath >=1.4
-    , ghc >8.0
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , directory >=1.3.0.0
+    , extra >=1.5.3
+    , filelock >=0.1.0.1
+    , filepath >=1.4.1.1
+    , ghc >=8.0.2
     , haskell-awk
-    , haskell-src-exts >=1.18
-    , hint >=0.4
-    , list-t >=0.4
-    , mtl >=2.2
-    , process >=1.2
-    , template-haskell >=2.10
-    , transformers >=0.4
+    , haskell-src-exts >=1.18.2
+    , hint >=0.7.0
+    , list-t >=1
+    , mtl >=2.2.1
+    , process >=1.4.3.0
+    , template-haskell >=2.11.1.0
+    , transformers >=0.5.2.0
   if os(windows)
     build-depends:
         base <0
@@ -189,33 +189,33 @@ test-suite reference
       tests
   ghc-options: -Wall
   build-depends:
-      HUnit >=1.5
-    , aeson >=1.0
-    , attoparsec >=0.13
+      HUnit >=1.5.0.0
+    , aeson >=1.1.2.0
+    , attoparsec >=0.13.1.0
     , base >=4.9 && <5
-    , bytestring >=0.10.6
-    , containers >=0.5.7
-    , directory >=1.2
+    , bytestring >=0.10.8.1
+    , containers >=0.5.7.1
+    , directory >=1.3.0.0
     , doctest >=0.11.4
     , easy-file >=0.2.1
-    , exceptions >=0.8
-    , extra >=1.5
-    , filelock >=0.1
-    , filepath >=1.4.1
-    , ghc >8.0
+    , exceptions >=0.8.3
+    , extra >=1.5.3
+    , filelock >=0.1.0.1
+    , filepath >=1.4.1.1
+    , ghc >=8.0.2
     , haskell-awk
-    , haskell-src-exts >=1.18
-    , hint >=0.6
-    , hspec >=2.4.3
-    , list-t >=0.4
-    , mtl >=2.2
-    , process >=1.4
-    , template-haskell >=2.11
-    , temporary >=1.2
-    , test-framework >=0.8.1
+    , haskell-src-exts >=1.18.2
+    , hint >=0.7.0
+    , hspec >=2.4.4
+    , list-t >=1
+    , mtl >=2.2.1
+    , process >=1.4.3.0
+    , template-haskell >=2.11.1.0
+    , temporary >=1.2.1
+    , test-framework >=0.8.1.1
     , test-framework-hunit >=0.3.0.2
-    , time >=1.6
-    , transformers >=0.5.2
+    , time >=1.6.0.1
+    , transformers >=0.5.2.0
   if os(windows)
     build-depends:
         base <0
