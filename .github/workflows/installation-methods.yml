@@ -27,14 +27,14 @@ jobs:
     - uses: actions/checkout@v2
 
     - uses: haskell/actions/setup@v1
-      if: matrix.method == 'v1-install'
+      if: matrix.method == 'v1-install' || matrix.method == 'cabal-sandbox'
       id: setup-haskell-cabal_1
       name: Setup Cabal
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: 3.2
     - uses: haskell/actions/setup@v1
-      if: matrix.method != 'v1-install'
+      if: matrix.method != 'v1-install' && matrix.method != 'cabal-sandbox'
       id: setup-haskell-cabal_2
       name: Setup Cabal
       with:
