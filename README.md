@@ -36,7 +36,7 @@ while Hawk uses the general-purpose language Haskell, which is also known for be
 There are many standard command-line tools that can be easily approximated using
 [short Haskell expressions](https://wiki.haskell.org/Simple_Unix_tools).
 
-Another important difference is that while awk one-liners are self-contained, Hawk encourages the use of libraries and user-defined functions. By adding function definitions, module imports and language pragmas to Hawk's user-configurable [prelude file](https://github.com/gelisam/hawk/tree/master/doc#user-prelude), those functions, libraries and language extensions become available to Hawk one-liners.
+Another important difference is that while awk one-liners are self-contained, Hawk encourages the use of libraries and user-defined functions. By adding function definitions, module imports and language pragmas to Hawk's user-configurable [prelude file](https://github.com/gelisam/hawk/tree/main/doc#user-prelude), those functions, libraries and language extensions become available to Hawk one-liners.
 For instance, we could add a `takeLast` function extracting the last `n` elements from a list, and use it to (inefficiently) approximate `tail`:
 
 ```bash
@@ -49,7 +49,7 @@ For instance, we could add a `takeLast` function extracting the last `n` element
 
 For more details, see the
 [presentation](http://melrief.github.io/HawkPresentation/#/) and the
-[documentation](https://github.com/gelisam/hawk/tree/master/doc/README.md).
+[documentation](https://github.com/gelisam/hawk/tree/main/doc/README.md).
 
 ## Installation
 
