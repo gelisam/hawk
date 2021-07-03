@@ -38,7 +38,6 @@ import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
 import System.Console.Hawk.Context.Dir
-import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.UserExpr.CanonicalExpr

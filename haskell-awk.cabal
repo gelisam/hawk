@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 44337e37a1a8895494d6b3a33eefd69db937844fda6127bd87fa51a501e6b455
+-- hash: 44c1c30fb87284d3d90f409c8cbd3deb0f89ee374d89a36b86577c6580c77d44
 
 name:           haskell-awk
 version:        1.2.0.1
@@ -98,7 +98,6 @@ executable hawk
       System.Console.Hawk.Context.Base
       System.Console.Hawk.Context.Dir
       System.Console.Hawk.Context.Paths
-      System.Console.Hawk.Help
       System.Console.Hawk.Interpreter
       System.Console.Hawk.Lock
       System.Console.Hawk.PackageDbs
@@ -164,7 +163,6 @@ test-suite reference
       System.Console.Hawk.Context.Base
       System.Console.Hawk.Context.Dir
       System.Console.Hawk.Context.Paths
-      System.Console.Hawk.Help
       System.Console.Hawk.Interpreter
       System.Console.Hawk.Lock
       System.Console.Hawk.PackageDbs
