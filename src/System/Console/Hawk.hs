@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +22,9 @@ module System.Console.Hawk
 
 import Prelude hiding (fail)
 
+#if !MIN_VERSION_simple_cmd_args(0,1,3)
+import Control.Applicative ((<|>))
+#endif
 #if MIN_VERSION_base(4,12,0)
 import Control.Monad.Fail (fail)
 #else
