@@ -32,7 +32,6 @@ import Prelude (fail)
 #endif
 import Control.Monad.Trans
 import Data.List
-import Data.Maybe
 import Language.Haskell.Interpreter
 import SimpleCmdArgs
 import System.FilePath
@@ -76,9 +75,8 @@ main = do
 
     cfgdirOpt :: FilePath -> Parser FilePath
     cfgdirOpt dir
-      = fmap (fromMaybe dir)
-      $ optional
-      $ normalise <$> strOptionWith 'c' "config-dir" "DIR" ("Override the config dir [default:" ++ dir ++ "]")
+      = normalise <$>
+        strOptionalWith 'c' "config-dir" "DIR" ("Override the config dir [default:" ++ dir ++ "]") dir
 
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.
