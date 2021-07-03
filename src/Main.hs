@@ -32,20 +32,21 @@ main = do
   simpleCmdArgs (Just version) "A Haskell awk/sed like tool"
     "shell text processing with Haskell" $
     processSpec
-      <$> ( ExprSpec
+      <$> modeOpt
+      <*>
+      ( ExprSpec
         <$> (ContextSpec <$> cfgdirOpt defaultContextDir)
         <*> strArg "EXPR"
-          )
-      <*> modeOpt
+      )
   where
     modeOpt :: Parser HawkMode
     modeOpt =
+      flagWith' LineMode 'L' "lines" "Apply function to list of lines [default]" <|>
       flagWith' LineMode 'l' "line" "Apply function to each line" <|>
       flagWith' WordsMode 'w' "words" "Apply function to list of words per line" <|>
       flagWith' WholeMode 'a' "all" "Apply function once to the whole input" <|>
-      flagWith' TypeMode 't' "typecheck" "Print out the type of the given function" <|>
       flagWith' EvalMode 'e' "eval" "Evaluate a Haskell expression" <|>
-      flagWith' RunMode 'r' "run" "Run Haskell IO"
+      pure LinesMode
 
     cfgdirOpt :: FilePath -> Parser FilePath
     cfgdirOpt dir

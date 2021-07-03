@@ -42,23 +42,29 @@ import System.Console.Hawk.UserExpr.CanonicalExpr
 import System.Console.Hawk.UserExpr.InputReadyExpr
 import System.Console.Hawk.UserExpr.OriginalExpr
 
-
-data HawkMode = DefaultMode | LineMode | WordsMode | WholeMode | TypeMode | EvalMode | RunMode | ShellMode
+data HawkMode = LinesMode | LineMode | WordsMode | WholeMode | EvalMode
   deriving Eq
 
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.
+
 processSpec
-  :: ExprSpec -> HawkMode -> IO ()
-processSpec e EvalMode
+  :: HawkMode -> ExprSpec -> IO ()
+processSpec EvalMode e
   = myRunUncertainIO e
   $ processEvalSpec (contextSpec e) defaultOutputSpec (userExpr e)
-processSpec e WholeMode
+processSpec LineMode e
   = myRunUncertainIO e
-  $ processApplySpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
-processSpec e LineMode
+  $ processLineSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
+processSpec LinesMode e
   = myRunUncertainIO e
-  $ processMapSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
+  $ processLinesSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
+processSpec WholeMode e
+  = myRunUncertainIO e
+  $ processWholeSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
+processSpec WordsMode e
+  = myRunUncertainIO e
+  $ processWordsSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
 
 -- | A version of `runUncertainIO` which detects poor error messages and improves them.
 myRunUncertainIO :: ExprSpec -> UncertainT IO () -> IO ()
@@ -103,11 +109,17 @@ userExpr = originalExpr . untypedExpr
 processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
 processEvalSpec c o = processInputReadyExpr c noInput o . constExpr
 
-processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
-processApplySpec c i o = processInputReadyExpr c i o . applyExpr
+processLineSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processLineSpec c i o = processInputReadyExpr c i o . mapExpr
 
-processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
-processMapSpec c i o = processInputReadyExpr c i o . mapExpr
+processLinesSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processLinesSpec c i o = processInputReadyExpr c i o . mapExpr
+
+processWholeSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processWholeSpec c i o = processInputReadyExpr c i o . applyExpr
+
+processWordsSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processWordsSpec c i o = processInputReadyExpr c i o . applyExpr
 
 
 processInputReadyExpr :: ContextSpec
