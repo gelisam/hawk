@@ -5,7 +5,11 @@ module Control.Monad.Trans.Uncertain where
 import Prelude hiding (fail)
 
 #if MIN_VERSION_base(4,12,0)
-import Control.Monad.Fail (MonadFail, fail)
+import Control.Monad.Fail (
+#if !MIN_VERSION_base(4,13,0)
+  MonadFail,
+#endif
+  fail)
 #else
 import Prelude (fail)
 #endif
