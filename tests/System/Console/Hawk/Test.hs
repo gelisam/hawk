@@ -61,11 +61,12 @@ withContextHSpec body = do
              hPutStr tmph input
              hClose tmph
              out <- catchOutput $ do
-               processSpec mode $
-                 ExprSpec (ContextSpec "tests/preludes/default") expr
+               processSpec mode
+                 (ExprSpec (ContextSpec "tests/preludes/default") expr)
+                 (InputFile tmpf)
              removeFile tmpf
              assertEqual descr expected out
-  let [itApply,itMap] = map it' [LinesMode,LineMode]
+  let [itApply,itMap] = map it' [WordsMode,LineMode]
   let itEval expr expected = it' EvalMode expr "" expected
   hspec $ body itEval itApply itMap
 

@@ -38,6 +38,7 @@ main = do
         <$> (ContextSpec <$> cfgdirOpt defaultContextDir)
         <*> strArg "EXPR"
       )
+      <*> (InputFile <$> (strArg "FILE") <|> pure UseStdin)
   where
     modeOpt :: Parser HawkMode
     modeOpt =

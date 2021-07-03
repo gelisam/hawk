@@ -10,17 +10,9 @@ import System.Console.Hawk.Args.Spec
 --   Simplifies testing.
 testBuilder :: FilePath -> FilePath -> HawkMode -> String -> FilePath -> IO ()
 testBuilder preludeBase preludeBasename mode expr inputBasename
-  = processSpec mode $
-    ExprSpec (ContextSpec (preludePath preludeBasename)) expr
-
-  where
-    args = inputArgs inputBasename
-
-    preludePath f = preludeBase </> f
-    inputPath f = "tests" </> "inputs" </> f
-
-    inputArgs "" = []
-    inputArgs f = [inputPath f]
+  = processSpec mode
+    (ExprSpec (ContextSpec (preludeBase </> preludeBasename)) expr)
+    (InputFile ("tests" </> "inputs" </> inputBasename))
 
 -- | A version of `testBuilder` without a custom prelude.
 -- 
