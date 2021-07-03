@@ -4,7 +4,7 @@ module Control.Monad.Trans.State.Persistent where
 
 import Control.Applicative
 import Control.Monad
-#if MIN_VERSION_base(4,12,0)
+#if MIN_VERSION_base(4,12,0) && !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
 import Control.Monad.IO.Class
