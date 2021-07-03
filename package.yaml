@@ -57,6 +57,7 @@ executables:
       - hint >= 0.7.0
       - mtl >= 2.2.1
       - process >= 1.4.3.0
+      - simple-cmd-args
       - template-haskell >= 2.11.1.0
       - transformers >= 0.5.2.0
     source-dirs: src

@@ -14,9 +14,7 @@
 
 module Main where
 
-import System.Environment
-
 import qualified System.Console.Hawk as Hawk
 
 main :: IO ()
-main = getArgs >>= Hawk.processArgs
+main = Hawk.main

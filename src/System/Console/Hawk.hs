@@ -16,7 +16,7 @@
 -- | Hawk as seen from the outside world: parsing command-line arguments,
 --   evaluating user expressions.
 module System.Console.Hawk
-  ( processArgs
+  ( main
   ) where
 
 import Prelude hiding (fail)
@@ -28,12 +28,16 @@ import Prelude (fail)
 #endif
 import Control.Monad.Trans
 import Data.List
+import Data.Maybe
 import Language.Haskell.Interpreter
+import SimpleCmdArgs
+import System.FilePath
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
+import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
@@ -43,22 +47,49 @@ import System.Console.Hawk.UserExpr.OriginalExpr
 import System.Console.Hawk.Version
 
 
--- | Same as if the given arguments were passed to Hawk on the command-line.
-processArgs :: [String] -> IO ()
-processArgs args = do
-    r <- runWarningsIO $ parseArgs args
-    case r of
-      Left err -> failHelp err
-      Right spec -> processSpec spec
+data HawkMode = DefaultMode | LineMode | WordsMode | WholeMode | TypeMode | EvalMode | RunMode | ShellMode
+  deriving Eq
+
+main :: IO ()
+main = do
+  defaultContextDir <- findContextFromCurrDirOrDefault
+  simpleCmdArgs (Just version) "A Haskell awk/sed like tool"
+    "shell text processing with Haskell" $
+    processSpec
+      <$> ( ExprSpec
+        <$> (ContextSpec <$> cfgdirOpt defaultContextDir)
+        <*> strArg "EXPR"
+          )
+      <*> modeOpt
+  where
+    modeOpt :: Parser HawkMode
+    modeOpt =
+      flagWith' LineMode 'l' "line" "Apply function to each line" <|>
+      flagWith' WordsMode 'w' "words" "Apply function to list of words per line" <|>
+      flagWith' WholeMode 'a' "all" "Apply function once to the whole input" <|>
+      flagWith' TypeMode 't' "typecheck" "Print out the type of the given function" <|>
+      flagWith' EvalMode 'e' "eval" "Evaluate a Haskell expression" <|>
+      flagWith' RunMode 'r' "run" "Run Haskell IO"
+
+    cfgdirOpt :: FilePath -> Parser FilePath
+    cfgdirOpt dir
+      = fmap (fromMaybe dir)
+      $ optional
+      $ normalise <$> strOptionWith 'c' "config-dir" "DIR" ("Override the config dir [default:" ++ dir ++ "]")
 
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.
-processSpec :: HawkSpec -> IO ()
-processSpec Help          = help
-processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = myRunUncertainIO e $ processEvalSpec  (contextSpec e)   o (userExpr e)
-processSpec (Apply e i o) = myRunUncertainIO e $ processApplySpec (contextSpec e) i o (userExpr e)
-processSpec (Map   e i o) = myRunUncertainIO e $ processMapSpec   (contextSpec e) i o (userExpr e)
+processSpec
+  :: ExprSpec -> HawkMode -> IO ()
+processSpec e EvalMode
+  = myRunUncertainIO e
+  $ processEvalSpec (contextSpec e) defaultOutputSpec (userExpr e)
+processSpec e WholeMode
+  = myRunUncertainIO e
+  $ processApplySpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
+processSpec e LineMode
+  = myRunUncertainIO e
+  $ processMapSpec (contextSpec e) defaultInputSpec defaultOutputSpec (userExpr e)
 
 -- | A version of `runUncertainIO` which detects poor error messages and improves them.
 myRunUncertainIO :: ExprSpec -> UncertainT IO () -> IO ()
