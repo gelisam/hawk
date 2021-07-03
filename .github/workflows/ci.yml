@@ -55,7 +55,7 @@ jobs:
       name: Setup Stack
       with:
         enable-stack: true
-        stack-setup-ghc: true
+        stack-setup-ghc: false
         stack-no-global: true
 
     # For some reason, installing happy from lts-9.0 fails unless some other
