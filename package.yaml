@@ -42,7 +42,7 @@ custom-setup:
 library:
   source-dirs: runtime
   dependencies:
-    - stringsearch >= 0.3.6.6
+    - split
 
 executables:
   hawk:

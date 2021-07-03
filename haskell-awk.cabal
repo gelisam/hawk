@@ -67,7 +67,7 @@ library
     , containers >=0.5.7.1
     , ghc >=8.0.2
     , list-t >=1
-    , stringsearch >=0.3.6.6
+    , split
   if os(windows)
     build-depends:
         base <0
