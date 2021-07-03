@@ -60,7 +60,7 @@ withContextHSpec body = do
              hPutStr tmph input
              hClose tmph
              out <- catchOutput $ do
-               processArgs $ concat [ ["-c", "tests/preludes/default"]
+               processSpec $ concat [ ["-c", "tests/preludes/default"]
                                     , flags
                                     , [expr, tmpf]
                                     ]

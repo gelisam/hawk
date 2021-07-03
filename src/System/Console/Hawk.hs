@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,15 +14,15 @@
 
 -- | Hawk as seen from the outside world: parsing command-line arguments,
 --   evaluating user expressions.
+{-# LANGUAGE CPP #-}
+
 module System.Console.Hawk
-  ( main
+  ( processSpec,
+    HawkMode(..)
   ) where
 
 import Prelude hiding (fail)
 
-#if !MIN_VERSION_simple_cmd_args(0,1,3)
-import Control.Applicative ((<|>))
-#endif
 #if MIN_VERSION_base(4,12,0)
 import Control.Monad.Fail (fail)
 #else
@@ -33,50 +31,20 @@ import Prelude (fail)
 import Control.Monad.Trans
 import Data.List
 import Language.Haskell.Interpreter
-import SimpleCmdArgs
-import System.FilePath
 
 import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.Context.Dir
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.UserExpr.CanonicalExpr
 import System.Console.Hawk.UserExpr.InputReadyExpr
 import System.Console.Hawk.UserExpr.OriginalExpr
-import System.Console.Hawk.Version
 
 
 data HawkMode = DefaultMode | LineMode | WordsMode | WholeMode | TypeMode | EvalMode | RunMode | ShellMode
   deriving Eq
-
-main :: IO ()
-main = do
-  defaultContextDir <- findContextFromCurrDirOrDefault
-  simpleCmdArgs (Just version) "A Haskell awk/sed like tool"
-    "shell text processing with Haskell" $
-    processSpec
-      <$> ( ExprSpec
-        <$> (ContextSpec <$> cfgdirOpt defaultContextDir)
-        <*> strArg "EXPR"
-          )
-      <*> modeOpt
-  where
-    modeOpt :: Parser HawkMode
-    modeOpt =
-      flagWith' LineMode 'l' "line" "Apply function to each line" <|>
-      flagWith' WordsMode 'w' "words" "Apply function to list of words per line" <|>
-      flagWith' WholeMode 'a' "all" "Apply function once to the whole input" <|>
-      flagWith' TypeMode 't' "typecheck" "Print out the type of the given function" <|>
-      flagWith' EvalMode 'e' "eval" "Evaluate a Haskell expression" <|>
-      flagWith' RunMode 'r' "run" "Run Haskell IO"
-
-    cfgdirOpt :: FilePath -> Parser FilePath
-    cfgdirOpt dir
-      = normalise <$>
-        strOptionalWith 'c' "config-dir" "DIR" ("Override the config dir [default:" ++ dir ++ "]") dir
 
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.

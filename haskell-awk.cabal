@@ -207,7 +207,6 @@ test-suite reference
     , list-t >=1
     , mtl >=2.2.1
     , process >=1.4.3.0
-    , simple-cmd-args
     , template-haskell >=2.11.1.0
     , temporary >=1.2.1
     , test-framework >=0.8.1.1
