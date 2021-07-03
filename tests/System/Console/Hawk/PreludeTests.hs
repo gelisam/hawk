@@ -4,23 +4,21 @@ module System.Console.Hawk.PreludeTests where
 import System.FilePath
 
 import System.Console.Hawk
+import System.Console.Hawk.Args.Spec
 
 -- | A helper for specifying which arguments to pass to Hawk.
 --   Simplifies testing.
-testBuilder :: FilePath -> FilePath -> [String] -> String -> FilePath -> IO ()
-testBuilder preludeBase preludeBasename flags expr inputBasename
-  = processArgs args
+testBuilder :: FilePath -> FilePath -> HawkMode -> String -> FilePath -> IO ()
+testBuilder preludeBase preludeBasename mode expr inputBasename
+  = processSpec mode $
+    ExprSpec (ContextSpec (preludePath preludeBasename)) expr
+
   where
-    args = preludeArgs preludeBasename
-        ++ flags
-        ++ [expr]
-        ++ inputArgs inputBasename
-    
+    args = inputArgs inputBasename
+
     preludePath f = preludeBase </> f
     inputPath f = "tests" </> "inputs" </> f
-    
-    preludeArgs f = ["-c", preludePath f]
-    
+
     inputArgs "" = []
     inputArgs f = [inputPath f]
 
@@ -28,12 +26,12 @@ testBuilder preludeBase preludeBasename flags expr inputBasename
 -- 
 -- We still need to specify a prelude file, because the user running these
 -- tests might have installed a custom prelude.
-test :: [String] -> String -> FilePath -> IO ()
+test :: HawkMode -> String -> FilePath -> IO ()
 test = testBuilder ("tests" </> "preludes") "default"
 
 -- | A version of `test` without a custom input file either.
-testEval :: [String] -> String -> IO ()
-testEval flags expr = test flags expr ""
+testEval :: HawkMode -> String -> IO ()
+testEval mode expr = test mode expr ""
 
 
 -- | A version of `testBuilder` using the preludes from "tests/preludes".
@@ -122,7 +120,7 @@ testEval flags expr = test flags expr ""
 -- 1 4 7 10
 -- 2 5 8 11
 -- 3 6 9 12
-testPrelude :: FilePath -> [String] -> String -> FilePath -> IO ()
+testPrelude :: FilePath -> HawkMode -> String -> FilePath -> IO ()
 testPrelude = testBuilder ("tests" </> "preludes")
 
 -- | A version of `testBuilder` using the preludes from the documentation.
@@ -242,5 +240,5 @@ testPrelude = testBuilder ("tests" </> "preludes")
 -- 
 -- >> testEval ["-a"] "L.length"
 -- 3
-testDoc :: String -> [String] -> String -> FilePath -> IO ()
+testDoc :: String -> HawkMode -> String -> FilePath -> IO ()
 testDoc = testBuilder "doc"

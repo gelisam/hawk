@@ -22,6 +22,7 @@ import Test.HUnit
 import GHC.IO.Handle
 
 import System.Console.Hawk
+import System.Console.Hawk.Args.Spec
 
 
 run :: IO ()
@@ -50,7 +51,7 @@ withContextHSpec :: ((String -> String -> Spec)
                     -> Spec)
                  -> IO ()
 withContextHSpec body = do
-  let it' flags expr input expected =
+  let it' mode expr input expected =
         let descr = "evals " ++ show expr ++
                     " on input " ++ show input ++
                     " equals to " ++ show expected
@@ -60,14 +61,12 @@ withContextHSpec body = do
              hPutStr tmph input
              hClose tmph
              out <- catchOutput $ do
-               processSpec $ concat [ ["-c", "tests/preludes/default"]
-                                    , flags
-                                    , [expr, tmpf]
-                                    ]
+               processSpec mode $
+                 ExprSpec (ContextSpec "tests/preludes/default") expr
              removeFile tmpf
              assertEqual descr expected out
-  let [itApply,itMap] = map it' [["-a"],["-m"]]
-  let itEval expr expected = it' [] expr "" expected
+  let [itApply,itMap] = map it' [LinesMode,LineMode]
+  let itEval expr expected = it' EvalMode expr "" expected
   hspec $ body itEval itApply itMap
 
 
