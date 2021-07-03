@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +16,10 @@
 
 module System.Console.Hawk.TestUtils where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
   ( (<$>) )
+#endif
 import Control.Exception
   ( bracket_ )
 import Data.List
