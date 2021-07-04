@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Easier access to haskell-src-exts's SrcLoc values.
 module Language.Haskell.Exts.Location where
 
@@ -14,11 +16,23 @@ import Language.Haskell.Exts.Syntax
 -- 
 -- The location only indicates the beginning of a range, because that's what
 -- haskell-src-exts provides.
-type Located a = Writer (Option (Min SrcLoc)) a
+type Located a = Writer (
+#if MIN_VERSION_base(4,11,0)
+  Maybe
+#else
+  Option
+#endif
+    (Min SrcLoc)) a
 
 located :: SrcLoc -> Located ()
-located srcLoc | srcLoc == noLoc = tell $ Option $ Nothing
-               | otherwise       = tell $ Option $ Just $ Min srcLoc
+located srcLoc =
+  tell $
+#if !MIN_VERSION_base(4,11,0)
+  Option $
+#endif
+  if srcLoc == noLoc
+  then Nothing
+  else Just $ Min srcLoc
 
 annotated :: (Annotated ast, SrcInfo si) => ast si -> Located (ast si)
 annotated x = do
@@ -28,4 +42,8 @@ annotated x = do
 runLocated :: Located a -> (a, Maybe SrcLoc)
 runLocated = go . runWriter
   where
-    go (x, p) = (x, fmap getMin $ getOption $ p)
+    go (x, p) = (x, fmap getMin $
+#if !MIN_VERSION_base(4,11,0)
+                  getOption
+#endif
+                  p)
