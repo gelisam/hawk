@@ -38,7 +38,6 @@ instance (Functor m, Monad m) => Applicative (UncertainT m) where
   UncertainT mf <*> UncertainT mx = UncertainT (mf <*> mx)
 
 instance Monad m => Monad (UncertainT m) where
-  return = UncertainT . return
   UncertainT mx >>= f = UncertainT (mx >>= f')
     where
       f' = unUncertainT . f
