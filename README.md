@@ -66,3 +66,7 @@ You should be ready to use Hawk:
 
 The first run will create a default configuration file into
 `~/.hawk/prelude.hs` if it doesn't exist.
+
+## Alternatives
+
+You can also try [hwk](https://hackage.haskell.org/package/hwk) which is fairly similar to this project though simpler.
