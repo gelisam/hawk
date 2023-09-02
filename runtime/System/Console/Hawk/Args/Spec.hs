@@ -2,9 +2,6 @@
 -- | The precisely-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Spec where
 
-import Data.ByteString (ByteString)
-
-
 data HawkSpec
     = Help
     | Version
@@ -62,7 +59,7 @@ data OutputFormat = OutputFormat
 -- into chunks or by leaving it as-is. When separating it into chunks, we can
 -- use whitespace as a delimiter (meaning one or more consecutive whitespace
 -- characters), or we can use a specific delimiter.
-type Delimiter = ByteString
+type Delimiter = String
 data Separator = Whitespace | Delimiter Delimiter
   deriving (Show, Eq)
 data Processor = DoNotSeparate | SeparateOn Separator

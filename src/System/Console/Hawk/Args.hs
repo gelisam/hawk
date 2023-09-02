@@ -7,8 +7,6 @@ module System.Console.Hawk.Args
   , OutputFormat(..)
   , Separator(..), Delimiter
   , ContextSpec(..), UntypedExpr, ExprSpec(..)
-  , parseArgs
   ) where
 
-import System.Console.Hawk.Args.Parse
 import System.Console.Hawk.Args.Spec

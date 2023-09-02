@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 --   Copyright 2013 Mario Pastorelli (pastorelli.mario@gmail.com) Samuel Gélineau (gelisam@gmail.com)
 --
 --   Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +14,11 @@
 
 -- | Hawk as seen from the outside world: parsing command-line arguments,
 --   evaluating user expressions.
+{-# LANGUAGE CPP #-}
+
 module System.Console.Hawk
-  ( processArgs
+  ( processSpec,
+    HawkMode(..)
   ) where
 
 import Prelude hiding (fail)
@@ -34,31 +36,32 @@ import Control.Monad.Trans.Uncertain
 import Data.HaskellExpr.Eval
 import System.Console.Hawk.Args
 import System.Console.Hawk.Args.Spec
-import System.Console.Hawk.Help
 import System.Console.Hawk.Interpreter
 import System.Console.Hawk.Runtime.Base
 import System.Console.Hawk.UserExpr.CanonicalExpr
 import System.Console.Hawk.UserExpr.InputReadyExpr
 import System.Console.Hawk.UserExpr.OriginalExpr
-import System.Console.Hawk.Version
 
-
--- | Same as if the given arguments were passed to Hawk on the command-line.
-processArgs :: [String] -> IO ()
-processArgs args = do
-    r <- runWarningsIO $ parseArgs args
-    case r of
-      Left err -> failHelp err
-      Right spec -> processSpec spec
+data HawkMode = LinesMode | LineMode | WordsMode | WholeMode | EvalMode
+  deriving Eq
 
 -- | A variant of `processArgs` which accepts a structured specification
 --   instead of a sequence of strings.
-processSpec :: HawkSpec -> IO ()
-processSpec Help          = help
-processSpec Version       = putStrLn versionString
-processSpec (Eval  e   o) = myRunUncertainIO e $ processEvalSpec  (contextSpec e)   o (userExpr e)
-processSpec (Apply e i o) = myRunUncertainIO e $ processApplySpec (contextSpec e) i o (userExpr e)
-processSpec (Map   e i o) = myRunUncertainIO e $ processMapSpec   (contextSpec e) i o (userExpr e)
+
+processSpec :: HawkMode -> ExprSpec -> InputSource -> IO ()
+processSpec mode e i
+  = myRunUncertainIO e
+  $ let processor =
+          case mode of
+            EvalMode -> processEvalSpec
+            LineMode -> processLineSpec (defaultFormat i)
+            LinesMode -> processLinesSpec (defaultFormat i)
+            WholeMode -> processWholeSpec (defaultFormat i)
+            WordsMode -> processWordsSpec (defaultFormat i)
+    in processor (contextSpec e) defaultOutputSpec (userExpr e)
+  where
+    defaultFormat :: InputSource -> InputSpec
+    defaultFormat is = InputSpec is defaultInputFormat
 
 -- | A version of `runUncertainIO` which detects poor error messages and improves them.
 myRunUncertainIO :: ExprSpec -> UncertainT IO () -> IO ()
@@ -103,11 +106,17 @@ userExpr = originalExpr . untypedExpr
 processEvalSpec :: ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
 processEvalSpec c o = processInputReadyExpr c noInput o . constExpr
 
-processApplySpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
-processApplySpec c i o = processInputReadyExpr c i o . applyExpr
+processLineSpec :: InputSpec -> ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processLineSpec i c o = processInputReadyExpr c i o . mapExpr
 
-processMapSpec :: ContextSpec -> InputSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
-processMapSpec c i o = processInputReadyExpr c i o . mapExpr
+processLinesSpec :: InputSpec -> ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processLinesSpec i c o = processInputReadyExpr c i o . mapExpr
+
+processWholeSpec :: InputSpec -> ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processWholeSpec i c o = processInputReadyExpr c i o . applyExpr
+
+processWordsSpec :: InputSpec -> ContextSpec -> OutputSpec -> OriginalExpr -> UncertainT IO ()
+processWordsSpec i c o = processInputReadyExpr c i o . applyExpr
 
 
 processInputReadyExpr :: ContextSpec

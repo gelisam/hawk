@@ -1,5 +1,5 @@
 name:           haskell-awk
-version:        1.2.0.1
+version:        2.0.0.0
 github:         gelisam/hawk
 author:         Mario Pastorelli <pastorelli.mario@gmail.com>,  Samuel Gélineau <gelisam@gmail.com>
 maintainer:     Samuel Gélineau <gelisam@gmail.com>, Jens Petersen <juhpetersen@gmail.com>
@@ -42,7 +42,7 @@ custom-setup:
 library:
   source-dirs: runtime
   dependencies:
-    - stringsearch >= 0.3.6.6
+    - split
 
 executables:
   hawk:
@@ -57,6 +57,7 @@ executables:
       - hint >= 0.7.0
       - mtl >= 2.2.1
       - process >= 1.4.3.0
+      - simple-cmd-args
       - template-haskell >= 2.11.1.0
       - transformers >= 0.5.2.0
     source-dirs: src

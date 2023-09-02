@@ -2,8 +2,6 @@
 -- | The string-typed version of Hawk's command-line arguments.
 module System.Console.Hawk.Args.Option where
 
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (pack)
 import Text.Printf
 
 import Control.Monad.Trans.OptionParser
@@ -43,8 +41,8 @@ delimiter = optional (Setting "delim")
 -- 
 -- >>> parseDelimiter "\\"
 -- "\\"
-parseDelimiter :: String -> ByteString
-parseDelimiter s = pack $ case reads (printf "\"%s\"" s) of
+parseDelimiter :: String -> String
+parseDelimiter s = case reads (printf "\"%s\"" s) of
     [(s', "")] -> s'
     _          -> s
 

@@ -25,8 +25,6 @@ module System.Console.Hawk.Representable (
 ) where
 
 import Prelude
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as C8 hiding (hPutStrLn)
 import qualified Data.List as L
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -39,11 +37,11 @@ import qualified Data.Map as M
 --
 -- For example:
 --
--- >>> mapM_ Data.ByteString.Lazy.Char8.putStrLn $ repr Data.ByteString.Lazy.Char8.empty "test"
+-- >>> mapM_ putStrLn $ repr mempty "test"
 -- test
 class (Show a) => ListAsRow a where
-    listRepr' :: ByteString -> [a] -> ByteString
-    listRepr' d = C8.intercalate d . L.map (C8.pack . show)
+    listRepr' :: String -> [a] -> String
+    listRepr' d = L.intercalate d . map show
 
 instance ListAsRow Bool
 instance ListAsRow Float
@@ -54,65 +52,62 @@ instance ListAsRow ()
 
 instance (ListAsRow a) => ListAsRow [a] where
     -- todo check the first delimiter if it should be d
-    listRepr' d = C8.intercalate d . L.map (listRepr' d)
+    listRepr' d = L.intercalate d . L.map (listRepr' d)
 
 instance (Row a) => ListAsRow (Maybe a) where
-    listRepr' d = C8.intercalate d . L.map (repr' d)
+    listRepr' d = L.intercalate d . L.map (repr' d)
 
 instance (ListAsRow a) => ListAsRow (Set a) where
     listRepr' d = listRepr' d . L.map (listRepr' d . S.toList)
 
 instance ListAsRow Char where
-    listRepr' _ = C8.pack
-
-instance ListAsRow ByteString where
-    listRepr' = C8.intercalate
+    listRepr' _ = id
 
 instance (Row a, Row b) => ListAsRow (Map a b) where
     listRepr' d = listRepr' d . L.map (listRepr' d . M.toList)
 
 instance (Row a,Row b) => ListAsRow (a,b) where
-    listRepr' d = C8.intercalate d . L.map (\(x,y) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(x,y) -> unwords
                   [repr' d x,repr' d y])
 
 instance (Row a,Row b,Row c) => ListAsRow (a,b,c) where
-    listRepr' d = C8.intercalate d . L.map (\(x,y,z) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(x,y,z) -> unwords
                   [repr' d x,repr' d y,repr' d z])
 
 instance (Row a,Row b,Row c,Row d) => ListAsRow (a,b,c,d) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e])
 
 instance (Row a,Row b,Row c,Row d,Row e) => ListAsRow (a,b,c,d,e) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f])
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f) => ListAsRow (a,b,c,d,e,f) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f,g) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f,g) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f
                   ,repr' d g])
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g)
   => ListAsRow (a,b,c,d,e,f,g) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f,g,h) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f,g,h) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f
                   ,repr' d g,repr' d h])
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h)
   => ListAsRow (a,b,c,d,e,f,g,h) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f,g,h,i) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f,g,h,i) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f
                   ,repr' d g,repr' d h,repr' d i])
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i)
   => ListAsRow (a,b,c,d,e,f,g,h,i) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f,g,h,i,l) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f,g,h,i,l) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f
                   ,repr' d g,repr' d h,repr' d i,repr' d l])
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
   => ListAsRow (a,b,c,d,e,f,g,h,i,l) where
-    listRepr' d = C8.intercalate d . L.map (\(a,b,c,e,f,g,h,i,l,m) -> C8.unwords
+    listRepr' d = L.intercalate d . L.map (\(a,b,c,e,f,g,h,i,l,m) -> unwords
                   [repr' d a,repr' d b,repr' d c,repr' d e,repr' d f
                   ,repr' d g,repr' d h,repr' d i,repr' d l,repr' d m])
 
@@ -127,13 +122,13 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 -- >>> putStrLn $ show [1,2,3,4]
 -- [1,2,3,4]
 --
--- >>> Data.ByteString.Lazy.Char8.putStrLn $ repr' (Data.ByteString.Lazy.Char8.pack " ") [1,2,3,4]
+-- >>> putStrLn $ repr' " " [1,2,3,4]
 -- 1 2 3 4
 class (Show a) => Row a where
-    repr' :: ByteString -- ^ columns delimiter
+    repr' :: String -- ^ columns delimiter
           -> a           -- ^ value to represent
-          -> ByteString
-    repr' _ = C8.pack . show
+          -> String
+    repr' _ = show
 
 instance Row Bool
 instance Row Float
@@ -143,7 +138,7 @@ instance Row Integer
 instance Row ()
 
 instance Row Char where
-    repr' _ = C8.singleton
+    repr' _ = pure
 
 instance (ListAsRow a) => Row [a] where
     repr' = listRepr'
@@ -154,82 +149,79 @@ instance (ListAsRow a) => Row (Set a) where
 instance (Row a,Row b) => Row (Map a b) where
     repr' d = listRepr' d . M.toList
 
-instance Row ByteString where
-    repr' _ = id
-
 instance (Row a) => Row (Maybe a) where
-    repr' _ Nothing = C8.empty
+    repr' _ Nothing = mempty
     repr' d (Just x) = repr' d x -- check if d is correct here
 
 instance (Row a,Row b) => Row (a,b) where
-    repr' d (a,b) = repr' d a `C8.append` (d `C8.append` repr' d b)
+    repr' d (a,b) = repr' d a ++ (d ++ repr' d b)
     --repr' d (a,b) = repr' d [repr' d a,repr' d b]
 
 instance (Row a,Row b,Row c) => Row (a,b,c) where
-    repr' d (a,b,c) =  repr' d a `C8.append` (d `C8.append`
-                      (repr' d b `C8.append` (d `C8.append` repr' d c)))
+    repr' d (a,b,c) =  repr' d a ++ (d ++
+                      (repr' d b ++ (d ++ repr' d c)))
 
 instance (Row a,Row b,Row c,Row d) => Row (a,b,c,d) where
-    repr' d (a,b,c,e) = repr' d a `C8.append` (d `C8.append`
-                        (repr' d b `C8.append` (d `C8.append`
-                        (repr' d c `C8.append` (d `C8.append` repr' d e)))))
+    repr' d (a,b,c,e) = repr' d a ++ (d ++
+                        (repr' d b ++ (d ++
+                        (repr' d c ++ (d ++ repr' d e)))))
 
 instance (Row a,Row b,Row c,Row d,Row e) => Row (a,b,c,d,e) where
-    repr' d (a,b,c,e,f) = repr' d a `C8.append` (d `C8.append`
-                        (repr' d b `C8.append` (d `C8.append`
-                        (repr' d c `C8.append` (d `C8.append`
-                        (repr' d e `C8.append` (d `C8.append` repr' d f)))))))
+    repr' d (a,b,c,e,f) = repr' d a ++ (d ++
+                        (repr' d b ++ (d ++
+                        (repr' d c ++ (d ++
+                        (repr' d e ++ (d ++ repr' d f)))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f) => Row (a,b,c,d,e,f) where
-    repr' d (a,b,c,e,f,g) = repr' d a `C8.append` (d `C8.append`
-                            (repr' d b `C8.append` (d `C8.append`
-                            (repr' d c `C8.append` (d `C8.append`
-                            (repr' d e `C8.append` (d `C8.append`
-                            (repr' d f `C8.append` (d `C8.append` repr' d g)))))))))
+    repr' d (a,b,c,e,f,g) = repr' d a ++ (d ++
+                            (repr' d b ++ (d ++
+                            (repr' d c ++ (d ++
+                            (repr' d e ++ (d ++
+                            (repr' d f ++ (d ++ repr' d g)))))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g) => Row (a,b,c,d,e,f,g) where
-    repr' d (a,b,c,e,f,g,h) = repr' d a `C8.append` (d `C8.append`
-                              (repr' d b `C8.append` (d `C8.append`
-                              (repr' d c `C8.append` (d `C8.append`
-                              (repr' d e `C8.append` (d `C8.append`
-                              (repr' d f `C8.append` (d `C8.append`
-                              (repr' d g `C8.append` (d `C8.append` repr' d h)))))))))))
+    repr' d (a,b,c,e,f,g,h) = repr' d a ++ (d ++
+                              (repr' d b ++ (d ++
+                              (repr' d c ++ (d ++
+                              (repr' d e ++ (d ++
+                              (repr' d f ++ (d ++
+                              (repr' d g ++ (d ++ repr' d h)))))))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h)
         => Row (a,b,c,d,e,f,g,h) where
     repr' d (a,b,c,e,f,g,h,i) =
-        repr' d a `C8.append` (d `C8.append`
-       (repr' d b `C8.append` (d `C8.append`
-       (repr' d c `C8.append` (d `C8.append`
-       (repr' d e `C8.append` (d `C8.append`
-       (repr' d f `C8.append` (d `C8.append`
-       (repr' d g `C8.append` (d `C8.append`
-       (repr' d h `C8.append` (d `C8.append` repr' d i)))))))))))))
+        repr' d a ++ (d ++
+       (repr' d b ++ (d ++
+       (repr' d c ++ (d ++
+       (repr' d e ++ (d ++
+       (repr' d f ++ (d ++
+       (repr' d g ++ (d ++
+       (repr' d h ++ (d ++ repr' d i)))))))))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i)
         => Row (a,b,c,d,e,f,g,h,i) where
     repr' d (a,b,c,e,f,g,h,i,l) =
-        repr' d a `C8.append` (d `C8.append`
-       (repr' d b `C8.append` (d `C8.append`
-       (repr' d c `C8.append` (d `C8.append`
-       (repr' d e `C8.append` (d `C8.append`
-       (repr' d f `C8.append` (d `C8.append`
-       (repr' d g `C8.append` (d `C8.append`
-       (repr' d h `C8.append` (d `C8.append`
-       (repr' d i `C8.append` (d `C8.append` repr' d l)))))))))))))))
+        repr' d a ++ (d ++
+       (repr' d b ++ (d ++
+       (repr' d c ++ (d ++
+       (repr' d e ++ (d ++
+       (repr' d f ++ (d ++
+       (repr' d g ++ (d ++
+       (repr' d h ++ (d ++
+       (repr' d i ++ (d ++ repr' d l)))))))))))))))
 
 instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
         => Row (a,b,c,d,e,f,g,h,i,l) where
     repr' d (a,b,c,e,f,g,h,i,l,m) =
-        repr' d a `C8.append` (d `C8.append`
-       (repr' d b `C8.append` (d `C8.append`
-       (repr' d c `C8.append` (d `C8.append`
-       (repr' d e `C8.append` (d `C8.append`
-       (repr' d f `C8.append` (d `C8.append`
-       (repr' d g `C8.append` (d `C8.append`
-       (repr' d h `C8.append` (d `C8.append`
-       (repr' d i `C8.append` (d `C8.append`
-       (repr' d l `C8.append` (d `C8.append` repr' d m)))))))))))))))))
+        repr' d a ++ (d ++
+       (repr' d b ++ (d ++
+       (repr' d c ++ (d ++
+       (repr' d e ++ (d ++
+       (repr' d f ++ (d ++
+       (repr' d g ++ (d ++
+       (repr' d h ++ (d ++
+       (repr' d i ++ (d ++
+       (repr' d l ++ (d ++ repr' d m)))))))))))))))))
 
 
 -- | A type that instantiate ListAsRows is a type that has a representation
@@ -241,15 +233,14 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
 --
 -- For example:
 --
--- >>> mapM_ Data.ByteString.Lazy.Char8.putStrLn $ repr Data.ByteString.Lazy.Char8.empty "test"
+-- >>> mapM_ putStrLn $ repr mempty "test"
 -- test
 class (Row a) => ListAsRows a where
-    listRepr :: ByteString -- ^ column delimiter
+    listRepr :: String -- ^ column delimiter
                -> [a]         -- ^ list of values to represent
-               -> [ByteString]
+               -> [String]
     listRepr d = L.map (repr' d)
 
-instance ListAsRows ByteString
 instance ListAsRows Bool
 instance ListAsRows Double
 instance ListAsRows Float
@@ -272,7 +263,7 @@ instance (Row a,Row b,Row c,Row d,Row e,Row f,Row g,Row h,Row i,Row l)
   => ListAsRows (a,b,c,d,e,f,g,h,i,l)
 
 instance ListAsRows Char where
-    listRepr _ = (:[]) . C8.pack
+    listRepr _ = (:[])
 
 instance (ListAsRow a,ListAsRows a) => ListAsRows (Set a) where
     listRepr d = listRepr d . L.map S.toList
@@ -289,17 +280,17 @@ instance (ListAsRows a) => Rows [a] where
 --
 -- For example:
 --
--- >>> mapM_ Data.ByteString.Lazy.Char8.putStrLn $ repr (Data.ByteString.Lazy.Char8.singleton '\n') [1,2,3,4]
+-- >>> mapM_ putStrLn $ repr "\n" [1,2,3,4]
 -- 1
 -- 2
 -- 3
 -- 4
 class (Show a) => Rows a where
     -- | Return a representation of the given value as list of strings.
-    repr :: ByteString -- ^ rows delimiter
-         -> a           -- ^ value to represent
-         -> [C8.ByteString]
-    repr _ = (:[]) . C8.pack . show
+    repr :: String -- ^ rows delimiter
+         -> a      -- ^ value to represent
+         -> [String]
+    repr _ = (:[]) . show
 
 
 instance Rows Bool
@@ -309,16 +300,13 @@ instance Rows Int
 instance Rows Integer
 
 instance Rows () where
-    repr _ = const [C8.empty]
+    repr _ = const [mempty]
 
 instance Rows Char where
-    repr _ = (:[]) . C8.singleton
-
-instance Rows ByteString where
-    repr _ = (:[])
+    repr _ = (:[]) . pure
 
 instance (Rows a) => Rows (Maybe a) where
-    repr d = maybe [C8.empty] (repr d)
+    repr d = maybe [mempty] (repr d)
 
 instance (Row a, Row b) => Rows (Map a b) where
     repr d = listRepr d . M.toList
