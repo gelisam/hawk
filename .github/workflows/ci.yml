@@ -34,22 +34,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # see https://github.com/actions/cache/issues/403
-    - name: Work around actions/cache bug
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew update && brew install gnu-tar
-        echo PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH" >> $GITHUB_ENV
-
-    - uses: actions/cache@v2
-      name: Cache Stack Artifacts
-      with:
-        path: |
-          ~/.stack
-          ~/.local/bin
-          .stack-work
-        key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-6
-
     - uses: haskell/actions/setup@v1
       id: setup-haskell-stack
       name: Setup Stack

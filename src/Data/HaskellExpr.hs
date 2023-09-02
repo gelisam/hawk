@@ -1,4 +1,5 @@
 -- | A String-based representation of simple Haskell expressions, typed via phantom types.
+{-# LANGUAGE NoPolyKinds #-}
 module Data.HaskellExpr where
 
 import Text.Printf

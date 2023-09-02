@@ -80,7 +80,6 @@ instance (Functor m, Monad m) => Applicative (OptionParserT o m) where
   OptionParserT mf <*> OptionParserT mx = OptionParserT (mf <*> mx)
 
 instance Monad m => Monad (OptionParserT o m) where
-  return = OptionParserT . return
   OptionParserT mx >>= f = OptionParserT (mx >>= f')
     where
       f' = unOptionParserT . f
