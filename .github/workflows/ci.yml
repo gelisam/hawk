@@ -96,8 +96,12 @@ jobs:
           # Check that our upper bounds are correct by building with the latest
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
+          #
+          # TODO: revert to "ghc: latest" once the latest version of ghc is
+          # supported, so we can detect when an even-more-recent version of ghc
+          # is released and breaks hawk.
           - name: newest
-            ghc: latest
+            ghc: 8.10.4
             os: ubuntu-latest
 
     steps:
