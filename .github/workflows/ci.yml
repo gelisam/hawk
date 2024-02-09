@@ -87,7 +87,7 @@ jobs:
           # supported, so we can detect when an even-more-recent version of ghc
           # is released and breaks hawk.
           - name: newest
-            ghc: 8.10.7
+            ghc: 9.0.2
             os: ubuntu-latest
 
     steps:
