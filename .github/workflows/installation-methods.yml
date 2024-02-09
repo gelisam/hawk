@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ghc: ["9.0.2"]
+        ghc: ["9.2.8"]
         os: ["ubuntu-latest", "macos-latest"]
         method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
 

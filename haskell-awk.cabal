@@ -18,7 +18,7 @@ license-file:   LICENSE
 build-type:     Custom
 tested-with:
     GHC==8.0.2
-  , GHC==9.0.2
+  , GHC==9.2.8
 extra-source-files:
     README.md
     CHANGELOG.md
