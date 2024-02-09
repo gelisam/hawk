@@ -12,6 +12,8 @@ on:
   # Build once a month, to detect missing upper bounds.
   schedule:
     - cron: '0 0 1 * *'
+  
+  workflow_dispatch:
 
 jobs:
   stack:
@@ -50,7 +52,7 @@ jobs:
           .stack-work
         key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-6
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell-actions/setup@v2
       id: setup-haskell-stack
       name: Setup Stack
       with:
@@ -94,14 +96,18 @@ jobs:
           # Check that our upper bounds are correct by building with the latest
           # version of everything. We use cabal because it uses the latest
           # versions of our dependencies allowed by our upper bounds.
+          #
+          # TODO: revert to "ghc: latest" once the latest version of ghc is
+          # supported, so we can detect when an even-more-recent version of ghc
+          # is released and breaks hawk.
           - name: newest
-            ghc: latest
+            ghc: 8.10.4
             os: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell-actions/setup@v2
       id: setup-haskell-cabal
       name: Setup Cabal
       with:

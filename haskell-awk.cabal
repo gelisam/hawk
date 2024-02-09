@@ -1,10 +1,10 @@
 cabal-version: 1.24
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7517e27fc1a323df0f63f63937abf935ca1ecdd5376effed8078a1c1dd86928a
+-- hash: 186d50c3926564fc359e64329c322981465bb7d43c4c1c3fb8f2edfa8c60a5f0
 
 name:           haskell-awk
 version:        1.2.0.1
@@ -18,6 +18,9 @@ maintainer:     Samuel Gélineau <gelisam@gmail.com>, Jens Petersen <juhpetersen
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Custom
+tested-with:
+    GHC==8.0.2
+  , GHC==8.10.4
 extra-source-files:
     README.md
     CHANGELOG.md
@@ -70,10 +73,10 @@ library
     , ghc >=8.0.2
     , list-t >=1
     , stringsearch >=0.3.6.6
+  default-language: Haskell2010
   if os(windows)
     build-depends:
         base <0
-  default-language: Haskell2010
 
 executable hawk
   main-is: Main.hs
@@ -133,10 +136,10 @@ executable hawk
     , process >=1.4.3.0
     , template-haskell >=2.11.1.0
     , transformers >=0.5.2.0
+  default-language: Haskell2010
   if os(windows)
     build-depends:
         base <0
-  default-language: Haskell2010
 
 test-suite reference
   type: exitcode-stdio-1.0
@@ -216,7 +219,7 @@ test-suite reference
     , test-framework-hunit >=0.3.0.2
     , time >=1.6.0.1
     , transformers >=0.5.2.0
+  default-language: Haskell2010
   if os(windows)
     build-depends:
         base <0
-  default-language: Haskell2010

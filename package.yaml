@@ -90,3 +90,7 @@ tests:
       - test-framework-hunit >= 0.3.0.2
       - time >= 1.6.0.1
       - transformers >= 0.5.2.0
+
+tested-with:
+  - GHC==8.0.2
+  - GHC==8.10.4
