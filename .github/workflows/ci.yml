@@ -52,7 +52,7 @@ jobs:
           .stack-work
         key: ${{ runner.os }}-stack-${{ hashFiles(matrix.stack_yaml) }}-6
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell-actions/setup@v2
       id: setup-haskell-stack
       name: Setup Stack
       with:
@@ -103,7 +103,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell-actions/setup@v2
       id: setup-haskell-cabal
       name: Setup Cabal
       with:
