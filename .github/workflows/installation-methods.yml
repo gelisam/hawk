@@ -12,6 +12,8 @@ on:
   #pull_request:
   #  types: [opened, synchronize]
 
+  workflow_dispatch:
+
 jobs:
   # the stack installation method is already covered by the regular CI tests
   installation-methods:
