@@ -1,5 +1,8 @@
 # What's new?
 
+## Next
+* support ghc-8.10
+
 ## New in 1.2.0.1
 * support ghc-8.6 again and back to ghc-8.0 (Stackage LTS 9)
 * fix missing test files in released tarball (#257)
