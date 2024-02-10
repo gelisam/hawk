@@ -9,8 +9,8 @@ on:
   # When a PR touches the installation-method code, we obviously do want to run
   # these tests even though they take longer. Simply uncomment this to run them,
   # then re-comment them before merging.
-  #pull_request:
-  #  types: [opened, synchronize]
+  pull_request:
+    types: [opened, synchronize]
 
   workflow_dispatch:
 
@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ghc: ["8.10.4"]
+        ghc: ["9.0"]
         os: ["ubuntu-latest", "macos-latest"]
         method: ["v1-install", "v2-install", "v2-run", "cabal-sandbox"]
 
@@ -33,7 +33,7 @@ jobs:
       id: setup-haskell-cabal_1
       name: Setup Cabal
       with:
-        ghc-version: ${{ matrix.ghc }}
+        ghc-version: 8.10
         cabal-version: 3.2
     - uses: haskell-actions/setup@v2
       if: matrix.method != 'v1-install' && matrix.method != 'cabal-sandbox'

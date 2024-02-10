@@ -1,13 +1,13 @@
 name: CI
 
 on:
-  # Build every pull request, to check for regressions.
-  pull_request:
-    types: [opened, synchronize]
+  ## Build every pull request, to check for regressions.
+  #pull_request:
+  #  types: [opened, synchronize]
 
-  # Build when a PR is merged, to update the README's CI badge.
-  push:
-    branches: [main]
+  ## Build when a PR is merged, to update the README's CI badge.
+  #push:
+  #  branches: [main]
 
   # Build once a month, to detect missing upper bounds.
   schedule:
