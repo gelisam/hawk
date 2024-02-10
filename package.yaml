@@ -93,4 +93,4 @@ tests:
 
 tested-with:
   - GHC==8.0.2
-  - GHC==8.10.4
+  - GHC==9.6.4
