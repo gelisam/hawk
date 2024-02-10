@@ -2,6 +2,7 @@
 
 ## Next
 * support ghc-8.10, ghc-9.0, ghc-9.2, ghc-9.4, and ghc-9.6
+* drop support for ghc-8.0
 
 ## New in 1.2.0.1
 * support ghc-8.6 again and back to ghc-8.0 (Stackage LTS 9)
